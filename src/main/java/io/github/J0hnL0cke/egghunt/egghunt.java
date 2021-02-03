@@ -22,6 +22,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -29,7 +30,6 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.CompassMeta;
@@ -52,7 +52,6 @@ public final class egghunt extends JavaPlugin implements Listener {
 		CONTAINER_INV,
 		DNE, //egg does not exist
 	}
-	
 	public UUID owner;
 	
 	@Override
@@ -72,7 +71,6 @@ public final class egghunt extends JavaPlugin implements Listener {
     }
     
     //These functions handle the egg dropping as an item
-    //TODO: handle player death
     //TODO: check if item spawn and item drop are overlapping, and check which can be replaced
     @EventHandler(priority = EventPriority.MONITOR)
     public void onLogoff(PlayerQuitEvent event) {
@@ -109,13 +107,13 @@ public final class egghunt extends JavaPlugin implements Listener {
     		setEggLocation(item,Egg_Storage_Type.ITEM);
     	}
     }
+
     
     //These functions handle the egg being held in an inventory
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPickupItem (EntityPickupItemEvent event) {
     	//have to check if the user is an entity before we can check their inventory for the egg
     	//check if entity is a player
-    	
     	
     	if(event.getItem().getItemStack().getType().equals(Material.DRAGON_EGG)) {
     		if (event.getEntityType().equals(EntityType.PLAYER)) {
@@ -128,6 +126,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     		}
     	}
     }
+    
     
     @EventHandler(priority = EventPriority.MONITOR)
     public void onHopperCollect (InventoryPickupItemEvent event) {
@@ -144,6 +143,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     		}
     	}
     }
+    
     
     @EventHandler(priority = EventPriority.MONITOR)
 	public void onInventoryClose(InventoryCloseEvent event) {
@@ -192,6 +192,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     }
     
+    
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryMove (InventoryMoveItemEvent event) {
     	//called when an inventory item is moved between blocks (hoppers, dispensers, etc)
@@ -206,6 +207,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     	
     }
+    
     
     //This function handles the egg being placed as a block
     @EventHandler(priority = EventPriority.MONITOR)
@@ -226,10 +228,8 @@ public final class egghunt extends JavaPlugin implements Listener {
         	}
         }
     }
-
     
     //Other event handlers
-    
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDespawn (ItemDespawnEvent event) {
     	//if the egg is going to despawn, cancel it
@@ -241,73 +241,30 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     }
     
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-    	if (cmd.getName().equalsIgnoreCase("locateegg")) {
-			String eggContainer="";
-			switch (stored_as) {
-			case BLOCK: eggContainer="has been placed";
-				break;
-			case CONTAINER_INV: eggContainer="is in a ".concat(loc.getBlock().getType().toString().toLowerCase());
-				break;
-			case ENTITY_INV: eggContainer="is in the inventory of ".concat(stored_entity.getName());
-				break;
-			case ITEM:eggContainer="is an item";
-				break;
-			default:eggContainer="does not exist";
-				break;
-			}
-			String extra="";
-			if (stored_as!=Egg_Storage_Type.DNE){
-				Location egg_loc=getEggLocation();
-				extra=" at ".concat(egg_loc.toString());
-			}
-			sender.sendMessage("The dragon egg ".concat(eggContainer).concat(extra).concat("."));
-			return true;
-    	}
-    	
-    	if (cmd.getName().equalsIgnoreCase("trackegg")) {
-    		if (!(sender instanceof Player)) {
-    			sender.sendMessage("This command can only be run by a player, use /locateegg instead.");
-    		} else {
-    			Player player = (Player) sender;
-    			//roundabout way of getting the item the player is holding in their hotbar
-    			ItemStack held_item=player.getInventory().getItemInMainHand();
-    			if (held_item.getType().equals(Material.COMPASS)) {
-    				if (stored_as!=Egg_Storage_Type.DNE) {
-    					CompassMeta compass= (CompassMeta) held_item.getItemMeta();
-    					compass.setLodestoneTracked(false);
-    					compass.setLodestone(getEggLocation());
-    					sender.sendMessage("Compass set to track last known dragon egg position.");
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+    	if (!event.getKeepInventory()) {
+    		if (event.getEntity().getInventory().contains(Material.DRAGON_EGG)) {
+    			String deathmsg=event.getDeathMessage();
+    			if (deathmsg.length()>0) {
+    				if (deathmsg.endsWith(".")) {
+    					deathmsg=deathmsg.substring(0,-1);
     				}
-    				else {
-    					sender.sendMessage("The dragon egg does not exist.");
-    				}
-    			}
-    			else {
-    				sender.sendMessage("You must be holding a compass to use this command, use /locateegg instead.");
+    				event.setDeathMessage(String.format("%s and lost the dragon egg!",deathmsg));
+    			} else {
+    				announce(String.format("%s died and lost the dragon egg!", event.getEntity().getDisplayName()));
     			}
     		}
     	}
-    	return true;
     }
     
-    //Helper methods
-    
-	public void setEggOwner(Player player) {
-    	getLogger().info(player.getName().concat(" has the egg."));
-    	//check if ownership switched
-    	if (!player.getUniqueId().equals(owner)) {
-    		announce(String.format("%s has stolen the dragon egg!",player.getName()));
-    		owner=player.getUniqueId();
-    	}
-    }
-	
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onInventoryMoveConsider (InventoryClickEvent event) {
 		if (event.getWhoClicked().getGameMode()!=GameMode.CREATIVE) {
-			//stop players from echesting the egg
-			if (event.getInventory().getType().equals(InventoryType.ENDER_CHEST)){
+			//TODO: 1.17: also exclude bundles
+			//stop players from echesting the egg or storing it in a shulker box
+			InventoryType inv=event.getInventory().getType();
+			if (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX)){
 				if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
 					event.setCancelled(true);
 					console_log(String.format("Stopped %s from moving egg to ender chest",event.getWhoClicked().getName()));
@@ -333,6 +290,97 @@ public final class egghunt extends JavaPlugin implements Listener {
 			}
 		}
     }
+    
+	@EventHandler(priority = EventPriority.HIGHEST)
+    public void onPushConsider (InventoryMoveItemEvent event) {
+		//nice try, but it won't work
+		if (event.getDestination().getType().equals(InventoryType.SHULKER_BOX)){
+			if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    	if (cmd.getName().equalsIgnoreCase("locateegg")) {
+			String eggContainer="";
+			switch (stored_as) {
+			case BLOCK: eggContainer="has been placed";
+				break;
+			case CONTAINER_INV: eggContainer="is in a ".concat(loc.getBlock().getType().toString().toLowerCase());
+				break;
+			case ENTITY_INV: eggContainer="is in the inventory of ".concat(stored_entity.getName());
+				break;
+			case ITEM:eggContainer="is an item";
+				break;
+			default:eggContainer="does not exist";
+				break;
+			}
+			String egg_loc_str=""; //make this empty so if egg does not exist, it remains blank
+			if (stored_as!=Egg_Storage_Type.DNE){
+				Location egg_loc=getEggLocation();
+				int egg_x=egg_loc.getBlockX();
+				int egg_y=egg_loc.getBlockY();
+				int egg_z=egg_loc.getBlockZ();
+				String egg_world=loc.getWorld().getName();
+				egg_loc_str=String.format(" at %d, %d, %d in %s",egg_x,egg_y,egg_z,egg_world);
+			}
+			sender.sendMessage("The dragon egg ".concat(eggContainer).concat(egg_loc_str).concat("."));
+			return true;
+    	}
+    	
+    	else if (cmd.getName().equalsIgnoreCase("trackegg")) {
+    		if (!(sender instanceof Player)) {
+    			sender.sendMessage("This command can only be run by a player, use /locateegg instead.");
+    		} else {
+    			Player player = (Player) sender;
+    			//roundabout way of getting the item the player is holding in their hotbar
+    			ItemStack held_item=player.getInventory().getItemInMainHand();
+    			if (held_item.getType().equals(Material.COMPASS)) {
+    				if (stored_as!=Egg_Storage_Type.DNE) {
+    					CompassMeta compass= (CompassMeta) held_item.getItemMeta();
+    					compass.setLodestoneTracked(false);
+    					compass.setLodestone(getEggLocation());
+    					sender.sendMessage("Compass set to track last known dragon egg position.");
+    				}
+    				else {
+    					sender.sendMessage("The dragon egg does not exist.");
+    				}
+    			}
+    			else {
+    				sender.sendMessage("You must be holding a compass to use this command, use /locateegg instead.");
+    			}
+    		}
+    		return true;
+    		
+    	} else if (cmd.getName().equalsIgnoreCase("eggowner")) {
+    		if (owner==null) {
+    			sender.sendMessage("The dragon egg is currently unclaimed");
+    		} else {
+    			sender.sendMessage(String.format("The dragon egg belongs to %s.",Bukkit.getOfflinePlayer(owner).getName()));
+    			sender.sendMessage("Don't steal it!");
+    		}
+    		return true;
+    	}
+    	return false;
+    }
+	
+    //Helper methods
+    
+	public void setEggOwner(Player player) {
+    	console_log(player.getName().concat(" has the egg."));
+    	//check if ownership switched
+    	if (owner!=null) {
+    		if (!player.getUniqueId().equals(owner)) {
+    			announce(String.format("%s has stolen the dragon egg!",player.getName()));
+    			owner=player.getUniqueId();
+    		}
+    	} else {
+    		announce(String.format("%s has claimed the dragon egg!",player.getName()));
+			owner=player.getUniqueId();
+    	}
+    }
 	
 	public void setEggLocation(Location egg_loc, Egg_Storage_Type store_type) {
 		loc=egg_loc;
@@ -349,6 +397,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 	public void eggDestroyed() {
 		announce("The dragon egg has been destroyed!");
 		stored_as=Egg_Storage_Type.DNE;
+		owner=null;
 	}
 	
 	public Location getEggLocation() {

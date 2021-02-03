@@ -5,13 +5,19 @@ version: 1.16.4
 author: J0hnL0cke
 commands:
     locateegg:
-      description: Gives the current coordinates of the Dragon Egg
+      description: Gives the current coordinates of the dragon egg
       usage: /<command>
       permission: <plugin name>.
       permission-message: You don't have <permission>
       
     trackegg:
-      description: Sets a compass held in the player's hand to point to the Dragon Egg
+      description: Sets a compass held in the player's hand to point to the dragon egg
+      usage: /<command>
+      permission: <plugin name>.
+      permission-message: You don't have <permission>
+      
+    eggowner:
+      description: Give the current owner of the dragon egg
       usage: /<command>
       permission: <plugin name>.
       permission-message: You don't have <permission>
