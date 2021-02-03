@@ -123,6 +123,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 	    				//an entity has picked up the egg, make it persist
 	    				event.getEntity().setRemoveWhenFarAway(false);
 	    				console_log("Entity picked up the egg, entity will persist");
+	    				setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
 	    			}
     			}
     		}
@@ -178,7 +179,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     	//should replace the need to check specifics about a player's clicks in an inventory
     	if (event.getPlayer().getInventory().contains(Material.DRAGON_EGG) || (event.getInventory().contains(Material.DRAGON_EGG) && always_revert_to_player)){
     		setEggLocation(event.getPlayer(), Egg_Storage_Type.ENTITY_INV);
-    	} else {
+    	} else if (event.getInventory().contains(Material.DRAGON_EGG)) {
     		InventoryType egg_holder=event.getInventory().getType();
     		boolean is_entity;
     		switch (egg_holder) {
