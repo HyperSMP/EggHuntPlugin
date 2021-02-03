@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -27,7 +28,6 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -91,8 +91,8 @@ public final class egghunt extends JavaPlugin implements Listener {
     	ItemStack stack=item.getItemStack();
     	if(stack.getType().equals(Material.DRAGON_EGG)) {
     		setEggOwner(event.getPlayer());
+    		setEggLocation(item,Egg_Storage_Type.ITEM);
     	}
-    	setEggLocation(item,Egg_Storage_Type.ITEM);
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
@@ -112,20 +112,16 @@ public final class egghunt extends JavaPlugin implements Listener {
     public void onPickupItem (EntityPickupItemEvent event) {
     	//have to check if the user is an entity before we can check their inventory for the egg
     	//check if entity is a player
-    	if (event.getEntityType().equals(EntityType.PLAYER)) {
-    		if(((Player)event.getEntity()).getInventory().contains(Material.DRAGON_EGG)) {
-    			setEggOwner((Player) event.getEntity());
+    	
+    	
+    	if(event.getItem().getItemStack().getType().equals(Material.DRAGON_EGG)) {
+    		if (event.getEntityType().equals(EntityType.PLAYER)) {
+    			setEggOwner((Player)event.getEntity());
     			setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
     		} else {
-    			//if entity is not a player
-    			if (event.getEntity().getEquipment().getItemInMainHand()!=null) {
-	    			if (event.getEntity().getEquipment().getItemInMainHand().getType().equals(Material.DRAGON_EGG)) {
-	    				//an entity has picked up the egg, make it persist
-	    				event.getEntity().setRemoveWhenFarAway(false);
-	    				console_log("Entity picked up the egg, entity will persist");
-	    				setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
-	    			}
-    			}
+    			//don't need to make the entity persist because they do so by default when
+				//picking up an item
+				setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
     		}
     	}
     }
@@ -135,13 +131,13 @@ public final class egghunt extends JavaPlugin implements Listener {
     	//check if the dragon egg was picked up
     	ItemStack item=event.getItem().getItemStack();
     	if (item.getType().equals(Material.DRAGON_EGG)){
-    		if (event.getInventory().getType().equals(InventoryType.HOPPER)){
-    			//hopper picked up the egg
-    			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
+    		if (event.getInventory().getHolder() instanceof Entity){
+    			//hopper minecart picked up the egg
+    			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
     		}
     		else {
-    			//hopper minecart picked up the egg
-    			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.ENTITY_INV);
+    			//hopper picked up the egg
+    			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
     		}
     	}
     }
@@ -175,28 +171,21 @@ public final class egghunt extends JavaPlugin implements Listener {
 		default:always_revert_to_player=false;
 			break;
 		}
-    	//check the player and the inventory for the egg
+    	//check the player and the inventory for the egg when the inventory closes
     	//should replace the need to check specifics about a player's clicks in an inventory
     	if (event.getPlayer().getInventory().contains(Material.DRAGON_EGG) || (event.getInventory().contains(Material.DRAGON_EGG) && always_revert_to_player)){
     		setEggLocation(event.getPlayer(), Egg_Storage_Type.ENTITY_INV);
-    	} else if (event.getInventory().contains(Material.DRAGON_EGG)) {
-    		InventoryType egg_holder=event.getInventory().getType();
-    		boolean is_entity;
-    		switch (egg_holder) {
-			case MERCHANT:is_entity=true;
-				break;
-			case PLAYER:is_entity=true;
-				break;
-			//case DONKEY:
-			//TODO:figure out how to handle donkeys (gives a location and not an entity if used with donkey)
-			default:is_entity=false;
-			break;
-    		
+    	} else if (event.getInventory().getType()!=InventoryType.PLAYER) {
+    		//check if the other inventory has the egg
+	    	if (event.getInventory().contains(Material.DRAGON_EGG)) {
+	    		if (event.getInventory().getHolder() instanceof Entity) {
+	    			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
+	    		} else {
+	    			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
+	    		}
+	    		
+    			
     		}
-    		if (is_entity) {
-    			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
-    		} else { setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV); }
-    		
     	}
     }
     
@@ -206,8 +195,8 @@ public final class egghunt extends JavaPlugin implements Listener {
     	//check if the item being moved is the egg
     	if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
     		InventoryType inv_type=event.getDestination().getType();
-    		if (inv_type.equals(InventoryType.PLAYER)) {
-    			setEggLocation(event.getDestination().getLocation(),Egg_Storage_Type.ENTITY_INV);
+    		if (event.getDestination() instanceof Entity) {
+    			setEggLocation((Entity)event.getDestination().getHolder(),Egg_Storage_Type.ENTITY_INV);
     		}
     		else {
     			setEggLocation(event.getDestination().getLocation(),Egg_Storage_Type.CONTAINER_INV);
@@ -304,14 +293,18 @@ public final class egghunt extends JavaPlugin implements Listener {
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onInventoryMoveConsider (InventoryClickEvent event) {
-		//stop players from echesting the egg
-		if (event.getInventory().getType().equals(InventoryType.ENDER_CHEST)){
-			if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
-				event.setCancelled(true);
-			//Don't allow hotkeying either
-			} else if (event.getClick().equals(ClickType.NUMBER_KEY)) {
-				if (event.getInventory().getItem(event.getHotbarButton()).getType().equals(Material.DRAGON_EGG)) {
+		if (event.getWhoClicked().getGameMode()!=GameMode.CREATIVE) {
+			//stop players from echesting the egg
+			if (event.getInventory().getType().equals(InventoryType.ENDER_CHEST)){
+				if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
 					event.setCancelled(true);
+					console_log(String.format("Stopped %s from moving egg to ender chest",event.getWhoClicked().getName()));
+				//Don't allow hotkeying either
+				} else if (event.getClick().equals(ClickType.NUMBER_KEY)) {
+					if (event.getWhoClicked().getInventory().getItem(event.getHotbarButton()).getType().equals(Material.DRAGON_EGG)) {
+						event.setCancelled(true);
+						console_log(String.format("Stopped %s from hotkeying egg to ender chest",event.getWhoClicked().getName()));
+					}
 				}
 			}
 		}
