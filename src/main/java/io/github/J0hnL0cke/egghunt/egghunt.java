@@ -110,16 +110,18 @@ public final class egghunt extends JavaPlugin implements Listener {
     //These functions handle the egg being held in an inventory
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPickupItem (EntityPickupItemEvent event) {
-    	//check if entity is a player
-    	if (event.getEntityType().equals(EntityType.PLAYER)) {
-    		setEggOwner((Player) event.getEntity());
+    	if (((ItemStack)event.getItem()).getType().equals(Material.DRAGON_EGG)){
+    		//check if entity is a player
+    		if (event.getEntityType().equals(EntityType.PLAYER)) {
+    			setEggOwner((Player) event.getEntity());
+    		}
+    		else {
+    			//an entity has picked up the egg, make it persist
+    			event.getEntity().setRemoveWhenFarAway(false);
+    			console_log("Entity picked up the egg, entity will persist");
+    		}
+    		setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
     	}
-    	else {
-    		//an entity has picked up the egg, make it persist
-    		event.getEntity().setRemoveWhenFarAway(false);
-    		console_log("Entity picked up the egg, entity will persist");
-    	}
-    	setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
@@ -288,7 +290,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     	getLogger().info(player.getName().concat(" has the egg."));
     	//check if ownership switched
     	if (!player.getUniqueId().equals(owner)) {
-    		announce(String.format("{0} has stolen the dragon egg!",player.getName()));
+    		announce(String.format("%s has stolen the dragon egg!",player.getName()));
     		owner=player.getUniqueId();
     	}
     }
@@ -323,13 +325,13 @@ public final class egghunt extends JavaPlugin implements Listener {
 	public void setEggLocation(Location egg_loc, Egg_Storage_Type store_type) {
 		loc=egg_loc;
 		stored_as=store_type;
-		console_log(String.format("The egg has moved to entity {0} as {1}",egg_loc,store_type.toString()));
+		console_log(String.format("The egg has moved to entity %s as %s",egg_loc,store_type.toString()));
 	}
 	
 	public void setEggLocation(Entity entity, Egg_Storage_Type store_type) {
 		stored_entity=entity;
 		stored_as=store_type;
-		console_log(String.format("The egg has moved to entity {0} ({1}) as {2}",entity,entity.getLocation(),store_type.toString()));
+		console_log(String.format("The egg has moved to entity %s (%s) as %s",entity,entity.getLocation(),store_type.toString()));
 	}
 	
 	public void eggDestroyed() {
@@ -368,7 +370,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 			for (int i=0;i<playerlist.length;i++) {
 				((CommandSender) playerlist[i]).sendMessage(message);
 			}
-			console_log(String.format("Told {0} players {1}",String.valueOf(playerlist.length),message));
+			console_log(String.format("Told %s players %s",String.valueOf(playerlist.length),message));
 		}
 	}
 	
