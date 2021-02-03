@@ -4,3 +4,4 @@
 *.xml
 /.settings/
 /target/
+.externalToolBuilders/Make Jar.launch
