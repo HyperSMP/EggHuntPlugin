@@ -110,17 +110,22 @@ public final class egghunt extends JavaPlugin implements Listener {
     //These functions handle the egg being held in an inventory
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPickupItem (EntityPickupItemEvent event) {
-    	if (((ItemStack)event.getItem()).getType().equals(Material.DRAGON_EGG)){
-    		//check if entity is a player
-    		if (event.getEntityType().equals(EntityType.PLAYER)) {
+    	//have to check if the user is an entity before we can check their inventory for the egg
+    	//check if entity is a player
+    	if (event.getEntityType().equals(EntityType.PLAYER)) {
+    		if(((Player)event.getEntity()).getInventory().contains(Material.DRAGON_EGG)) {
     			setEggOwner((Player) event.getEntity());
+    			setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
+    		} else {
+    			//if entity is not a player
+    			if (event.getEntity().getEquipment().getItemInMainHand()!=null) {
+	    			if (event.getEntity().getEquipment().getItemInMainHand().getType().equals(Material.DRAGON_EGG)) {
+	    				//an entity has picked up the egg, make it persist
+	    				event.getEntity().setRemoveWhenFarAway(false);
+	    				console_log("Entity picked up the egg, entity will persist");
+	    			}
+    			}
     		}
-    		else {
-    			//an entity has picked up the egg, make it persist
-    			event.getEntity().setRemoveWhenFarAway(false);
-    			console_log("Entity picked up the egg, entity will persist");
-    		}
-    		setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
     	}
     }
     
@@ -130,9 +135,11 @@ public final class egghunt extends JavaPlugin implements Listener {
     	ItemStack item=event.getItem().getItemStack();
     	if (item.getType().equals(Material.DRAGON_EGG)){
     		if (event.getInventory().getType().equals(InventoryType.HOPPER)){
+    			//hopper picked up the egg
     			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
     		}
     		else {
+    			//hopper minecart picked up the egg
     			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.ENTITY_INV);
     		}
     	}
@@ -191,7 +198,6 @@ public final class egghunt extends JavaPlugin implements Listener {
     		
     	}
     }
-    
     
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryMove (InventoryMoveItemEvent event) {
