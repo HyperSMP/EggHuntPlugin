@@ -1,5 +1,7 @@
 package io.github.J0hnL0cke.egghunt;
 
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -16,10 +18,13 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,7 +38,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 	(ex: held by a zombie or item frame), but only players can "own" the egg*/
 	public Location loc;
 	public Entity stored_entity;
-	public Egg_Storage_Type stored_as;
+	public Egg_Storage_Type stored_as=Egg_Storage_Type.DNE;
 	enum Egg_Storage_Type {
 		ITEM,
 		BLOCK,
@@ -42,7 +47,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 		DNE, //egg does not exist
 	}
 	
-	public Player owner;
+	public UUID owner;
 	
 	@Override
     public void onEnable() {
@@ -113,7 +118,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onHopperCollect (InventoryPickupItemEvent event) {
     	//check if the dragon egg was picked up
-    	ItemStack item=(ItemStack) event.getItem();
+    	ItemStack item=event.getItem().getItemStack();
     	if (item.getType().equals(Material.DRAGON_EGG)){
     		if (event.getInventory().getType().equals(InventoryType.HOPPER)){
     			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
@@ -123,6 +128,87 @@ public final class egghunt extends JavaPlugin implements Listener {
     		}
     	}
     }
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+	public void onInventoryClose(InventoryCloseEvent event) {
+    	//check the player and the inventory for the egg
+    	//should replace the need to check specifics about a player's clicks in an inventory
+    	if (event.getPlayer().getInventory().contains(Material.DRAGON_EGG)){
+    		setEggLocation(event.getPlayer(), Egg_Storage_Type.ENTITY_INV);
+    	} else {
+    		InventoryType egg_holder=event.getInventory().getType();
+    		boolean is_entity;
+    		switch (egg_holder) {
+			case MERCHANT:is_entity=true;
+				break;
+			case PLAYER:is_entity=true;
+				break;
+			//case DONKEY:
+			//TODO:figure out how to handle donkeys (gives a location and not an entity if used with donkey)
+			default:is_entity=false;
+			break;
+    		
+    		}
+    		if (is_entity) {
+    			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
+    		} else { setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV); }
+    		
+    	}
+    }
+    
+    /*@EventHandler(priority = EventPriority.MONITOR)
+	public void onInventoryMove (InventoryClickEvent event) {
+		if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
+			if (!event.getInventory().getType().equals(InventoryType.PLAYER)){
+				boolean moved_into_chest=false;
+				boolean interacted=false;
+					switch (event.getAction()) {
+					case CLONE_STACK:interacted=false;
+						break;
+					case COLLECT_TO_CURSOR:interacted=true;
+						break;
+					case DROP_ALL_CURSOR:
+						break;
+					case DROP_ALL_SLOT:
+						break;
+					case DROP_ONE_CURSOR:
+						break;
+					case DROP_ONE_SLOT:
+						break;
+					case HOTBAR_MOVE_AND_READD:
+						break;
+					case HOTBAR_SWAP:
+						break;
+					case MOVE_TO_OTHER_INVENTORY:
+						break;
+					case NOTHING:
+						break;
+					case PICKUP_ALL:
+						break;
+					case PICKUP_HALF:
+						break;
+					case PICKUP_ONE:
+						break;
+					case PICKUP_SOME:
+						break;
+					case PLACE_ALL:
+						break;
+					case PLACE_ONE:
+						break;
+					case PLACE_SOME:
+						break;
+					case SWAP_WITH_CURSOR:
+						break;
+					case UNKNOWN:
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			
+		}*/
+    
     
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryMove (InventoryMoveItemEvent event) {
@@ -178,12 +264,12 @@ public final class egghunt extends JavaPlugin implements Listener {
 			default:eggContainer="does not exist";
 				break;
 			}
-			Location egg_loc=getEggLocation();
 			String extra="";
 			if (stored_as!=Egg_Storage_Type.DNE){
+				Location egg_loc=getEggLocation();
 				extra=" at ".concat(egg_loc.toString());
 			}
-			sender.sendMessage("The dragon egg".concat(eggContainer).concat(extra).concat("."));
+			sender.sendMessage("The dragon egg ".concat(eggContainer).concat(extra).concat("."));
 			return true;
     	}
     	
@@ -195,18 +281,22 @@ public final class egghunt extends JavaPlugin implements Listener {
     			//roundabout way of getting the item the player is holding in their hotbar
     			ItemStack held_item=player.getInventory().getItemInMainHand();
     			if (held_item.getType().equals(Material.COMPASS)) {
-    				CompassMeta compass= (CompassMeta) held_item.getItemMeta();
-    				compass.setLodestoneTracked(false);
-    				compass.setLodestone(getEggLocation());
-    				sender.sendMessage("Compass set to track last known dragon egg position");
+    				if (stored_as!=Egg_Storage_Type.DNE) {
+    					CompassMeta compass= (CompassMeta) held_item.getItemMeta();
+    					compass.setLodestoneTracked(false);
+    					compass.setLodestone(getEggLocation());
+    					sender.sendMessage("Compass set to track last known dragon egg position.");
+    				}
+    				else {
+    					sender.sendMessage("The dragon egg does not exist.");
+    				}
     			}
     			else {
     				sender.sendMessage("You must be holding a compass to use this command, use /locateegg instead.");
     			}
     		}
-    		return true;
     	}
-    	return false;
+    	return true;
     }
     
     
@@ -214,17 +304,18 @@ public final class egghunt extends JavaPlugin implements Listener {
     
 	public void setEggOwner(Player player) {
     	getLogger().info(player.getName().concat(" has the egg."));
-    	//TODO: check if ownership switched
-    	if (!player.equals(owner)) {
+    	//check if ownership switched
+    	if (!player.getUniqueId().equals(owner)) {
     		getLogger().info(player.getName().concat(" has stolen the egg!"));
+    		owner=player.getUniqueId();
     	}
     }
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onInventoryMoveConsider (InventoryMoveItemEvent event) {
+	public void onInventoryMoveConsider (InventoryClickEvent event) {
 		//stop players from echesting the egg
-		if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
-			if (event.getDestination().getType().equals(InventoryType.ENDER_CHEST)){
+		if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
+			if (event.getInventory().getType().equals(InventoryType.ENDER_CHEST)){
 				event.setCancelled(true);
 			}
 		}
@@ -235,8 +326,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 		//if the egg item takes damage, call eggDestroyed
 		Entity entity=event.getEntity();
 		if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-			//eww, casting
-			ItemStack item = (ItemStack) entity;
+			ItemStack item = ((Item)entity).getItemStack();
 			if (item.getType().equals(Material.DRAGON_EGG)) {
 				eggDestroyed();
 			}
@@ -249,7 +339,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 	}
 	
 	public void setEggLocation(Entity entity, Egg_Storage_Type store_type) {
-		loc=entity.getLocation();
+		stored_entity=entity;
 		stored_as=store_type;
 	}
 	
@@ -259,21 +349,25 @@ public final class egghunt extends JavaPlugin implements Listener {
 	}
 	
 	public Location getEggLocation() {
-		boolean is_entity;
-		switch (stored_as) {
-		case BLOCK:is_entity=false;
-			break;
-		case CONTAINER_INV:is_entity=false;
-			break;
-		case ENTITY_INV:is_entity=true;
-			break;
-		case ITEM:is_entity=true;
-			break;
-		default:return null;//handles type being DNE
+		if (stored_as!=Egg_Storage_Type.DNE) {
+			boolean is_entity=false; //Don't want to initialize this, but it's needed to compile
+			switch (stored_as) {
+			case BLOCK:is_entity=false;
+				break;
+			case CONTAINER_INV:is_entity=false;
+				break;
+			case ENTITY_INV:is_entity=true;
+				break;
+			case ITEM:is_entity=true;
+				break;
+			default:throw new java.lang.Error("Unknown egg storage type when calling getEggLocation()"); //fail loudly instead of silently
+				//you're welcome
+			}
+			if (is_entity) {
+				return stored_entity.getLocation();
+			} else { return loc; }
 		}
-		if (is_entity) {
-			return stored_entity.getLocation();
-		} else { return loc; }
+		return null;
 	}
 	
 }

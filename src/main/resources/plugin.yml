@@ -1,5 +1,5 @@
 name: EggHunt
-main: egghunt.egghunt
+main:  io.github.J0hnL0cke.egghunt.egghunt
 version: 1.16.4
 
 author: J0hnL0cke
