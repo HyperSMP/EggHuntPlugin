@@ -65,7 +65,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         // TODO Insert logic to be performed when the plugin is disabled
-    	console_log("onDisable has been invoked.")
+    	console_log("onDisable has been invoked.");
     }
     
     //These functions handle the egg dropping as an item
