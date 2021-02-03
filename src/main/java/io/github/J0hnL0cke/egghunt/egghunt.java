@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,7 +29,9 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -213,6 +216,17 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     }
 
+    //This function handles the egg being placed in an item frame
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInteract(PlayerInteractEntityEvent event) {
+        if(event.getRightClicked() instanceof ItemFrame) {
+        	PlayerInventory player_inv=event.getPlayer().getInventory();
+        	if(player_inv.getItemInMainHand().getType().equals(Material.DRAGON_EGG) || player_inv.getItemInOffHand().getType().equals(Material.DRAGON_EGG)) {
+        		setEggLocation(event.getRightClicked(),Egg_Storage_Type.ENTITY_INV);
+        	}
+        }
+    }
+
     
     //Other event handlers
     
@@ -234,7 +248,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 			switch (stored_as) {
 			case BLOCK: eggContainer="has been placed";
 				break;
-			case CONTAINER_INV: eggContainer="is in a ".concat(loc.getBlock().toString());
+			case CONTAINER_INV: eggContainer="is in a ".concat(loc.getBlock().getType().toString().toLowerCase());
 				break;
 			case ENTITY_INV: eggContainer="is in the inventory of ".concat(stored_entity.getName());
 				break;
@@ -277,7 +291,6 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     	return true;
     }
-    
     
     //Helper methods
     
