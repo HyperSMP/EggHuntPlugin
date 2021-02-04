@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -17,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -178,6 +180,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     	//should replace the need to check specifics about a player's clicks in an inventory
     	if (event.getPlayer().getInventory().contains(Material.DRAGON_EGG) || (event.getInventory().contains(Material.DRAGON_EGG) && always_revert_to_player)){
     		setEggLocation(event.getPlayer(), Egg_Storage_Type.ENTITY_INV);
+    		setEggOwner((Player) event.getPlayer());
     	} else if (event.getInventory().getType()!=InventoryType.PLAYER) {
     		//check if the other inventory has the egg
 	    	if (event.getInventory().contains(Material.DRAGON_EGG)) {
@@ -197,12 +200,14 @@ public final class egghunt extends JavaPlugin implements Listener {
     public void onInventoryMove (InventoryMoveItemEvent event) {
     	//called when an inventory item is moved between blocks (hoppers, dispensers, etc)
     	//check if the item being moved is the egg
-    	if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
-    		if (event.getDestination().getHolder() instanceof Entity) {
-    			setEggLocation((Entity)event.getDestination().getHolder(),Egg_Storage_Type.ENTITY_INV);
-    		}
-    		else {
-    			setEggLocation(event.getDestination().getLocation(),Egg_Storage_Type.CONTAINER_INV);
+    	if (!event.isCancelled()) {
+    		if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
+    			if (event.getDestination().getHolder() instanceof Entity) {
+    				setEggLocation((Entity)event.getDestination().getHolder(),Egg_Storage_Type.ENTITY_INV);
+    			}
+    			else {
+    				setEggLocation(event.getDestination().getLocation(),Egg_Storage_Type.CONTAINER_INV);
+    			}
     		}
     	}
     	
@@ -212,9 +217,9 @@ public final class egghunt extends JavaPlugin implements Listener {
     //This function handles the egg being placed as a block
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockPlace (BlockPlaceEvent event) {
-    	//check if entity is a player
     	if (event.getBlock().getType().equals(Material.DRAGON_EGG)) {
     		setEggLocation(event.getBlock().getLocation(),Egg_Storage_Type.BLOCK);
+    		setEggOwner(event.getPlayer());
     	}
     }
 
@@ -225,9 +230,43 @@ public final class egghunt extends JavaPlugin implements Listener {
         	PlayerInventory player_inv=event.getPlayer().getInventory();
         	if(player_inv.getItemInMainHand().getType().equals(Material.DRAGON_EGG) || player_inv.getItemInOffHand().getType().equals(Material.DRAGON_EGG)) {
         		setEggLocation(event.getRightClicked(),Egg_Storage_Type.ENTITY_INV);
+        		setEggOwner(event.getPlayer());
         	}
         }
     }
+    
+    //This function handles the egg teleporting
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSpread(BlockFromToEvent event) {
+    	if (event.getBlock().getType().equals(Material.DRAGON_EGG)) {
+    		
+    		/*whether the teleport should record the egg
+    		location after (true) or before (false) it teleports*/
+    		boolean accurate=false;
+    		/*setting to false makes it harder to find the egg after it teleports*/
+    		
+    		/*If set to true, the owner of the egg is reset when it teleports*/
+    		boolean lose_owner=true;
+    		
+    		Block block;
+    		if (accurate) {
+    			block=event.getToBlock();
+    			console_log("The egg teleported, location is set to show location after teleport");
+    		} else {
+    			block=event.getBlock();
+    			console_log("The egg teleported, location is set to show location before teleport");
+    		}
+    		if (lose_owner) {
+    			if (owner!=null) {
+    				announce(String.format("The dragon egg has teleported. %s is no longer the owner.",get_username_from_uuid(owner)));
+    				owner=null;
+    			}
+    		}
+    		setEggLocation(block.getLocation(),Egg_Storage_Type.BLOCK);
+    	}
+    }
+    
+    
     
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -358,7 +397,7 @@ public final class egghunt extends JavaPlugin implements Listener {
     		if (owner==null) {
     			sender.sendMessage("The dragon egg is currently unclaimed");
     		} else {
-    			sender.sendMessage(String.format("The dragon egg belongs to %s.",Bukkit.getOfflinePlayer(owner).getName()));
+    			sender.sendMessage(String.format("The dragon egg belongs to %s.",get_username_from_uuid(owner)));
     			sender.sendMessage("Don't steal it!");
     		}
     		return true;
@@ -385,7 +424,7 @@ public final class egghunt extends JavaPlugin implements Listener {
 	public void setEggLocation(Location egg_loc, Egg_Storage_Type store_type) {
 		loc=egg_loc;
 		stored_as=store_type;
-		console_log(String.format("The egg has moved to entity %s as %s",egg_loc,store_type.toString()));
+		console_log(String.format("The egg has moved to block %s as %s",egg_loc,store_type.toString()));
 	}
 	
 	public void setEggLocation(Entity entity, Egg_Storage_Type store_type) {
@@ -437,6 +476,10 @@ public final class egghunt extends JavaPlugin implements Listener {
 	
 	public void console_log(String message) {
 		getLogger().info(message);
+	}
+	
+	public String get_username_from_uuid(UUID id) {
+		return Bukkit.getOfflinePlayer(id).getName();
 	}
 	
 }
