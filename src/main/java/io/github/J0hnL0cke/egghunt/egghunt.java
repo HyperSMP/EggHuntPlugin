@@ -1,6 +1,8 @@
 package io.github.J0hnL0cke.egghunt;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -462,16 +464,11 @@ public final class egghunt extends JavaPlugin implements Listener {
 	}
 	
 	public void announce(String message) {
-		
-		Collection<? extends Player> players=Bukkit.getOnlinePlayers();
-		if (!players.isEmpty()) {
-			Object[] playerlist=players.toArray();
-			
-			for (int i=0;i<playerlist.length;i++) {
-				((CommandSender) playerlist[i]).sendMessage(message);
-			}
-			console_log(String.format("Told %s players %s",String.valueOf(playerlist.length),message));
+		List<Player> players=new ArrayList<Player>(Bukkit.getOnlinePlayers());
+		for (Player player: players) {
+			((CommandSender) player).sendMessage(message);
 		}
+		console_log(String.format("Told %s players %s",String.valueOf(players.size()),message));
 	}
 	
 	public void console_log(String message) {
