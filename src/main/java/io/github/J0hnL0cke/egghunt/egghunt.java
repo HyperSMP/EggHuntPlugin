@@ -266,7 +266,19 @@ public final class egghunt extends JavaPlugin implements Listener {
     	}
     }
     
-    
+    //This function handles the egg being destroyed
+    //TODO: Make the egg regen or cancel destroy
+	@EventHandler(priority = EventPriority.MONITOR)
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+		//if the egg item takes damage, call eggDestroyed
+		Entity entity=event.getEntity();
+		if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+			ItemStack item = ((Item)entity).getItemStack();
+			if (item.getType().equals(Material.DRAGON_EGG)) {
+				eggDestroyed();
+			}
+		}
+    }
     
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -317,18 +329,6 @@ public final class egghunt extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
-	@EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent event) {
-		//if the egg item takes damage, call eggDestroyed
-		Entity entity=event.getEntity();
-		if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-			ItemStack item = ((Item)entity).getItemStack();
-			if (item.getType().equals(Material.DRAGON_EGG)) {
-				eggDestroyed();
-			}
-		}
-    }
     
 	@EventHandler(priority = EventPriority.HIGHEST)
     public void onPushConsider (InventoryMoveItemEvent event) {
