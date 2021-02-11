@@ -65,22 +65,10 @@ public class FileSave  {
 		if (this.keyExists("stored_entity")) {
 			if (EggHuntListener.stored_as==EggHuntListener.Egg_Storage_Type.ENTITY_INV || EggHuntListener.stored_as==EggHuntListener.Egg_Storage_Type.ITEM) {
 				UUID id=UUID.fromString(this.getKey("stored_entity", null));
-				boolean found=false;
-
-				for (World world : Bukkit.getWorlds()) {
-					if (!found) {
-						for (Entity entity:world.getEntities()) {
-							
-							if (entity.getUniqueId().equals(id)) {
-								EggHuntListener.stored_entity=entity;
-								found=true;
-								break;
-							}
-						}
-					}
-				}
-				if (!found) {
-					EggHuntListener.logger.warning("Could not locate stored entity!");
+				EggHuntListener.stored_entity=Bukkit.getEntity(id);
+				
+				if (EggHuntListener.stored_entity==null) {
+					EggHuntListener.logger.warning("Could not locate entity from saved UUID!");
 				}
 			}
 		}
@@ -105,5 +93,4 @@ public class FileSave  {
 		this.writeKey("owner", EggHuntListener.owner.toString());
 		}
 	}
-
 }
