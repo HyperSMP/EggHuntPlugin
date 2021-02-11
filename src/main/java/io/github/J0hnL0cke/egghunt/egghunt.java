@@ -18,6 +18,9 @@ import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
 public final class egghunt extends JavaPlugin {
 
+
+	FileSave config = new FileSave(this);
+
 	@Override
 	public void onEnable() {
 		// TODO Insert logic to be performed when the plugin is enabled
@@ -36,28 +39,29 @@ public final class egghunt extends JavaPlugin {
 		// TODO Insert logic to be performed when the plugin is disabled
 		getLogger().info("onDisable has been invoked.");
 	}
-	
+
 	public void loadData() {
 		//load loc
-		if (FileSave.keyExists("loc")) {
-			String[] loc=FileSave.getKey("loc", "").split(":");
+
+		if (config.keyExists("loc")) {
+			String[] loc=config.getKey("loc", "").split(":");
 			if (loc.length==4) {
 				World w = Bukkit.getServer().getWorld(loc[0]);
-	            double x = Double.parseDouble(loc[1]);
-	            double y = Double.parseDouble(loc[2]);
-	            double z = Double.parseDouble(loc[3]);
+				double x = Double.parseDouble(loc[1]);
+				double y = Double.parseDouble(loc[2]);
+				double z = Double.parseDouble(loc[3]);
 				EggHuntListener.loc=new Location(w,x,y,z);
 			}
 		}
 		//load stored_entity
-		if (FileSave.keyExists("stored_entity")) {
-			UUID id=UUID.fromString(FileSave.getKey("stored_entity", null));
+		if (config.keyExists("stored_entity")) {
+			UUID id=UUID.fromString(config.getKey("stored_entity", null));
 			boolean found=false;
-			
+
 			for (World world : Bukkit.getWorlds()) {
 				if (!found) {
 					for (Entity entity:world.getEntities()) {
-						
+
 						if (entity.getUniqueId()==id) {
 							EggHuntListener.stored_entity=entity;
 							found=true;
@@ -68,30 +72,30 @@ public final class egghunt extends JavaPlugin {
 			}
 		}
 		//load stored_as
-		if (FileSave.keyExists("stored_as")){
-			EggHuntListener.stored_as=Egg_Storage_Type.valueOf(FileSave.getKey("stored_as", null));
+		if (config.keyExists("stored_as")){
+			EggHuntListener.stored_as=Egg_Storage_Type.valueOf(config.getKey("stored_as", null));
 		}
 		//load owner
-		if (FileSave.keyExists("owner")) {
-			EggHuntListener.owner=UUID.fromString(FileSave.getKey("owner", null));
+		if (config.keyExists("owner")) {
+			EggHuntListener.owner=UUID.fromString(config.getKey("owner", null));
 		}
 	}
-	
+
 	public void saveData() {
 		//save loc
 		Location loc=EggHuntListener.loc;
-		FileSave.writeKey("loc", loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
-		
+		config.writeKey("loc", loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+
 		//save stored_entity
-		FileSave.writeKey("stored_entity", EggHuntListener.stored_entity.getUniqueId().toString());
-		
+		config.writeKey("stored_entity", EggHuntListener.stored_entity.getUniqueId().toString());
+
 		//save stored_entity
-		FileSave.writeKey("stored_as", EggHuntListener.stored_as.name());
-		
+		config.writeKey("stored_as", EggHuntListener.stored_as.name());
+
 		//save owner
-		FileSave.writeKey("owner", EggHuntListener.owner.toString());
+		config.writeKey("owner", EggHuntListener.owner.toString());
 	}
-	
+
 	public Location getEggLocation() {
 		if (EggHuntListener.stored_as!= EggHuntListener.Egg_Storage_Type.DNE) {
 			boolean is_entity;
@@ -191,5 +195,3 @@ public final class egghunt extends JavaPlugin {
 	}
 
 }
-
-
