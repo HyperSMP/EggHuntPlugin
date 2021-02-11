@@ -16,7 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
 
-public final class EggHunt extends JavaPlugin {
+public final class egghunt extends JavaPlugin {
 
 	@Override
 	public void onEnable() {

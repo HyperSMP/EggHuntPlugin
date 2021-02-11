@@ -249,7 +249,7 @@ public class EggHuntListener implements Listener {
             }
             if (lose_owner) {
                 if (owner!=null) {
-                    announce(String.format("The dragon egg has teleported. %s is no longer the owner.", EggHunt.get_username_from_uuid(owner)));
+                    announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
                     owner=null;
                 }
             }
