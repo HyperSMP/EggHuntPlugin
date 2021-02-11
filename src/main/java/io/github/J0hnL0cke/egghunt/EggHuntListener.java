@@ -178,7 +178,7 @@ public class EggHuntListener implements Listener {
             if (others.contains(Material.DRAGON_EGG)) {
 
                 if (others.getHolder() instanceof Entity) {
-                    setEggLocation((Entity) others, Egg_Storage_Type.ENTITY_INV);
+                    setEggLocation((Entity) others.getHolder(), Egg_Storage_Type.ENTITY_INV);
                 } else {
                     setEggLocation(others.getLocation(), Egg_Storage_Type.CONTAINER_INV);
                 }
