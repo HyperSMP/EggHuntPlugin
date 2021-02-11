@@ -1,20 +1,21 @@
 package io.github.J0hnL0cke.egghunt;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
-public final class FileSave {
-	private Path rel_dir=Paths.get("/EggHunt/data");
-	String file_ext=".txt";
+public class FileSave {
+	private static Path rel_dir=Paths.get("/EggHunt/data");
+	private static String file_ext=".txt";
 	
 	//Saves data in key-value pairs, saving is abstracted into private methods
 	
 	//TODO: this is a temporary implement mongodb saving when able
 	//TODO: make saving async
 	
-	public void writeKey(String key, String value) {
+	public static void writeKey(String key, String value) {
 		if (!keyExists(key)) {
 			createFile(key.concat(file_ext));
 		}
@@ -26,7 +27,7 @@ public final class FileSave {
 		}
 	}
 	
-	public String getKey(String key, String not_found) {
+	public static String getKey(String key, String not_found) {
 		if (keyExists(key)) {
 			try {
 				return Files.readAllLines(rel_dir).get(0);
@@ -41,7 +42,7 @@ public final class FileSave {
 		}
 	}
 	
-	public boolean keyExists(String key) {
+	public static boolean keyExists(String key) {
 		checkPathAccessable();
 		return Files.exists(rel_dir.resolve(key));
 		
@@ -49,7 +50,7 @@ public final class FileSave {
 	
 	//private methods
 	
-	private void checkPathAccessable() {
+	private static void checkPathAccessable() {
 		//makes sure the path in rel_loc exists, creates it if not, and checks if it is readable and writable
 		if (Files.exists(rel_dir)) {
 			//if files are not readable or not writable, warn the user
@@ -68,7 +69,7 @@ public final class FileSave {
 		}
 	}
 	
-	private void createFile(String filename) {
+	private static void createFile(String filename) {
 		try {
 			Files.createFile(rel_dir.resolve(filename));
 		} catch (IOException e) {
