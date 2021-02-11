@@ -46,6 +46,7 @@ public class EggHuntListener implements Listener {
     }
     static public UUID owner;
     static public Logger logger;
+    static public FileSave config;
 
 
     public EggHuntListener(Logger logger) {
@@ -344,9 +345,11 @@ public class EggHuntListener implements Listener {
         if (owner!=null && !player.getUniqueId().equals(owner)) {
             announce(String.format("%s has stolen the dragon egg!", player.getName()));
             owner=player.getUniqueId();
-        } else {
+            config.saveData();
+        } else if (owner==null){
             announce(String.format("%s has claimed the dragon egg!", player.getName()));
             owner=player.getUniqueId();
+            config.saveData();
         }
     }
 
@@ -354,18 +357,21 @@ public class EggHuntListener implements Listener {
         loc=egg_loc;
         stored_as=store_type;
         console_log(String.format("The egg has moved to block %s as %s", egg_loc, store_type.toString()));
+        config.saveData();
     }
 
     public void setEggLocation(Entity entity, Egg_Storage_Type store_type) {
         stored_entity=entity;
         stored_as=store_type;
         console_log(String.format("The egg has moved to entity %s (%s) as %s", entity, entity.getLocation(), store_type.toString()));
+        config.saveData();
     }
 
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
         stored_as= Egg_Storage_Type.DNE;
         owner=null;
+        config.saveData();
     }
 
 
