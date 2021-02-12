@@ -16,10 +16,9 @@ With this plugin:
 - Clicking the egg makes it teleport, but the locate commands will be focused on where the egg was before it teleported
 - When the egg teleports, it becomes "lost", so it won't have an owner until someone finds it again
 
-This plugin integrates with MongoDB so it can communicate with our discord bot.
-
 **For server owners:**
 - Best paired with an anticheat to prevent duplication
 - The egg location does not update when taken out of a chest until the chest is closed, so you should also enable [inventory close](https://github.com/NoCheatPlus/Docs/wiki/%5BInventory%5D-Open) on your anticheat to prevent the player from teleporting away with their inventory open
-- If you need any help using this plugin, open an issue. The configuration can be made more user-friendly, we just haven't bothered to do so yet.
-- See [here](https://github.com/HyperSMP/EggHuntPlugin/projects/1) for our TODO list regarding this plugin.
+- This plugin integrates with MongoDB so it can communicate with our discord bot
+- If you need any help using this plugin, open an issue. The configuration can be made more user-friendly, we just haven't bothered to do so yet
+- See [here](https://github.com/HyperSMP/EggHuntPlugin/projects/1) for our TODO list regarding this plugin
