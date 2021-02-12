@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
@@ -48,7 +49,7 @@ public class FileSave  {
 
 	//Saves data in key-value pairs
 
-=
+
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
