@@ -125,7 +125,7 @@ public class EggHuntListener implements Listener {
         ItemStack item = event.getItem().getItemStack();
 
         if (item.getType().equals(Material.DRAGON_EGG)){
-        	if (event.getInventory().firstEmpty()!=-1 && !event.getInventory().contains(Material.DRAGON_EGG)) {
+        	if (event.getInventory().firstEmpty()!=-1 || event.getInventory().contains(Material.DRAGON_EGG)) {
         		if (event.getInventory().getHolder() instanceof Entity){
         			// Hopper minecart picked up the egg
         			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
@@ -192,7 +192,7 @@ public class EggHuntListener implements Listener {
         //called when an inventory item is moved between blocks (hoppers, dispensers, etc)
         //check if the item being moved is the egg
         if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
-        	if (event.getDestination().firstEmpty()!=-1 && !event.getDestination().contains(Material.DRAGON_EGG)) {
+        	if (event.getDestination().firstEmpty()!=-1 || event.getDestination().contains(Material.DRAGON_EGG)) {
         		if (event.getDestination().getHolder() instanceof Entity) {
         			setEggLocation((Entity)event.getDestination().getHolder(), Egg_Storage_Type.ENTITY_INV);
         		}
