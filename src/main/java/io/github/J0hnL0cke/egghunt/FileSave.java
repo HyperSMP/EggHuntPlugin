@@ -1,22 +1,20 @@
 package io.github.J0hnL0cke.egghunt;
 
-import java.io.File;
 import java.util.UUID;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.mongodb.MongoClientSettings;
 
 
@@ -24,27 +22,27 @@ public class FileSave  {
 
 	JavaPlugin plugin;
 
-	String db_username = "admin";
+	
 	String db_password = "";
-
-	String db_name = "egghunt_db";
+	String db_name = "egghunt-db";
 
 
 	ConnectionString connString = new ConnectionString(
-			String.format("mongodb+srv://%s:%s@cluster0.mdj8f.mongodb.net/%s?retryWrites=true&w=majority\n", db_username, db_password, db_name)
-	);
-
-	MongoClientSettings settings = MongoClientSettings.builder()
-			.applyConnectionString(connString)
-			.retryWrites(true)
-			.build();
-	MongoClient mongoClient = MongoClients.create(settings);
-	MongoDatabase database = mongoClient.getDatabase(db_name);
-
-	MongoCollection collection = database.getCollection("data");
+			String.format("mongodb+srv://admin:%s@cluster0.mdj8f.mongodb.net/egghunt_db?retryWrites=true&w=majority",db_password));
+	
+		MongoClientSettings settings = MongoClientSettings.builder()
+		    .applyConnectionString(connString)
+		    .retryWrites(true)
+		    .build();
+		MongoClient mongoClient = MongoClients.create(settings);
+		MongoDatabase database = mongoClient.getDatabase("test");
+		
+		MongoCollection collection = database.getCollection("data");
 
 	public FileSave(JavaPlugin plugin) {
 		this.plugin = plugin;
+		//you're welcome
+		assert db_password.length() > 0;
 	}
 
 	//Saves data in key-value pairs
@@ -54,16 +52,7 @@ public class FileSave  {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
 
-		BasicDBObject query = new BasicDBObject();
-		query.put(key, value); // (1)
-
-		BasicDBObject newDocument = new BasicDBObject();
-		newDocument.put(key, value); // (2)
-
-		BasicDBObject updateObject = new BasicDBObject();
-		updateObject.put("$set", newDocument); // (3)
-
-		collection.updateOne(query, updateObject); // (4)
+		collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
 	}
 
 	public String getKey(String key, String not_found) {
