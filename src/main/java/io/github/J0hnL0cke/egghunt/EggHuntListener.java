@@ -59,7 +59,7 @@ public class EggHuntListener implements Listener {
 
     // Handle egg removal and drop upon player logoff
     //TODO: check if item spawn and item drop are overlapping, and check which can be replaced
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLogoff(PlayerQuitEvent event) {
 
         Player player = event.getPlayer();
@@ -78,7 +78,7 @@ public class EggHuntListener implements Listener {
     }
 
     // Handle egg removal and drop upon the player dropping it
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent event) {
 
         Item item = event.getItemDrop();
@@ -92,7 +92,7 @@ public class EggHuntListener implements Listener {
     }
 
     // No handler to check if the falling egg drops an item, so we have to check every item spawn
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent event) {
 
         // Check if the spawned item is the egg
@@ -106,43 +106,39 @@ public class EggHuntListener implements Listener {
 
 
     // Handle the egg being held in an entity's inventory
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPickupItem(EntityPickupItemEvent event) {
-
-        // Check if item dropped is an egg
-        if(event.getItem().getItemStack().getType().equals(Material.DRAGON_EGG)) {
-
-            try {
-                setEggOwner((Player) event.getEntity());
-            }
-
-            finally {
-                setEggLocation(event.getEntity(), Egg_Storage_Type.ENTITY_INV);
-            }
-
-        }
+    	// Check if item dropped is an egg
+    	if(event.getItem().getItemStack().getType().equals(Material.DRAGON_EGG)) {
+    		if (event.getEntity() instanceof Player) {
+    			setEggOwner((Player) event.getEntity());
+    		}
+    		setEggLocation(event.getEntity(), Egg_Storage_Type.ENTITY_INV);
+    	}
     }
 
     // Handle the egg being held in an item-based entity's inventory
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHopperCollect(InventoryPickupItemEvent event) {
-
+    	
         // Check if the dragon egg was picked up
         ItemStack item = event.getItem().getItemStack();
 
         if (item.getType().equals(Material.DRAGON_EGG)){
-            if (event.getInventory().getHolder() instanceof Entity){
-                // Hopper minecart picked up the egg
-                setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
-            } else {
-                //hopper picked up the egg
-                setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
+        	if (event.getInventory().firstEmpty()!=-1 && !event.getInventory().contains(Material.DRAGON_EGG)) {
+        		if (event.getInventory().getHolder() instanceof Entity){
+        			// Hopper minecart picked up the egg
+        			setEggLocation((Entity)event.getInventory().getHolder(), Egg_Storage_Type.ENTITY_INV);
+        		} else {
+        			//hopper picked up the egg
+        			setEggLocation(event.getInventory().getLocation(), Egg_Storage_Type.CONTAINER_INV);
+        		}
             }
         }
     }
 
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClose(InventoryCloseEvent event) {
 
         //some storage, like anvils, can't actually store items, only hold them while the inventory is open
@@ -191,18 +187,18 @@ public class EggHuntListener implements Listener {
     }
 
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryMove (InventoryMoveItemEvent event) {
         //called when an inventory item is moved between blocks (hoppers, dispensers, etc)
         //check if the item being moved is the egg
-        if (!event.isCancelled()) {
-            if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
-                if (event.getDestination().getHolder() instanceof Entity) {
-                    setEggLocation((Entity)event.getDestination().getHolder(), Egg_Storage_Type.ENTITY_INV);
-                }
-                else {
-                    setEggLocation(event.getDestination().getLocation(), Egg_Storage_Type.CONTAINER_INV);
-                }
+        if (event.getItem().getType().equals(Material.DRAGON_EGG)) {
+        	if (event.getDestination().firstEmpty()!=-1 && !event.getDestination().contains(Material.DRAGON_EGG)) {
+        		if (event.getDestination().getHolder() instanceof Entity) {
+        			setEggLocation((Entity)event.getDestination().getHolder(), Egg_Storage_Type.ENTITY_INV);
+        		}
+        		else {
+        			setEggLocation(event.getDestination().getLocation(), Egg_Storage_Type.CONTAINER_INV);
+        		}
             }
         }
 
@@ -210,7 +206,7 @@ public class EggHuntListener implements Listener {
 
 
     //This function handles the egg being placed as a block
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace (BlockPlaceEvent event) {
         if (event.getBlock().getType().equals(Material.DRAGON_EGG)) {
             setEggLocation(event.getBlock().getLocation(), Egg_Storage_Type.BLOCK);
@@ -219,7 +215,7 @@ public class EggHuntListener implements Listener {
     }
 
     //This function handles the egg being placed in an item frame
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteract(PlayerInteractEntityEvent event) {
         if(event.getRightClicked() instanceof ItemFrame) {
             PlayerInventory player_inv = event.getPlayer().getInventory();
@@ -231,7 +227,7 @@ public class EggHuntListener implements Listener {
     }
 
     //This function handles the egg teleporting
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSpread(BlockFromToEvent event) {
         if (event.getBlock().getType().equals(Material.DRAGON_EGG)) {
 
@@ -262,7 +258,7 @@ public class EggHuntListener implements Listener {
     }
 
     //This function handles the egg as a falling block entity
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFallingBlock(final EntityChangeBlockEvent event){
     	//check if this is dealing with a falling block
     	if (event.getEntityType() == EntityType.FALLING_BLOCK) {
@@ -283,7 +279,19 @@ public class EggHuntListener implements Listener {
     	}
     }
     
-    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+        //if the egg item takes damage, call eggDestroyed
+        Entity entity=event.getEntity();
+        if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+            ItemStack item = ((Item)entity).getItemStack();
+            if (item.getType().equals(Material.DRAGON_EGG)) {
+            	//make sure item is destroyed to prevent dupes
+            	event.getEntity().remove();
+                eggDestroyed();
+            }
+        }
+    }
 
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -338,20 +346,6 @@ public class EggHuntListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent event) {
-        //if the egg item takes damage, call eggDestroyed
-        Entity entity=event.getEntity();
-        if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-            ItemStack item = ((Item)entity).getItemStack();
-            if (item.getType().equals(Material.DRAGON_EGG)) {
-            	//make sure item is destroyed to prevent dupes
-            	event.getEntity().remove();
-                eggDestroyed();
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPushConsider (InventoryMoveItemEvent event) {
         //nice try, but it won't work
@@ -361,7 +355,6 @@ public class EggHuntListener implements Listener {
             }
         }
     }
-
 
 
     //Helper methods

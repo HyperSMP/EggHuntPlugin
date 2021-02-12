@@ -103,11 +103,20 @@ public final class egghunt extends JavaPlugin {
 				//roundabout way of getting the item the player is holding in their hotbar
 				ItemStack held_item=player.getInventory().getItemInMainHand();
 				if (held_item.getType().equals(Material.COMPASS)) {
+					
 					if (EggHuntListener.stored_as!= EggHuntListener.Egg_Storage_Type.DNE) {
-						CompassMeta compass= (CompassMeta) held_item.getItemMeta();
-						compass.setLodestoneTracked(false);
-						compass.setLodestone(getEggLocation());
-						sender.sendMessage("Compass set to track last known dragon egg position.");
+						Location egg_loc=getEggLocation();
+						if (player.getWorld().equals(egg_loc.getWorld())) {
+						
+							CompassMeta meta = (CompassMeta) held_item.getItemMeta();
+				            meta.setLodestoneTracked(false);
+				            meta.setLodestone(egg_loc);
+				            held_item.setItemMeta(meta);
+							sender.sendMessage("Compass set to track last known dragon egg position.");
+						} else {
+							sender.sendMessage("Not in the same dimension as the egg.");
+							sender.sendMessage(String.format("The egg is in %s.",egg_loc.getWorld().getName()));
+						}
 					}
 					else {
 						sender.sendMessage("The dragon egg does not exist.");
