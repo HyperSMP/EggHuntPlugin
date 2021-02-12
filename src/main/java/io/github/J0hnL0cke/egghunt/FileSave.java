@@ -11,10 +11,36 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.MongoClientSettings;
+
 
 public class FileSave  {
 
 	JavaPlugin plugin;
+
+	String db_username = "admin";
+	String db_password = "";
+
+	String db_name = "egghunt_db";
+
+
+	ConnectionString connString = new ConnectionString(
+			String.format("mongodb+srv://%s:%s@cluster0.mdj8f.mongodb.net/%s?retryWrites=true&w=majority\n", db_username, db_password, db_name)
+	);
+
+	MongoClientSettings settings = MongoClientSettings.builder()
+			.applyConnectionString(connString)
+			.retryWrites(true)
+			.build();
+	MongoClient mongoClient = MongoClients.create(settings);
+	MongoDatabase database = mongoClient.getDatabase(db_name);
+
+	MongoCollection collection = database.getCollection("data");
 
 	public FileSave(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -22,11 +48,21 @@ public class FileSave  {
 
 	//Saves data in key-value pairs
 
-	//TODO: implement mongodb saving
-
+=
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
+
+		BasicDBObject query = new BasicDBObject();
+		query.put(key, value); // (1)
+
+		BasicDBObject newDocument = new BasicDBObject();
+		newDocument.put(key, value); // (2)
+
+		BasicDBObject updateObject = new BasicDBObject();
+		updateObject.put("$set", newDocument); // (3)
+
+		collection.updateOne(query, updateObject); // (4)
 	}
 
 	public String getKey(String key, String not_found) {
@@ -75,6 +111,7 @@ public class FileSave  {
 	}
 
 	public void saveData() {
+
 		//save loc
 		if (EggHuntListener.loc!=null) {
 			Location loc=EggHuntListener.loc;
