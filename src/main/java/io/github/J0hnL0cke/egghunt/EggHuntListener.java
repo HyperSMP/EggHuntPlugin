@@ -5,12 +5,14 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
@@ -20,6 +22,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BlockStateMeta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -258,7 +261,29 @@ public class EggHuntListener implements Listener {
         }
     }
 
-
+    //This function handles the egg as a falling block entity
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onFallingBlock(final EntityChangeBlockEvent event){
+    	//check if this is dealing with a falling block
+    	if (event.getEntityType() == EntityType.FALLING_BLOCK) {
+    		//check if the falling block is the egg
+    		if (((FallingBlock)event.getEntity()).getMaterial().equals(Material.DRAGON_EGG)) {
+    			 
+    			console_log("Gravity event involving dragon egg occured");
+    			//block lands
+    			if (event.getBlock().getType()==Material.AIR) {
+    				setEggLocation(event.getBlock().getLocation(), Egg_Storage_Type.BLOCK);
+    			}
+    			//block begins falling
+    			else if (event.getBlock().getType()==Material.DRAGON_EGG) {
+    				//TODO: make falling block entities a separate storage type
+    				setEggLocation(event.getEntity(),Egg_Storage_Type.ENTITY_INV);
+    			}
+    		}
+    	}
+    }
+    
+    
 
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
