@@ -345,6 +345,8 @@ public class EggHuntListener implements Listener {
         if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
             ItemStack item = ((Item)entity).getItemStack();
             if (item.getType().equals(Material.DRAGON_EGG)) {
+            	//make sure item is destroyed to prevent dupes
+            	event.getEntity().remove();
                 eggDestroyed();
             }
         }
