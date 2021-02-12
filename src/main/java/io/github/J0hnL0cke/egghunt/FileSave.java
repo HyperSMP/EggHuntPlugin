@@ -24,28 +24,33 @@ public class FileSave  {
 	JavaPlugin plugin;
 
 	//safety first
-	String db_password = plugin.getConfig().getString("password","");
-	String db_name = "egghunt-db";
+	String db_password;
+	String db_name;
 
-
-	ConnectionString connString = new ConnectionString(
-			String.format("mongodb+srv://admin:%s@cluster0.mdj8f.mongodb.net/egghunt_db?retryWrites=true&w=majority",db_password));
-	
-		MongoClientSettings settings = MongoClientSettings.builder()
-		    .applyConnectionString(connString)
-		    .retryWrites(true)
-		    .build();
-		MongoClient mongoClient = MongoClients.create(settings);
-		MongoDatabase database = mongoClient.getDatabase("test");
-		
-		MongoCollection collection = database.getCollection("data");
+	MongoCollection collection;
 
 	public FileSave(JavaPlugin plugin) {
 		this.plugin = plugin;
+		db_password=plugin.getConfig().getString("db_password","");
+		db_name=plugin.getConfig().getString("db_name","");
+		makeConnection();
 	}
 
 	//Saves data in key-value pairs
 
+	public void makeConnection() {
+		ConnectionString connString = new ConnectionString(
+				String.format("mongodb+srv://admin:%s@cluster0.mdj8f.mongodb.net/%s?retryWrites=true&w=majority",db_password,db_name));
+		
+		MongoClientSettings settings = MongoClientSettings.builder()
+			    .applyConnectionString(connString)
+			    .retryWrites(true)
+			    .build();
+		MongoClient mongoClient = MongoClients.create(settings);
+		MongoDatabase database = mongoClient.getDatabase(db_name);
+			
+		collection = database.getCollection("data");
+	}
 
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
