@@ -1,5 +1,6 @@
 package io.github.J0hnL0cke.egghunt;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,8 +23,8 @@ public class FileSave  {
 
 	JavaPlugin plugin;
 
-	
-	String db_password = "";
+	//safety first
+	String db_password = plugin.getConfig().getString("password","");
 	String db_name = "egghunt-db";
 
 
@@ -41,8 +42,6 @@ public class FileSave  {
 
 	public FileSave(JavaPlugin plugin) {
 		this.plugin = plugin;
-		//you're welcome
-		assert db_password.length() > 0;
 	}
 
 	//Saves data in key-value pairs
@@ -53,6 +52,7 @@ public class FileSave  {
 		plugin.saveConfig();
 
 		collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
+		collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
 	}
 
 	public String getKey(String key, String not_found) {
