@@ -409,12 +409,14 @@ public class EggHuntListener implements Listener {
 
     public void setEggLocation(Location egg_loc, Egg_Storage_Type store_type) {
         loc=egg_loc;
+        stored_entity=null;
         stored_as=store_type;
         console_log(String.format("The egg has moved to block %s as %s", egg_loc, store_type.toString()));
         config.saveData();
     }
 
     public void setEggLocation(Entity entity, Egg_Storage_Type store_type) {
+    	loc=null;
         stored_entity=entity;
         stored_as=store_type;
         console_log(String.format("The egg has moved to entity %s (%s) as %s", entity, entity.getLocation(), store_type.toString()));
@@ -429,6 +431,8 @@ public class EggHuntListener implements Listener {
         		spawnEgg();
         	} else {
         		stored_as=Egg_Storage_Type.DNE;
+        		loc=null;
+        		entity_loc=null;
         		config.saveData();
         		announce("It will respawn the next time the dragon is defeated");
         	}
