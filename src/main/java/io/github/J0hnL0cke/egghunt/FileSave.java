@@ -61,7 +61,6 @@ public class FileSave  {
 		plugin.saveConfig();
 		if (use_db) {
 			collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
-			collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
 		}
 	}
 
@@ -86,35 +85,52 @@ public class FileSave  {
 				
 		//load egg location
 		//load stored_as
-		if (this.keyExists("stored_as")){
-			EggHuntListener.stored_as=Egg_Storage_Type.valueOf(this.getKey("stored_as", null));
-		} else {
-			EggHuntListener.stored_as=Egg_Storage_Type.DNE;
-			}
+		EggHuntListener.stored_as=Egg_Storage_Type.valueOf(this.getKey("stored_as", Egg_Storage_Type.DNE.name()));
+		
 		//load owner
-		if (this.keyExists("owner")) {
-			EggHuntListener.owner=UUID.fromString(this.getKey("owner", null));
+		String owner=this.getKey("owner", null);
+		if (owner!=null) {
+			EggHuntListener.owner=UUID.fromString(owner);
+		} else {
+			EggHuntListener.owner=null;
 		}
+			
 		//load loc
-		if (this.keyExists("loc")) {
-			String[] loc=this.getKey("loc", "").split(":");
+		String loc_str=this.getKey("loc", null);
+		boolean needs_loc_str=EggHuntListener.stored_as==Egg_Storage_Type.BLOCK || EggHuntListener.stored_as==Egg_Storage_Type.CONTAINER_INV;
+		if (loc_str!=null) {
+			String[] loc=loc_str.split(":");
 			if (loc.length==4) {
 				World w = Bukkit.getServer().getWorld(loc[0]);
 				double x = Double.parseDouble(loc[1]);
 				double y = Double.parseDouble(loc[2]);
 				double z = Double.parseDouble(loc[3]);
 				EggHuntListener.loc=new Location(w,x,y,z);
+			} else {
+				plugin.getLogger().warning("Invalid block location string");
 			}
+		} else {
+			if (needs_loc_str) {
+				plugin.getLogger().warning("Location string was null when it should have a value");
+			}
+			EggHuntListener.loc=null;
 		}
+		
 		//load stored_entity
-		if (this.keyExists("stored_entity")) {
-			if (EggHuntListener.stored_as==EggHuntListener.Egg_Storage_Type.ENTITY_INV || EggHuntListener.stored_as==EggHuntListener.Egg_Storage_Type.ITEM) {
-				UUID id=UUID.fromString(this.getKey("stored_entity", null));
-				EggHuntListener.stored_entity=Bukkit.getEntity(id);
-				
-				if (EggHuntListener.stored_entity==null) {
-					EggHuntListener.logger.warning("Could not locate entity from saved UUID!");
-				}
+		String stored_entity=this.getKey("stored_entity", null);
+		boolean needs_stored_entity=EggHuntListener.stored_as==Egg_Storage_Type.ENTITY_INV || EggHuntListener.stored_as==Egg_Storage_Type.ITEM;
+		
+		if (stored_entity!=null) {
+			UUID id=UUID.fromString(stored_entity);
+			EggHuntListener.stored_entity=Bukkit.getEntity(id);
+			//if the entity is not found
+			if (EggHuntListener.stored_entity==null && needs_stored_entity) {
+				plugin.getLogger().warning("Could not locate entity from saved UUID");
+			}
+		} else {
+			EggHuntListener.stored_entity=null;
+			if (needs_stored_entity) {
+				plugin.getLogger().warning("Stored entity was null when it should have a value");
 			}
 		}
 	}
@@ -125,18 +141,32 @@ public class FileSave  {
 		if (EggHuntListener.loc!=null) {
 			Location loc=EggHuntListener.loc;
 			this.writeKey("loc", loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+		} else {
+			this.writeKey("loc", null);
 		}
+		
 		//save stored_entity
 		if (EggHuntListener.stored_entity!=null) {
 			this.writeKey("stored_entity", EggHuntListener.stored_entity.getUniqueId().toString());
+		} else {
+			this.writeKey("stored_entity", null);
 		}
+		
 		//save stored_as
 		if (EggHuntListener.stored_as!=null) {
 			this.writeKey("stored_as", EggHuntListener.stored_as.name());
+		} else {
+			this.writeKey("stored_as",Egg_Storage_Type.DNE.name());
 		}
+		
 		//save owner
 		if (EggHuntListener.owner!=null) {
 			this.writeKey("owner", EggHuntListener.owner.toString());
+		} else {
+			this.writeKey("owner", null);
+		}
+		if (use_db) {
+			collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
 		}
 	}
 

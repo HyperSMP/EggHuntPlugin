@@ -249,7 +249,6 @@ public class EggHuntListener implements Listener {
                 if (owner!=null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
                     owner=null;
-                    config.saveData();
                 }
             }
             setEggLocation(block.getLocation(), Egg_Storage_Type.BLOCK);
@@ -346,17 +345,23 @@ public class EggHuntListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryMoveConsider (InventoryClickEvent event) {
         InventoryType inv=event.getInventory().getType();
-
         if (event.getWhoClicked().getGameMode()!= GameMode.CREATIVE && (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX))) {
 
             if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
                 event.setCancelled(true);
                 console_log(String.format("Stopped %s from moving egg to ender chest",event.getWhoClicked().getName()));
-
-                //Don't allow hotkeying either
-            } else if (event.getClick().equals(ClickType.NUMBER_KEY) && event.getWhoClicked().getInventory().getItem(event.getHotbarButton()).getType().equals(Material.DRAGON_EGG)) {
-                event.setCancelled(true);
-                console_log(String.format("Stopped %s from hotkeying egg to ender chest",event.getWhoClicked().getName()));
+                
+            } else {
+            	//Don't allow hotkeying either
+            	if (event.getClick().equals(ClickType.NUMBER_KEY)) {
+            		ItemStack item=event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+            		if (item!=null) {
+            			if (item.getType().equals(Material.DRAGON_EGG)) {
+            				event.setCancelled(true);
+                            console_log(String.format("Stopped %s from hotkeying egg to ender chest",event.getWhoClicked().getName()));
+            			}
+            		}
+            	}
             }
         }
     }
@@ -390,6 +395,7 @@ public class EggHuntListener implements Listener {
     public void setEggOwner(Player player) {
         console_log(player.getName().concat(" has the egg."));
         //check if ownership switched
+        //need redundant code so owner getting the egg again doesn't unnecessairly update the db
         if (owner!=null && !player.getUniqueId().equals(owner)) {
             announce(String.format("%s has stolen the dragon egg!", player.getName()));
             owner=player.getUniqueId();
