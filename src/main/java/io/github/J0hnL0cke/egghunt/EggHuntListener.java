@@ -432,7 +432,7 @@ public class EggHuntListener implements Listener {
         	} else {
         		stored_as=Egg_Storage_Type.DNE;
         		loc=null;
-        		entity_loc=null;
+        		stored_entity=null;
         		config.saveData();
         		announce("It will respawn the next time the dragon is defeated");
         	}
