@@ -55,10 +55,19 @@ public class FileSave  {
 			collection = database.getCollection("data");
 		}
 	}
-
+	
+	public void writeAll(String key, String value) {
+		writeKey(key,value);
+		writeToDB(key,value);
+	}
+	
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
+		
+	}
+	
+	public void writeToDB(String key, String value) {
 		if (use_db) {
 			collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
 		}
@@ -140,36 +149,49 @@ public class FileSave  {
 		//save loc
 		if (EggHuntListener.loc!=null) {
 			Location loc=EggHuntListener.loc;
-			this.writeKey("loc", loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+			writeKey("loc", serializeLocation(loc));
 		} else {
-			this.writeKey("loc", null);
+			writeKey("loc", null);
 		}
 		
 		//save stored_entity
 		if (EggHuntListener.stored_entity!=null) {
-			this.writeKey("stored_entity", EggHuntListener.stored_entity.getUniqueId().toString());
+			writeKey("stored_entity", EggHuntListener.stored_entity.getUniqueId().toString());
 		} else {
-			this.writeKey("stored_entity", null);
+			writeKey("stored_entity", null);
 		}
+		
+		//save newest location to DB
+		if (EggHuntListener.stored_as.equals(Egg_Storage_Type.DNE)){
+			//save true location to db
+			writeToDB("loc",serializeLocation(egghunt.getEggLocation()));
+		} else {
+			writeToDB("loc",null);
+		}
+				
 		
 		//save stored_as
 		if (EggHuntListener.stored_as!=null) {
-			this.writeKey("stored_as", EggHuntListener.stored_as.name());
+			writeAll("stored_as", EggHuntListener.stored_as.name());
 		} else {
-			this.writeKey("stored_as",Egg_Storage_Type.DNE.name());
+			writeAll("stored_as",Egg_Storage_Type.DNE.name());
 		}
 		
 		//save owner
 		if (EggHuntListener.owner!=null) {
-			this.writeKey("owner", EggHuntListener.owner.toString());
+			writeAll("owner", EggHuntListener.owner.toString());
 		} else {
-			this.writeKey("owner", null);
+			writeAll("owner", null);
 		}
-		if (use_db) {
-			collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
-		}
+		
+		//save timestamp
+		writeAll("timestamp", LocalDateTime.now().toString());
 	}
 
+	public String serializeLocation(Location loc) {
+		return loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
+	}
+	
 	public boolean getBoolFromConfig(String key) {
 		return Boolean.parseBoolean(plugin.getConfig().getString(key,"false"));
 	}

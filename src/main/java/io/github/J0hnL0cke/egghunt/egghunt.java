@@ -37,7 +37,7 @@ public final class egghunt extends JavaPlugin {
 		getLogger().info("onDisable has been invoked.");
 	}
 
-	public Location getEggLocation() {
+	public static Location getEggLocation() {
 		if (EggHuntListener.stored_as!= EggHuntListener.Egg_Storage_Type.DNE) {
 			boolean is_entity;
 
