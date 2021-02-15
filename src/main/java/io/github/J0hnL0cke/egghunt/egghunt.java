@@ -25,6 +25,7 @@ public final class egghunt extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new EggHuntListener(getLogger()), this);
 		//load saved data
 		getLogger().info("Loading save data.");
+		saveDefaultConfig();
 		config.loadData();
 		EggHuntListener.config=config;
 		//done
