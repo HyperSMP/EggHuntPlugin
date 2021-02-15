@@ -249,6 +249,7 @@ public class EggHuntListener implements Listener {
                 if (owner!=null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
                     owner=null;
+                    config.saveData();
                 }
             }
             setEggLocation(block.getLocation(), Egg_Storage_Type.BLOCK);
@@ -417,12 +418,12 @@ public class EggHuntListener implements Listener {
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
         owner=null;
-        config.saveData();
         if (resp_egg) {
         	if (resp_imm) {
         		spawnEgg();
         	} else {
-        		stored_as= Egg_Storage_Type.DNE;
+        		stored_as=Egg_Storage_Type.DNE;
+        		config.saveData();
         		announce("It will respawn the next time the dragon is defeated");
         	}
         }
