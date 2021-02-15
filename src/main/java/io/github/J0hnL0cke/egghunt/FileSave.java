@@ -26,6 +26,7 @@ public class FileSave  {
 	//safety first
 	String db_password;
 	String db_name;
+	boolean use_db;
 
 	MongoCollection collection;
 
@@ -39,25 +40,29 @@ public class FileSave  {
 	//Saves data in key-value pairs
 
 	public void makeConnection() {
-		ConnectionString connString = new ConnectionString(
+		use_db=Boolean.parseBoolean(plugin.getConfig().getString("use_db","true"));
+		if (use_db) {
+			ConnectionString connString = new ConnectionString(
 				String.format("mongodb+srv://admin:%s@cluster0.mdj8f.mongodb.net/%s?retryWrites=true&w=majority",db_password,db_name));
 		
-		MongoClientSettings settings = MongoClientSettings.builder()
+			MongoClientSettings settings = MongoClientSettings.builder()
 			    .applyConnectionString(connString)
 			    .retryWrites(true)
 			    .build();
-		MongoClient mongoClient = MongoClients.create(settings);
-		MongoDatabase database = mongoClient.getDatabase(db_name);
-			
-		collection = database.getCollection("data");
+		
+			MongoClient mongoClient = MongoClients.create(settings);
+			MongoDatabase database = mongoClient.getDatabase(db_name);
+			collection = database.getCollection("data");
+		}
 	}
 
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
-
-		collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
-		collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
+		if (use_db) {
+			collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
+			collection.updateOne(Filters.eq("type", "stats"), Updates.set("timestamp", LocalDateTime.now()));
+		}
 	}
 
 	public String getKey(String key, String not_found) {
@@ -71,6 +76,15 @@ public class FileSave  {
 	}
 	
 	public void loadData() {
+		//load config settings
+		EggHuntListener.egg_inv=getBoolFromConfig("egg_inv");
+		EggHuntListener.resp_egg=getBoolFromConfig("resp_egg");
+		EggHuntListener.resp_imm=getBoolFromConfig("resp_imm");
+		EggHuntListener.reset_owner=getBoolFromConfig("reset_owner");
+		EggHuntListener.accurate_loc=getBoolFromConfig("accurate_loc");
+		EggHuntListener.end=Bukkit.getServer().getWorld(plugin.getConfig().getString("end","world_end"));
+				
+		//load egg location
 		//load stored_as
 		if (this.keyExists("stored_as")){
 			EggHuntListener.stored_as=Egg_Storage_Type.valueOf(this.getKey("stored_as", null));
@@ -125,4 +139,9 @@ public class FileSave  {
 		this.writeKey("owner", EggHuntListener.owner.toString());
 		}
 	}
+
+	public boolean getBoolFromConfig(String key) {
+		return Boolean.parseBoolean(plugin.getConfig().getString("key","false"));
+	}
+
 }

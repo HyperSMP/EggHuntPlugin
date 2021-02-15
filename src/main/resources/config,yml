@@ -1,0 +1,28 @@
+#name of your end world, defaults to "world_end" on spigot
+end: world_end
+
+#whether the egg teleporting resets the owner to none
+reset_owner: true
+#whether to give the new location of the egg (true) or the previous location of the egg (false) when it teleports
+accurate_loc: false
+
+#whether the egg should be invulnerable to damage
+egg_inv: false
+#whether the egg should respawn after it is destroyed
+resp_egg: true
+#whether the egg respawns immediately (true) or after a new dragon is spawned and killed (false) after the egg is destroyed
+resp_imm: false
+
+#whether to use mongoDB
+use_db: false
+db_username: null
+db_password: null
+
+
+
+#egg location information
+######## Do not edit unless you know what you're doing ########
+stored_entity: null
+loc: null
+owner: null
+stored_as: DNE

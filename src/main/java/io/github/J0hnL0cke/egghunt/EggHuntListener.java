@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -50,6 +51,12 @@ public class EggHuntListener implements Listener {
     static public UUID owner;
     static public Logger logger;
     static public FileSave config;
+    static public boolean egg_inv;
+    static public boolean resp_egg;
+    static public boolean resp_imm;
+    static public boolean reset_owner;
+    static public boolean accurate_loc;
+    static public World end;
 
 
     public EggHuntListener(Logger logger) {
@@ -230,24 +237,15 @@ public class EggHuntListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSpread(BlockFromToEvent event) {
         if (event.getBlock().getType().equals(Material.DRAGON_EGG)) {
-
-    		/*whether the teleport should record the egg
-    		location after (true) or before (false) it teleports*/
-            boolean accurate=false;
-            /*setting to false makes it harder to find the egg after it teleports*/
-
-            /*If set to true, the owner of the egg is reset when it teleports*/
-            boolean lose_owner=true;
-
             Block block;
-            if (accurate) {
+            if (accurate_loc) {
                 block=event.getToBlock();
                 console_log("The egg teleported, location is set to show location after teleport");
             } else {
                 block=event.getBlock();
                 console_log("The egg teleported, location is set to show location before teleport");
             }
-            if (lose_owner) {
+            if (reset_owner) {
                 if (owner!=null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
                     owner=null;
@@ -279,9 +277,9 @@ public class EggHuntListener implements Listener {
     	}
     }
     
+    //if the egg item takes damage, call eggDestroyed
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
-        //if the egg item takes damage, call eggDestroyed
         Entity entity=event.getEntity();
         if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
             ItemStack item = ((Item)entity).getItemStack();
@@ -293,6 +291,22 @@ public class EggHuntListener implements Listener {
         }
     }
 
+    //when the dragon dies, spawn the egg
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDeath(EntityDeathEvent event) {
+    	//if the egg should respawn, and it does not exist, and the dragon is killed, and the dragon has already been killed, respawn the egg
+    	if (resp_egg) {
+    		if (stored_as.equals(Egg_Storage_Type.DNE)) {
+    			if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
+    				//dragon is killed
+    				if (end.getEnderDragonBattle().hasBeenPreviouslyKilled()) {
+    					spawnEgg();
+    				}
+    			}
+    		}
+    	}
+    }
+    
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDespawn (ItemDespawnEvent event) {
@@ -356,7 +370,20 @@ public class EggHuntListener implements Listener {
         }
     }
 
-
+    //prevent egg destruction
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onConsiderEntityDamageEvent(EntityDamageEvent event) {
+        if (egg_inv) {
+        	Entity entity=event.getEntity();
+        	if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+        		ItemStack item = ((Item)entity).getItemStack();
+        		if (item.getType().equals(Material.DRAGON_EGG)) {
+        			event.setCancelled(true);
+        		}
+        	}
+        }
+    }
+    
     //Helper methods
 
     public void setEggOwner(Player player) {
@@ -389,12 +416,24 @@ public class EggHuntListener implements Listener {
 
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
-        stored_as= Egg_Storage_Type.DNE;
         owner=null;
         config.saveData();
+        if (resp_egg) {
+        	if (resp_imm) {
+        		spawnEgg();
+        	} else {
+        		stored_as= Egg_Storage_Type.DNE;
+        		announce("It will respawn the next time the dragon is defeated");
+        	}
+        }
     }
-
-
+    
+    public void spawnEgg() {
+    	Location new_egg_loc=end.getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0);
+    	new_egg_loc.getBlock().setType(Material.DRAGON_EGG);
+    	setEggLocation(new_egg_loc,Egg_Storage_Type.BLOCK);
+    	announce("The dragon egg has spawned in the end!");
+    }
 
     public void announce(String message) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
