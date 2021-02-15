@@ -141,7 +141,7 @@ public class FileSave  {
 	}
 
 	public boolean getBoolFromConfig(String key) {
-		return Boolean.parseBoolean(plugin.getConfig().getString("key","false"));
+		return Boolean.parseBoolean(plugin.getConfig().getString(key,"false"));
 	}
 
 }

@@ -1,5 +1,5 @@
-#name of your end world, defaults to "world_end" on spigot
-end: world_end
+#name of your end world, defaults to "world_the_end" on spigot
+end: world_the_end
 
 #whether the egg teleporting resets the owner to none
 reset_owner: true
@@ -15,7 +15,7 @@ resp_imm: false
 
 #whether to use mongoDB
 use_db: false
-db_username: null
+db_name: null
 db_password: null
 
 

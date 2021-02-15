@@ -19,6 +19,6 @@ With this plugin:
 **For server owners:**
 - Best paired with an anticheat to prevent duplication
 - The egg location does not update when taken out of a chest until the chest is closed, so you should also enable [inventory close](https://github.com/NoCheatPlus/Docs/wiki/%5BInventory%5D-Open) on your anticheat to prevent the player from teleporting away with their inventory open
-- This plugin integrates with MongoDB so it can communicate with our discord bot
-- If you need any help using this plugin, open an issue. The configuration can be made more user-friendly, we just haven't bothered to do so yet
+- This plugin integrates with MongoDB so it can communicate with our discord bot, see the config.yml to enable it
+- Most settings you might need can be changed via the config.yml, open an issue if you don't see a setting you want
 - See [here](https://github.com/HyperSMP/EggHuntPlugin/projects/1) for our TODO list regarding this plugin
