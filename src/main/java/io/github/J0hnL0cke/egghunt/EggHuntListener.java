@@ -95,6 +95,7 @@ public class EggHuntListener implements Listener {
         if(stack.getType().equals(Material.DRAGON_EGG)) {
             setEggOwner(event.getPlayer());
             setEggLocation(item, Egg_Storage_Type.ITEM);
+            setEggInv(event.getItemDrop());
         }
     }
 
@@ -107,6 +108,7 @@ public class EggHuntListener implements Listener {
 
         if (item.getItemStack().getType().equals(Material.DRAGON_EGG)) {
             setEggLocation(item, Egg_Storage_Type.ITEM);
+            setEggInv(event.getEntity());
         }
 
     }
@@ -292,9 +294,17 @@ public class EggHuntListener implements Listener {
     }
 
     //when the dragon dies, spawn the egg
+    //if the egg dies, call egg destroyed
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
     	//if the egg should respawn, and it does not exist, and the dragon is killed, and the dragon has already been killed, respawn the egg
+    	if (event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
+    		if (((ItemStack)event.getEntity()).getType().equals(Material.DRAGON_EGG)) {
+    			event.getEntity().remove();
+    			eggDestroyed();
+    		}
+    	}
+    	
     	if (resp_egg) {
     		if (stored_as.equals(Egg_Storage_Type.DNE)) {
     			if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
@@ -423,6 +433,12 @@ public class EggHuntListener implements Listener {
         config.saveData();
     }
 
+    public void setEggInv(Entity egg_stack) {
+    	if (egg_inv) {
+    		egg_stack.setInvulnerable(true);
+    	}
+    }
+    
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
         owner=null;
