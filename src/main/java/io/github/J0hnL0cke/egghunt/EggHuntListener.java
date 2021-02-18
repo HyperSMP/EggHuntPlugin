@@ -356,23 +356,23 @@ public class EggHuntListener implements Listener {
     public void onInventoryMoveConsider (InventoryClickEvent event) {
         InventoryType inv=event.getInventory().getType();
         if (event.getWhoClicked().getGameMode()!= GameMode.CREATIVE && (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX))) {
-
-            if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
-                event.setCancelled(true);
-                console_log(String.format("Stopped %s from moving egg to ender chest",event.getWhoClicked().getName()));
-                
-            } else {
-            	//Don't allow hotkeying either
-            	if (event.getClick().equals(ClickType.NUMBER_KEY)) {
-            		ItemStack item=event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
-            		if (item!=null) {
-            			if (item.getType().equals(Material.DRAGON_EGG)) {
-            				event.setCancelled(true);
-                            console_log(String.format("Stopped %s from hotkeying egg to ender chest",event.getWhoClicked().getName()));
-            			}
-            		}
-            	}
-            }
+        	//check if the item clicked was the egg
+        	if (event.getCurrentItem()!=null) {
+        		if (event.getCurrentItem().getType().equals(Material.DRAGON_EGG)) {
+        			event.setCancelled(true);
+        			console_log(String.format("Stopped %s from moving egg to ender chest",event.getWhoClicked().getName()));
+        		}
+        	}
+	        //Don't allow hotkeying either
+	        if (event.getClick().equals(ClickType.NUMBER_KEY)) {
+	        	ItemStack item=event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+	            if (item!=null) {
+	            	if (item.getType().equals(Material.DRAGON_EGG)) {
+	            		event.setCancelled(true);
+	                    console_log(String.format("Stopped %s from hotkeying egg to ender chest",event.getWhoClicked().getName()));
+	            	}
+	            }
+	        }
         }
     }
 
@@ -436,6 +436,7 @@ public class EggHuntListener implements Listener {
     public void setEggInv(Entity egg_stack) {
     	if (egg_inv) {
     		egg_stack.setInvulnerable(true);
+    		console_log("made drop invulnerable");
     	}
     }
     
