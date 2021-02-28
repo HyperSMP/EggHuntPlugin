@@ -162,7 +162,7 @@ public class FileSave  {
 		}
 		
 		//save newest location to DB
-		if (EggHuntListener.stored_as.equals(Egg_Storage_Type.DNE)){
+		if (!EggHuntListener.stored_as.equals(Egg_Storage_Type.DNE)){
 			//save true location to db
 			writeToDB("loc",serializeLocation(egghunt.getEggLocation()));
 		} else {
