@@ -443,14 +443,14 @@ public class EggHuntListener implements Listener {
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
         owner=null;
+        stored_as=Egg_Storage_Type.DNE;
+		loc=null;
+		stored_entity=null;
+		config.saveData();
         if (resp_egg) {
         	if (resp_imm) {
         		spawnEgg();
         	} else {
-        		stored_as=Egg_Storage_Type.DNE;
-        		loc=null;
-        		stored_entity=null;
-        		config.saveData();
         		announce("It will respawn the next time the dragon is defeated");
         	}
         }

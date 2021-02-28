@@ -168,7 +168,26 @@ public class FileSave  {
 		} else {
 			writeToDB("loc",null);
 		}
-				
+		
+		//save block/entity name to DB
+		String name;
+		switch (EggHuntListener.stored_as) {
+		case BLOCK: name="block";
+			break;
+		case CONTAINER_INV: name=egghunt.getEggLocation().getBlock().getType().toString();
+			break;
+		case DNE: name=null;
+			break;
+		case ENTITY_INV: 
+			String entityName=EggHuntListener.stored_entity.getName();
+			String entityType=EggHuntListener.stored_entity.getType().toString();
+			name=String.format("%s:%s",entityType,entityName);
+			break;
+		case ITEM: name="item";
+			break;
+		default: throw new java.lang.Error("Unknown egg storage type");
+		}
+		writeToDB("name", name);
 		
 		//save stored_as
 		if (EggHuntListener.stored_as!=null) {
