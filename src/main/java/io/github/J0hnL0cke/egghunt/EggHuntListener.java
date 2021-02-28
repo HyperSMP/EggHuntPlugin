@@ -20,6 +20,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -250,7 +251,7 @@ public class EggHuntListener implements Listener {
             if (reset_owner) {
                 if (owner!=null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
-                    owner=null;
+                    resetEggOwner(false);
                 }
             }
             setEggLocation(block.getLocation(), Egg_Storage_Type.BLOCK);
@@ -304,7 +305,7 @@ public class EggHuntListener implements Listener {
     			eggDestroyed();
     		}
     	}
-    	
+    	//if the dragon is killed, respawn the egg
     	if (resp_egg) {
     		if (stored_as.equals(Egg_Storage_Type.DNE)) {
     			if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
@@ -313,6 +314,13 @@ public class EggHuntListener implements Listener {
     					spawnEgg();
     				}
     			}
+    		}
+    	}
+    	//if an entity dies with the egg
+    	//for player death, see onPlayerDeath()
+    	if (!(event.getEntity() instanceof Player)) {
+    		if (event.getEntity().getEquipment().getItemInMainHand().getType().equals(Material.DRAGON_EGG)) {
+    		deathWithEgg(event.getEntity());
     		}
     	}
     }
@@ -332,21 +340,23 @@ public class EggHuntListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (!event.getKeepInventory() && event.getEntity().getInventory().contains(Material.DRAGON_EGG)) {
-            String deathmsg = event.getDeathMessage();
+        	deathWithEgg(event.getEntity());
+        	resetEggOwner(false);
+        	String deathmsg = event.getDeathMessage();
 
             // Can occasionally give NullPointerExceptions even on death
-            assert deathmsg != null;
-
+            if (deathmsg == null) {
+            	deathmsg="";
+            }
+            	
             if (deathmsg.length() > 0) {
                 if (deathmsg.endsWith(".")) {
-                    deathmsg= deathmsg.substring(0,deathmsg.length() - 1);
+                	deathmsg= deathmsg.substring(0,deathmsg.length() - 1);
                 }
-
                 event.setDeathMessage(String.format("%s and lost the dragon egg!", deathmsg));
             } else {
                 announce(String.format("%s died and lost the dragon egg!", event.getEntity().getDisplayName()));
             }
-
         }
     }
 
@@ -400,6 +410,15 @@ public class EggHuntListener implements Listener {
         }
     }
     
+    public void resetEggOwner(boolean announce) {
+    	if (announce) {
+    		if (owner!=null) {
+    			announce(String.format("%s no longer owns the dragon egg", owner));
+    		}
+    	}
+    	owner=null;
+    	
+    }
     //Helper methods
 
     public void setEggOwner(Player player) {
@@ -442,7 +461,7 @@ public class EggHuntListener implements Listener {
     
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
-        owner=null;
+        resetEggOwner(false);
         stored_as=Egg_Storage_Type.DNE;
 		loc=null;
 		stored_entity=null;
@@ -455,7 +474,44 @@ public class EggHuntListener implements Listener {
         	}
         }
     }
-    
+    //called when a player or mob holding the egg dies
+    public void deathWithEgg(LivingEntity entity) {
+    	Location l= entity.getLocation();
+    	//if the player dies below the world
+    	//TODO: update height for 1.17
+    	if (l.getBlockY()<0) {
+    		resetEggOwner(false);
+    		removeFromInventory(Material.DRAGON_EGG,entity);
+    		if (egg_inv) {
+    			//spawn a new egg item
+    			l.setY(100);
+    			ItemStack egg=new ItemStack(Material.DRAGON_EGG);
+    			egg.setAmount(1);
+    			Item drop=l.getWorld().dropItem(l, egg);
+    			drop.setGravity(false);
+    			drop.setGlowing(true);
+    		} else {
+    			eggDestroyed();
+    		}
+    	}
+    }
+    public void removeFromInventory(Material m, LivingEntity entity) {
+    	if (entity instanceof Player) {
+    		Player player= (Player)entity;
+    		player.getInventory().remove(m);
+    	} else {
+    		EntityEquipment equipment=entity.getEquipment();
+    		if (equipment!=null) {
+    			//TODO: consider all armor slots, not just hands
+    			if(equipment.getItemInMainHand().getType().equals(m)) {
+    				equipment.setItemInMainHand(null);
+    			}
+    			if(equipment.getItemInOffHand().getType().equals(m)) {
+    				equipment.setItemInOffHand(null);
+    			}
+    		}
+    	}
+    }
     public void spawnEgg() {
     	Location new_egg_loc=end.getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0);
     	new_egg_loc.getBlock().setType(Material.DRAGON_EGG);
