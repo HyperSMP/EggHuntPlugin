@@ -1,7 +1,7 @@
 # EggHuntPlugin
 **A plugin for hunting down the dragon egg.**
 
-With this plugin:
+**With this plugin:**
 
 - You aren't able to put the egg in an enderchest or shulker box
 - The egg item will drop on the ground if you leave the game with it in your inventory
