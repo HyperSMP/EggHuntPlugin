@@ -88,9 +88,6 @@ public class EventScheduler extends BukkitRunnable {
 		EggHuntListener.resetEggOwner(true);
 	}
     
-    //spawn a new egg item
-    
-    
     public void removeFromInventory(Material m, Entity entity) {
     	EggHuntListener.stored_as=Egg_Storage_Type.DNE;
     	if (entity instanceof Player) {
