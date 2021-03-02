@@ -10,34 +10,45 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 
 public final class egghunt extends JavaPlugin {
 
 
 	FileSave config = new FileSave(this);
-
+	EventScheduler schedule=new EventScheduler(this);
+	EggHuntListener listener=new EggHuntListener(getLogger(),config);
+	BukkitTask belowWorldTask;
+	
 	@Override
 	public void onEnable() {
-		// TODO Insert logic to be performed when the plugin is enabled
-		getLogger().info("onEnable has been invoked, registering event listeners.");
-		//register event handlers
-		getServer().getPluginManager().registerEvents(new EggHuntListener(getLogger()), this);
+		
 		//load saved data
-		getLogger().info("Loading save data.");
+		getLogger().info("onEnable has been invoked, loading save data.");
 		saveDefaultConfig();
 		config.loadData();
-		EggHuntListener.config=config;
-		//done
+		
+		//register event handlers
+		getLogger().info("registering event listeners.");
+		getServer().getPluginManager().registerEvents(listener, this);
+		
+		//schedule tasks
+		//TODO: disable task when not in use
+		getLogger().info("Scheduling below world task");
+		belowWorldTask = schedule.runTaskTimer(this, 20, 20);
 		getLogger().info("Done!");
 	}
 
 	@Override
 	public void onDisable() {
-		// TODO Insert logic to be performed when the plugin is disabled
 		getLogger().info("onDisable has been invoked.");
+		if (belowWorldTask!=null) {
+			belowWorldTask.cancel();
+		}
+		getLogger().info("Done!");
 	}
-
+	
 	public static Location getEggLocation() {
 		if (EggHuntListener.stored_as!= EggHuntListener.Egg_Storage_Type.DNE) {
 			boolean is_entity;
