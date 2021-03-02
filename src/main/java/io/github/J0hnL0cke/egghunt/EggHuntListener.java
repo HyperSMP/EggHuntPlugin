@@ -484,6 +484,9 @@ public class EggHuntListener implements Listener {
 		drop.setGravity(false);
 		drop.setGlowing(true);
 		drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
+		if (egg_inv) {
+			drop.setInvulnerable(true);
+		}
 		setEggLocation(drop, Egg_Storage_Type.ITEM);
     }
 
