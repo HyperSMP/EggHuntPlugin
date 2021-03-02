@@ -21,6 +21,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +57,9 @@ public class EggHuntListener implements Listener {
     static public World end;
 
 
-    public EggHuntListener(Logger logger, FileSave config) {
+    public EggHuntListener(Logger logger, FileSave conf) {
         EggHuntListener.logger = logger;
+        config=conf;
     }
 
 
@@ -403,7 +405,7 @@ public class EggHuntListener implements Listener {
     public static void resetEggOwner(boolean announce) {
     	if (announce) {
     		if (owner!=null) {
-    			announce(String.format("%s no longer owns the dragon egg", owner));
+    			announce(String.format("%s no longer owns the dragon egg", egghunt.get_username_from_uuid(owner)));
     		}
     		
     	}
@@ -473,6 +475,16 @@ public class EggHuntListener implements Listener {
     	new_egg_loc.getBlock().setType(Material.DRAGON_EGG);
     	setEggLocation(new_egg_loc,Egg_Storage_Type.BLOCK);
     	announce("The dragon egg has spawned in the end!");
+    }
+    
+    public static void spawnEggItem(Location loc){
+		ItemStack egg=new ItemStack(Material.DRAGON_EGG);
+		egg.setAmount(1);
+		Item drop=loc.getWorld().dropItem(loc, egg);
+		drop.setGravity(false);
+		drop.setGlowing(true);
+		drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
+		setEggLocation(drop, Egg_Storage_Type.ITEM);
     }
 
     public static void announce(String message) {

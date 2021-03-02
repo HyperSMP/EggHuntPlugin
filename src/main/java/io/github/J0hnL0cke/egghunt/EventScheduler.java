@@ -72,27 +72,27 @@ public class EventScheduler extends BukkitRunnable {
     
     public void removeEgg(Entity container) {
     	Location l=container.getLocation();
-		
-    	EggHuntListener.resetEggOwner(true);
 		removeFromInventory(Material.DRAGON_EGG,container);
 		if (EggHuntListener.egg_inv) {
-			respawnEgg(l);
+			//get coords for egg to spawn at
+			//TODO: handle negative y coords in 1.17
+			int y_pos=Math.max(0, l.getWorld().getHighestBlockAt(l).getY()+2);
+			if (y_pos<2) {
+				y_pos=60;
+			}
+			l.setY(y_pos);
+			EggHuntListener.spawnEggItem(l);
 		} else {
 			EggHuntListener.eggDestroyed();
 		}
+		EggHuntListener.resetEggOwner(true);
 	}
     
     //spawn a new egg item
-    public void respawnEgg(Location loc){
-    	loc.setY(Math.max(60, loc.getWorld().getHighestBlockAt(loc).getY()+2));
-		ItemStack egg=new ItemStack(Material.DRAGON_EGG);
-		egg.setAmount(1);
-		Item drop=loc.getWorld().dropItem(loc, egg);
-		drop.setGravity(false);
-		drop.setGlowing(true);
-    }
+    
     
     public void removeFromInventory(Material m, Entity entity) {
+    	EggHuntListener.stored_as=Egg_Storage_Type.DNE;
     	if (entity instanceof Player) {
     		Player player= (Player)entity;
     		player.getInventory().remove(m);
