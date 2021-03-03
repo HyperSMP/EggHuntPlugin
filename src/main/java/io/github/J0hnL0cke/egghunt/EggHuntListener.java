@@ -4,8 +4,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -18,6 +21,8 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -52,8 +57,9 @@ public class EggHuntListener implements Listener {
     static public boolean egg_inv;
     static public boolean resp_egg;
     static public boolean resp_imm;
-    static public boolean reset_owner;
+    static public boolean reset_owner_after_tp;
     static public boolean accurate_loc;
+    static public boolean troll_glitch;
     static public World end;
 
 
@@ -246,7 +252,7 @@ public class EggHuntListener implements Listener {
                 block=event.getBlock();
                 console_log("The egg teleported, location is set to show location before teleport");
             }
-            if (reset_owner) {
+            if (reset_owner_after_tp) {
                 if (owner!=null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", egghunt.get_username_from_uuid(owner)));
                     resetEggOwner(false);
@@ -316,6 +322,30 @@ public class EggHuntListener implements Listener {
     	}
     }
     
+    //stop portals from removing the egg
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onCreatePortal(PortalCreateEvent event) {
+    	//not specific to any particular creation reason because multiple events could cause the egg to be removed (obby platform regen, gateway portal spawning, stronghold portal activation)
+    	boolean egg_affected=false;
+    	Location l = null;
+    	for (BlockState blockState: event.getBlocks()) {
+    		if (blockState.getBlock().getType().equals(Material.DRAGON_EGG)) {
+    			egg_affected=true;
+    			l=blockState.getLocation();
+    			//extra check to make sure egg is removed
+    			blockState.getBlock().setType(Material.AIR);;
+    		}
+    	}
+    	if (egg_affected) {
+    		resetEggOwner(true);
+    		if (l!=null) {
+    			spawnEggItem(l);
+    		}
+    	}
+    	
+    }
+    
+    
     //Other event handlers
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDespawn (ItemDespawnEvent event) {
@@ -349,6 +379,31 @@ public class EggHuntListener implements Listener {
         }
     }
 
+    //stop mushrooms from removing the egg
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onGrow(StructureGrowEvent event) {
+    	boolean cancel=false;
+    	if (event.getSpecies().equals(TreeType.BROWN_MUSHROOM) || event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
+    		List<BlockState> blocks=event.getBlocks();
+    		for (BlockState block : blocks) {
+    			if (block.getBlock().getType().equals(Material.DRAGON_EGG)) {
+    				cancel=true;
+    				break;
+    			}
+    		}
+    		if (cancel) {
+    			event.setCancelled(true);
+	    		Player p=event.getPlayer();
+		    	if (p!=null) {
+		    		p.playSound(p.getLocation(),Sound.BLOCK_ANVIL_LAND, 1, 1);
+		    		p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
+		    		p.setCooldown(Material.BONE_MEAL, 100);
+		    		console_log(String.format("%s tried to mushroom the dragon egg", p.getName()));
+    			}
+    		}
+    	}
+    }
+    
     //TODO: 1.17: also exclude bundles
     // stop players from echesting the egg or storing it in a shulker box
     @EventHandler(priority = EventPriority.HIGHEST)

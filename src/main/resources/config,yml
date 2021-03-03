@@ -18,8 +18,6 @@ use_db: false
 db_name: null
 db_password: null
 
-
-
 #egg location information
 ######## Do not edit unless you know what you're doing ########
 stored_entity: null
