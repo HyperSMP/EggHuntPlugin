@@ -12,6 +12,8 @@ egg_inv: false
 resp_egg: true
 #whether the egg respawns immediately (true) or after a new dragon is spawned and killed (false) after the egg is destroyed
 resp_imm: false
+#whether to ignore any eggs that players have put into an ender chest before this plugin was enabled. Setting this to false will drop the egg as an item next the time the player closes their ender chest.
+ignore_echest_egg: true
 
 #whether to use mongoDB
 use_db: false

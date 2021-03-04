@@ -90,6 +90,7 @@ public class FileSave  {
 		EggHuntListener.resp_imm=getBoolFromConfig("resp_imm");
 		EggHuntListener.reset_owner_after_tp=getBoolFromConfig("reset_owner");
 		EggHuntListener.accurate_loc=getBoolFromConfig("accurate_loc");
+		EggHuntListener.ignore_echest_egg=getBoolFromConfig("ignore_echest_egg");
 		EggHuntListener.end=Bukkit.getServer().getWorld(plugin.getConfig().getString("end","world_end"));
 				
 		//load egg location

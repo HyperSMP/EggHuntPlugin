@@ -59,7 +59,7 @@ public class EggHuntListener implements Listener {
     static public boolean resp_imm;
     static public boolean reset_owner_after_tp;
     static public boolean accurate_loc;
-    static public boolean troll_glitch;
+    static public boolean ignore_echest_egg;
     static public World end;
 
 
@@ -185,6 +185,7 @@ public class EggHuntListener implements Listener {
         if (player.getInventory().contains(Material.DRAGON_EGG) || (others.contains(Material.DRAGON_EGG) && always_revert_to_player)){
             setEggLocation(player, Egg_Storage_Type.ENTITY_INV);
             setEggOwner(player);
+            
         } else if (others.getType()!= InventoryType.PLAYER) {
 
             //check if the other inventory has the egg
@@ -192,6 +193,18 @@ public class EggHuntListener implements Listener {
 
                 if (others.getHolder() instanceof Entity) {
                     setEggLocation((Entity) others.getHolder(), Egg_Storage_Type.ENTITY_INV);
+                } else if (others.getType().equals(InventoryType.ENDER_CHEST)) {
+                	//force any eggs in the ender chest to be dropped
+                	if (!ignore_echest_egg && player.getGameMode()!=GameMode.CREATIVE) {
+                		ItemStack egg=others.getItem(others.first(Material.DRAGON_EGG));
+                		egg.setAmount(1);
+                		Location player_loc=player.getLocation();
+                		others.remove(egg);
+                		Item i=player_loc.getWorld().dropItemNaturally(player_loc, egg);
+                		console_log(String.format("%s has the dragon egg in their ender chest, dropping it on the ground...", player.getName()));
+                		console_log("Set ignore_echest_egg to \"true\" in the config file to disable this feature.");
+                		setEggLocation(i, stored_as);
+                	}
                 } else {
                     setEggLocation(others.getLocation(), Egg_Storage_Type.CONTAINER_INV);
                 }
