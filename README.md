@@ -21,6 +21,10 @@
 **For server owners:**
 - Best paired with an anticheat to prevent duplication, unless you are using paperspigot, which disables falling block dupes by default
 - The egg location does not update when taken out of a chest until the chest is closed, so you should also enable [inventory close](https://github.com/NoCheatPlus/Docs/wiki/%5BInventory%5D-Open) on your anticheat to prevent the player from teleporting away with their inventory open
+- Only players in creative mode can move the egg into an ender chest.
+- You can allow players to have dragon eggs in their ender chests that are not tracked. This is enabled by default in the config.yml under "ignore_echest_egg"
 - This plugin integrates with MongoDB so it can communicate with our discord bot, see the config.yml to enable it
-- Most settings you might need can be changed via the config.yml, open an issue if you don't see a setting you want
+- Most settings you might need can be changed via the plugin's config file (/EggHunt/config.yml), open an issue if you don't see a setting you want
+- To generate the config file the first time around, just place the plugin jar in your plugins folder and restart or /reload the server
+- It is safe to use the Essentials /reload command while this plugin is running
 - See [here](https://github.com/HyperSMP/EggHuntPlugin/projects/1) for our TODO list regarding this plugin

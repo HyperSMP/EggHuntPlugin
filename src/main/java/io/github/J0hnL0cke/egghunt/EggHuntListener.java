@@ -59,7 +59,7 @@ public class EggHuntListener implements Listener {
     static public boolean resp_imm;
     static public boolean reset_owner_after_tp;
     static public boolean accurate_loc;
-    static public boolean ignore_echest_egg;
+    static public boolean drop_enderchested_egg;
     static public World end;
 
 
@@ -195,7 +195,7 @@ public class EggHuntListener implements Listener {
                     setEggLocation((Entity) others.getHolder(), Egg_Storage_Type.ENTITY_INV);
                 } else if (others.getType().equals(InventoryType.ENDER_CHEST)) {
                 	//force any eggs in the ender chest to be dropped
-                	if (!ignore_echest_egg && player.getGameMode()!=GameMode.CREATIVE) {
+                	if (drop_enderchested_egg && player.getGameMode()!=GameMode.CREATIVE) {
                 		ItemStack egg=others.getItem(others.first(Material.DRAGON_EGG));
                 		egg.setAmount(1);
                 		Location player_loc=player.getLocation();
