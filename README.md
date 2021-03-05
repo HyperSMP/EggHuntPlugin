@@ -26,5 +26,6 @@
 - This plugin integrates with MongoDB so it can communicate with our discord bot, see the config.yml to enable it
 - Most settings you might need can be changed via the plugin's config file (/EggHunt/config.yml), open an issue if you don't see a setting you want
 - To generate the config file the first time around, just place the plugin jar in your plugins folder and restart or /reload the server
+- You can disallow players from using commands in this plugin if you are also using a permissions plugin
 - It is safe to use the Essentials /reload command while this plugin is running
 - See [here](https://github.com/HyperSMP/EggHuntPlugin/projects/1) for our TODO list regarding this plugin

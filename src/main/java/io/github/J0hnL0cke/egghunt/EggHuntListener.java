@@ -562,7 +562,9 @@ public class EggHuntListener implements Listener {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
         for (Player player: players)
-            ((CommandSender) player).sendMessage(message);
+        	if (player.hasPermission("egghunt.notify")) {
+        		((CommandSender) player).sendMessage(message);
+        	}
 
         console_log(String.format("Told %d players %s", players.size(), message));
     }

@@ -8,17 +8,42 @@ commands:
     locateegg:
       description: Gives the current coordinates of the dragon egg
       usage: /<command>
-      permission: <plugin name>.
-      permission-message: You don't have <permission>
+      permission: egghunt.locateegg
+      permission-message: You need to have permission <permission> to use this command
       
     trackegg:
       description: Sets a compass held in the player's hand to point to the dragon egg
       usage: /<command>
-      permission: <plugin name>.
-      permission-message: You don't have <permission>
+      permission: egghunt.trackegg
+      permission-message: You need to have permission <permission> to use this command
       
     eggowner:
-      description: Give the current owner of the dragon egg
+      description: Shows the current owner of the dragon egg
       usage: /<command>
-      permission: <plugin name>.
-      permission-message: You don't have <permission>
+      permission: egghunt.eggowner
+      permission-message: You need to have permission <permission> to use this command
+      
+    #eggnotify:
+    #  description: Turn on or off notifications when the dragon egg is claimed, stolen, lost, or destroyed
+    #  usage: /<command> [on/off]
+    #  permission-message: You need to have permission <permission> to use this command
+
+permissions:
+    egghunt.*:
+        description: Gives access to all Egg Hunt commands
+        children:
+            egghunt.locateegg: true
+            egghunt.trackegg: true
+            egghunt.notify: true
+    egghunt.locateegg:
+        description: Allows you to locate the dragon egg using /locateegg
+        default: true
+    egghunt.trackegg:
+        description: Allows you to track the egg with a compass using /trackegg
+        default: true
+    egghunt.notify:
+        description: Receive a chat message when the egg is claimed, stolen, lost, or destroyed
+        default: true
+    #egghunt.togglenotify:
+    #    description: Allows you to toggle your egghunt.notify permission with /eggnotify
+    #    default: true
