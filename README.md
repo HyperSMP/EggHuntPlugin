@@ -14,7 +14,7 @@
 - Using /trackegg with a compass in hand will point the compass towards the egg
 - The egg can be located/tracked regardless of whether it's a block, an item, or in an inventory, and in any dimension
 - Clicking the egg makes it teleport, but the locate commands might be focused on where the egg was before it teleported*
-- When the egg teleports, it becomes "lost", so it won't have an owner until someone finds it again
+- When the egg teleports, it becomes "lost", so it won't have an owner until someone finds it again*
 
  *(depending on how the plugin is configured by the admin)
 
