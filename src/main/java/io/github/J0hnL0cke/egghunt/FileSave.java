@@ -9,68 +9,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.J0hnL0cke.egghunt.EggHuntListener.Egg_Storage_Type;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import com.mongodb.MongoClientSettings;
-
 
 public class FileSave  {
 
 	JavaPlugin plugin;
 
-	//safety first
-	String db_password;
-	String db_name;
-	boolean use_db;
-
-	MongoCollection collection;
-
 	public FileSave(JavaPlugin plugin) {
 		this.plugin = plugin;
-		db_password=plugin.getConfig().getString("db_password","");
-		db_name=plugin.getConfig().getString("db_name","");
-		makeConnection();
 	}
 
 	//Saves data in key-value pairs
-
-	public void makeConnection() {
-		use_db=Boolean.parseBoolean(plugin.getConfig().getString("use_db","true"));
-		if (use_db) {
-			ConnectionString connString = new ConnectionString(
-				String.format("mongodb+srv://admin:%s@cluster0.mdj8f.mongodb.net/%s?retryWrites=true&w=majority",db_password,db_name));
-		
-			MongoClientSettings settings = MongoClientSettings.builder()
-			    .applyConnectionString(connString)
-			    .retryWrites(true)
-			    .build();
-		
-			MongoClient mongoClient = MongoClients.create(settings);
-			MongoDatabase database = mongoClient.getDatabase(db_name);
-			collection = database.getCollection("data");
-		}
-	}
 	
 	public void writeAll(String key, String value) {
 		writeKey(key,value);
-		writeToDB(key,value);
 	}
 	
 	public void writeKey(String key, String value) {
 		plugin.getConfig().set(key,value);
 		plugin.saveConfig();
 		
-	}
-	
-	public void writeToDB(String key, String value) {
-		if (use_db) {
-			collection.updateOne(Filters.eq("type", "stats"), Updates.set(key, value));
-		}
 	}
 
 	public String getKey(String key, String not_found) {
@@ -162,14 +119,6 @@ public class FileSave  {
 			writeKey("stored_entity", null);
 		}
 		
-		//save newest location to DB
-		if (!EggHuntListener.stored_as.equals(Egg_Storage_Type.DNE)){
-			//save true location to db
-			writeToDB("loc",serializeLocation(egghunt.getEggLocation()));
-		} else {
-			writeToDB("loc",null);
-		}
-		
 		//save block/entity name to DB
 		String name;
 		switch (EggHuntListener.stored_as) {
@@ -188,7 +137,6 @@ public class FileSave  {
 			break;
 		default: throw new java.lang.Error("Unknown egg storage type");
 		}
-		writeToDB("name", name);
 		
 		//save stored_as
 		if (EggHuntListener.stored_as!=null) {
