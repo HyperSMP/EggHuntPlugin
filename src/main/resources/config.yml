@@ -15,11 +15,6 @@ resp_imm: false
 #whether to drop any eggs that players have in their ender chest onto the ground. Setting this to false will ignore that egg entirely.
 drop_enderchested_egg: false
 
-#whether to use mongoDB
-use_db: false
-db_name: null
-db_password: null
-
 #egg location information
 ######## Do not edit unless you know what you're doing ########
 stored_entity: null
