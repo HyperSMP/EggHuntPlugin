@@ -26,6 +26,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -335,24 +336,40 @@ public class EggHuntListener implements Listener {
     	}
     }
     
+    //old block= blockState.getBlock().getType()
+    //new block= blockState.getType()
+    
     //stop portals from removing the egg
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onCreatePortal(PortalCreateEvent event) {
+    public void onCreatePortal(EntityCreatePortalEvent event) {
     	//not specific to any particular creation reason because multiple events could cause the egg to be removed (obby platform regen, gateway portal spawning, stronghold portal activation)
     	boolean egg_affected=false;
     	Location l = null;
-    	for (BlockState blockState: event.getBlocks()) {
+    	List<BlockState> blocks=event.getBlocks();
+    	console_log(String.format("blocks: %s",blocks.toString()));
+    	for (BlockState blockState: blocks) {
+    		console_log(String.format("Block update at %s: from %s to %s",config.serializeLocation(blockState.getLocation()),blockState.getBlock().getType(),blockState.getType()));
     		if (blockState.getBlock().getType().equals(Material.DRAGON_EGG)) {
     			egg_affected=true;
     			l=blockState.getLocation();
     			//extra check to make sure egg is removed
-    			blockState.getBlock().setType(Material.AIR);;
+    			blockState.getBlock().setType(Material.AIR);
+    			
     		}
     	}
     	if (egg_affected) {
+    		String entityName="Unknown entity";
+    		if (event.getEntity()!=null) {
+    			if (event.getEntity().getCustomName()!=null) {
+    				entityName=event.getEntity().getCustomName();
+    			}
+    		}
+    		console_log(String.format("%s tried to overwrite egg with a portal",entityName));
     		resetEggOwner(true);
     		if (l!=null) {
     			spawnEggItem(l);
+    		} else {
+    			console_log("Could not spawn egg item! Invalid location.");
     		}
     	}
     	
@@ -469,6 +486,53 @@ public class EggHuntListener implements Listener {
     }
     
     //Helper methods
+    
+    //When a portal is updated, check if the egg will be replaced
+    public static void checkPortalBlocks(){
+    	//Check end platform
+    	Location l1=new Location(end,102,48,2);
+    	Location l2=new Location(end,98,51,-2);
+    	Location res=checkBlockMaterialFromLocation(end,Material.DRAGON_EGG,l1,l2);
+    	if (res!=null) {
+    		portalOverwriteEgg(res);
+    	}
+    	
+    	
+    }
+    
+    public static void portalOverwriteEgg(Location res) {
+    	res.getBlock().setType(Material.AIR);
+    	console_log("Prevented egg overwrite with a portal");
+    	resetEggOwner(true);
+    	if (egg_inv) {
+    		spawnEggItem(res);
+    	} else {
+    		eggDestroyed();
+    	}
+    }
+    
+    //Checks various blocks for the given material
+    public static Location checkBlockMaterial(World w, Material m, int x1, int x2, int y1, int y2, int z1, int z2) {
+    	for (int x=x1; x<x2; x++) {
+    		for (int y=y1; y<y2; y++) {
+    			for (int z=z1; z<z2; z++) {
+    				if (w.getBlockAt(x, y, z).getType().equals(m)) {
+    					return new Location(w,x,y,z);
+    				}
+    			}
+    		}
+    	}
+    	return null;
+    }
+    
+    public static Location checkBlockMaterialFromLocation(World w, Material m, Location l1, Location l2) {
+    	return checkBlockMaterial(w,m,l1.getBlockX(),l1.getBlockY(),l1.getBlockZ(),l2.getBlockX(),l2.getBlockY(),l2.getBlockZ());
+    }
+    
+    //Calls CheckBlockMaterial with deltas
+    public static Location checkDeltaBlockMaterial(World w, Material m, int x, int dx, int y, int dy, int z, int dz) {
+    	return (checkBlockMaterial(w, m, x, x+dx, y, y+dy, z, z+dz));
+    }
     
     public static void resetEggOwner(boolean announce) {
     	if (announce) {

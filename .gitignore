@@ -1,7 +1,6 @@
 *.classpath
 *.project
 *.prefs
-*.xml
 /.settings/
 /target/
 .externalToolBuilders/Make Jar.launch
