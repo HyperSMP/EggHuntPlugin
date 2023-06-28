@@ -36,8 +36,9 @@ public class Data {
     private Entity entity;
    
 
-    public Data(DataFileDAO dataDAO, Logger logger) {
-        dataDAO = this.dataDao;
+    public Data(DataFileDAO dataDao, Logger logger) {
+        this.dataDao = dataDao;
+        this.logger = logger;
         loadData();
     }
 

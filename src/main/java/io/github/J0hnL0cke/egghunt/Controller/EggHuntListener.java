@@ -25,6 +25,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BundleMeta;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -410,17 +411,17 @@ public class EggHuntListener implements Listener {
     }
     
     /**
-     * stop players from storing the egg in an ender chest or shulker box
-     * TODO: 1.17+: also exclude bundles
+     * stop players from storing the egg in an ender chest, shulker box, or bundle
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryMoveConsider(InventoryClickEvent event) {
         InventoryType inv = event.getInventory().getType();
         if (event.getWhoClicked().getGameMode() != GameMode.CREATIVE) {
             if (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX)) {
-                //check if the item clicked was the egg
+                //if the other inventory is an ender chest or shulker box
                 if (event.getCurrentItem() != null) {
                     if (isEgg(event.getCurrentItem())) {
+                        //if the item clicked was the egg
                         event.setCancelled(true);
                         console_log(String.format("Stopped %s from moving egg to ender chest",
                                 event.getWhoClicked().getName()));
@@ -436,6 +437,23 @@ public class EggHuntListener implements Listener {
                                     event.getWhoClicked().getName()));
                         }
                     }
+                }
+            }
+
+            //prevent using bundles on the egg in any inventory
+            if(event.getCurrentItem() != null){
+                if(event.getCursor()!=null){
+
+                    ItemStack clicked=event.getCurrentItem();
+                    ItemStack cursor=event.getCursor();
+
+                    if ((isEgg(cursor) && clicked.getType() == Material.BUNDLE)
+                            || (isEgg(clicked) && cursor.getType() == Material.BUNDLE)) {
+                        event.setCancelled(true);
+                        console_log(String.format("Stopped %s from bundling the egg",
+                                    event.getWhoClicked().getName()));
+                    }
+
                 }
             }
         }

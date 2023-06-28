@@ -34,7 +34,7 @@ public class DataFileDAO {
      * Create the save file if necessary. Also load the save data
      */
     private void loadData(JavaPlugin plugin, String ymlName) {
-        File file = new File(plugin.getDataFolder(), ymlName);
+        this.file = new File(plugin.getDataFolder(), ymlName);
 
         if (!file.exists()) {
             try {

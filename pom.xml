@@ -41,13 +41,6 @@
    </repositories>
       <dependencies>
        <dependency>
-           <groupId>org.bukkit</groupId>
-           <artifactId>bukkit</artifactId>
-           <version>LATEST</version><!--change this value depending on the version or use LATEST-->
-           <type>jar</type>
-           <scope>provided</scope>
-       </dependency>
-       <dependency>
            <groupId>org.spigotmc</groupId>
            <artifactId>spigot-api</artifactId>
            <version>LATEST</version><!--change this value depending on the version-->
