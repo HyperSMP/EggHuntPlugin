@@ -5,11 +5,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 /** 
  * Reads and writes key/value pairs to/from the plugin's config.yml file
  */
-public class ConfigDAO  {
+public class ConfigFileDAO  {
 
 	JavaPlugin plugin;
 
-	public ConfigDAO(JavaPlugin plugin) {
+	public ConfigFileDAO(JavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 	

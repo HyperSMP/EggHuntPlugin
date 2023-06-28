@@ -6,154 +6,216 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import io.github.J0hnL0cke.egghunt.Persistence.DataDAO;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+
+import io.github.J0hnL0cke.egghunt.Controller.Announcement;
+import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
 /**
- * Retrieve and store this plugin's data
+ * Retrieves and stores this plugin's data
  */
 public class Data {
 
-    private DataDAO dataDao;
+    private DataFileDAO dataDao;
     private Logger logger;
     
     public enum Egg_Storage_Type {
-        ITEM,
+        ENTITY,
         BLOCK,
-        ENTITY_INV,
-        CONTAINER_INV,
         DNE, //egg does not exist
     }
 
-    public Location loc;
-    public Entity stored_entity;
-    public UUID owner;
-    public Egg_Storage_Type stored_as;
+    private Location approxLocation;
+    private UUID owner;
+    private Egg_Storage_Type storedAs;
+    
+    private Block block;
+    private Entity entity;
+   
 
-    public Data(DataDAO dataDAO, Logger logger) {
+    public Data(DataFileDAO dataDAO, Logger logger) {
         dataDAO = this.dataDao;
         loadData();
-
-        //TODO figure out a better schema for getting/setting egg data than making everything public
     }
 
     public Location getEggLocation() {
-		if (stored_as != Egg_Storage_Type.DNE) {
-			boolean is_entity;
+        if (storedAs == Egg_Storage_Type.DNE) {
+            return null;
+        } else if (storedAs == Egg_Storage_Type.BLOCK) {
+            return block.getLocation();
+        } else if (storedAs == Egg_Storage_Type.ENTITY) {
+            return entity.getLocation();
+        }
+        return null;
+    }
 
-			switch (stored_as) {
-				case BLOCK:
-				case CONTAINER_INV:
-					is_entity=false;
-					break;
-				case ENTITY_INV:
-				case ITEM:
-					is_entity=true;
-					break;
-				default:
-					throw new java.lang.Error("Unknown egg storage type when calling getEggLocation()"); //fail loudly instead of silently, you're welcome
-			}
-			return is_entity ? stored_entity.getLocation() : loc;
-		}
-		return null;
-	}
+    public Egg_Storage_Type getEggType() {
+        return storedAs;
+    }
+    
+    public Entity getEggEntity() {
+        return entity;
+    }
 
+    public Block getEggBlock() {
+        return block;
+    }
+
+    public OfflinePlayer getEggOwner() {
+        return Bukkit.getOfflinePlayer(owner);
+    }
+    
     public void loadData() {
-		
-		//load egg location
-		//load stored_as
-		stored_as=dataDao.read("stored_as", Egg_Storage_Type.class, Egg_Storage_Type.DNE);
-		
-		//load owner
-		owner=dataDao.read("owner", UUID.class, null);
-			
-        //load loc
-        //TODO major refactor to this
-		String loc_str=dataDao.read("loc", String.class, null);
-        boolean needs_loc_str = stored_as == Egg_Storage_Type.BLOCK
-                || stored_as == Egg_Storage_Type.CONTAINER_INV;
-        if (loc_str!=null) {
-			String[] loc_arr=loc_str.split(":");
-			if (loc_arr.length==4) {
-				World w = Bukkit.getServer().getWorld(loc_arr[0]);
-				double x = Double.parseDouble(loc_arr[1]);
-				double y = Double.parseDouble(loc_arr[2]);
-				double z = Double.parseDouble(loc_arr[3]);
-				loc=new Location(w,x,y,z);
-			} else {
-				logger.warning("Invalid block location string");
-			}
-		} else {
-			if (needs_loc_str) {
-				logger.warning("Location string was null when it should have a value");
-			}
-			loc=null;
-		}
-		
-		//load stored_entity
-		String stored_entity=dataDao.read("stored_entity", String.class, null);
-		boolean needs_stored_entity=stored_as==Egg_Storage_Type.ENTITY_INV || stored_as==Egg_Storage_Type.ITEM;
-		
-		if (stored_entity!=null) {
-			UUID id=UUID.fromString(stored_entity);
-			this.stored_entity=Bukkit.getEntity(id);
-			//if the entity is not found
-			if (this.stored_entity==null && needs_stored_entity) {
-				logger.warning("Could not locate entity from saved UUID");
-			}
-		} else {
-			stored_entity=null;
-			if (needs_stored_entity) {
-				logger.warning("Stored entity was null when it should have a value");
-			}
-		}
+		owner = dataDao.read("owner", UUID.class, null);
+        block = dataDao.read("block", Block.class, null);
+        entity = dataDao.read("entity", Entity.class, null);
+        approxLocation = dataDao.read("lastLocation", Location.class, null);
+        storedAs = dataDao.read("storedAs", Egg_Storage_Type.class, null);
+
+        if (storedAs == null) {
+            logger.warning("Could not correctly load egg location data! Was this plugin's data folder deleted?\n" +
+                    "If this is the first time this plugin has run, it is safe to ignore this error.");
+            storedAs = Egg_Storage_Type.DNE;
+            saveData();
+        }
 	}
 
-	public void saveData() {
-		//save loc
-        dataDao.write("loc", loc);
-        
-        //save stored_entity
-        dataDao.write("stored_entity", stored_entity);
-		
-		//save block/entity name to DB
-		String name;
-		switch (stored_as) {
-		case BLOCK: name="block";
-			break;
-		case CONTAINER_INV: name=loc.getBlock().getType().toString();
-			break;
-		case DNE: name=null;
-			break;
-		case ENTITY_INV:
-			String entityName=stored_entity.getName();
-			String entityType=stored_entity.getType().toString();
-			name=String.format("%s:%s",entityType,entityName);
-			break;
-		case ITEM: name="item";
-			break;
-		default: throw new java.lang.Error("Unknown egg storage type");
-		}
-		
-		//save stored_as
-		if (stored_as!=null) {
-			dataDao.write("stored_as", stored_as.name());
-		} else {
-			dataDao.write("stored_as", Egg_Storage_Type.DNE.name());
-		}
-		
-        //save owner
+    public void saveData() {
         dataDao.write("owner", owner);
-		
-		//save timestamp
-        dataDao.write("timestamp", LocalDateTime.now().toString());
-        
+        dataDao.write("block", block);
+        dataDao.write("entity", entity);
+        dataDao.write("lastLocation", approxLocation);
+        dataDao.write("storedAs", storedAs);
+
+        //save timestamp
+        dataDao.write("FileWriteTime", LocalDateTime.now().toString());
+
         //write to file
         dataDao.save();
-	}
+    }
 
-	public String serializeLocation(Location loc) {
-		return loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
-	}
+    @Deprecated
+    private String locationToString(Location loc) {
+        return loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
+    }
+    
+    
+    public void setEggOwner(Player player) {
+        setEggOwner(player.getUniqueId());
+    }
+
+    private void setEggOwner(UUID playerUUID) {
+        owner = playerUUID;
+    }
+
+    public void resetEggOwner(boolean announce) {
+        if (announce) { //TODO move announcements somewhere else?
+            if (owner != null) {
+                Announcement.announce(String.format("%s no longer owns the dragon egg", Bukkit.getOfflinePlayer(owner)), logger);
+            }
+        }
+        logger.info("Egg owner has been reset");
+        owner = null;
+        saveData();
+
+    }
+
+    public void resetEggLocation() {
+        log("Egg no longer exists");
+        block = null;
+        entity = null;
+        storedAs = Egg_Storage_Type.DNE;
+        saveData();
+    }
+
+    public void updateEggLocation(Block block) {
+        approxLocation = block.getLocation();
+        this.block = block;
+        entity = null;
+        storedAs=Egg_Storage_Type.BLOCK;
+        
+        switch (block.getType()) {
+            case DRAGON_EGG: {
+                //egg is stored as a block
+                log(String.format("The egg is placed as a block"));
+            }
+
+            default: {
+                //egg is stored within the inventory of a tile entity (chest, hopper, furnace, etc)
+                log(String.format("The egg is in a(n) %s", block.getType()));
+            }
+        }
+        
+        saveData();
+    }
+    
+    public void updateEggLocation(Entity holderEntity) {
+        approxLocation = holderEntity.getLocation();
+        entity = holderEntity;
+        block = null;
+        storedAs = Egg_Storage_Type.ENTITY;
+
+        switch (holderEntity.getType()) {
+            case PLAYER: {
+                //TODO Switch posession here
+                log(String.format("The egg is in the inventory of the player \"%s\"", entity.getName()));
+            }
+
+            case FALLING_BLOCK: {
+                log(String.format("The egg is a falling block"));
+            }
+
+            case DROPPED_ITEM: {
+                log(String.format("The egg is a dropped item"));
+            }
+
+            case ITEM_FRAME: {
+                log(String.format("The egg is an item frame"));
+            }
+
+            case ARMOR_STAND: {
+                log(String.format("The egg is held by an armor stand"));
+            }
+
+            default:
+                //stored in the inventory of a non-player entity (zombie, hopper minecart, etc)
+                if (entity.getCustomName() != null) {
+                    log(String.format("The egg is held by a(n) %s named \"%s\"", entity.getType().toString(),
+                            entity.getName()));
+                } else {
+                    log(String.format("The egg is held by a(n) %s", entity.getType().toString()));
+                }
+
+        }
+
+        saveData();
+    }
+    
+    public void updateEggLocation(Inventory holder) {
+        //likely to be called when a generic inventory is the most info given for what picked up an item, like on hopper collect event
+        //if more info is available (such as Entity or Block instance), better to pass that instead, although this should still work
+        if (holder instanceof Entity){
+            // Hopper minecart (or some other entity) picked up the egg
+            updateEggLocation((Entity)holder);
+        } else {
+            // Hopper picked up the egg
+            updateEggLocation((Block)holder); //TODO check if this cast works or if .getLocation().getBlock() is needed
+        }
+    }
+    
+    private void log(String msg) {
+        logger.info(msg);
+    }
+
+    
 }

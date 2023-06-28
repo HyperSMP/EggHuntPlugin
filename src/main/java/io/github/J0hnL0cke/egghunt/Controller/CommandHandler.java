@@ -1,17 +1,17 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 
 import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 
 public class CommandHandler {
 
@@ -25,43 +25,66 @@ public class CommandHandler {
 
     private boolean locateEgg(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("egghunt.locateegg")) {
-            String eggContainer = "";
 
-            switch (data.stored_as) {
-                case BLOCK:
-                    eggContainer = "has been placed";
-                    break;
-                case CONTAINER_INV:
-                    eggContainer = "is in a "
-                            .concat(data.loc.getBlock().getType().toString().toLowerCase());
-                    break;
-                case ENTITY_INV:
-                    eggContainer = "is in the inventory of ".concat(data.stored_entity.getName());
-                    break;
-                case ITEM:
-                    eggContainer = "is an item";
-                    break;
-                default:
-                    eggContainer = "does not exist";
-                    break;
+            final String msgStart = "The dragon egg ";
+
+            Data.Egg_Storage_Type type = data.getEggType();
+
+            if (type == Egg_Storage_Type.DNE) {
+                //if the egg does not exist
+                sender.sendMessage(msgStart + "does not exist");
+
+            } else {
+                String storageMsg;
+
+                //figure out how the egg is contained
+                if (type == Egg_Storage_Type.BLOCK) {
+                    Block eggBlock = data.getEggBlock();
+
+                    if (eggBlock.getType() == Material.DRAGON_EGG) {
+                        storageMsg = "has been placed";
+
+                    } else {
+                        //egg is inside a container, provide the name of the container
+                        storageMsg = String.format(" is inside of a(n) %s", eggBlock.getType().toString());
+                    }
+
+                } else {
+                    Entity eggEntity = data.getEggEntity();
+
+                    switch (eggEntity.getType()) {
+                        case DROPPED_ITEM: {
+                            storageMsg = "is a dropped item";
+                        }
+                        case ITEM_FRAME: {
+                            storageMsg = "is in an item frame";
+                        }
+                        case FALLING_BLOCK: {
+                            storageMsg = "is a falling block entity";
+                        }
+                        case PLAYER: {
+                            storageMsg = String.format("is in the inventory of %s", eggEntity.getName());
+                        }
+                        default: {
+                            storageMsg = String.format("is held by a(n) %s", eggEntity.getType().toString());
+                            if (eggEntity.getCustomName() != null) {
+                                storageMsg += String.format(" named %s", eggEntity.getCustomName());
+                            }
+                        }
+                    }
+                }
+            
+                //stringify the egg's location
+                Location locMsg = data.getEggLocation();
+                int x = locMsg.getBlockX();
+                int y = locMsg.getBlockY();
+                int z = locMsg.getBlockZ();
+                String world = locMsg.getWorld().getName();
+                String locStr = String.format(" at %d, %d, %d in %s", x, y, z, world);
+
+                sender.sendMessage(String.format("The dragon egg %s %s.", storageMsg, locStr));
             }
-
-            String egg_loc_str = ""; // make this empty so if egg does not exist, it remains blank
-
-            if (data.stored_as != Data.Egg_Storage_Type.DNE) {
-                Location egg_loc = data.getEggLocation();
-
-                // May occasionally produce a NullPointerException, assert that it wont
-                assert egg_loc != null;
-
-                int egg_x = egg_loc.getBlockX();
-                int egg_y = egg_loc.getBlockY();
-                int egg_z = egg_loc.getBlockZ();
-                String egg_world = egg_loc.getWorld().getName();
-                egg_loc_str = String.format(" at %d, %d, %d in %s", egg_x, egg_y, egg_z, egg_world);
-            }
-            sender.sendMessage("The dragon egg ".concat(eggContainer).concat(egg_loc_str).concat("."));
-
+            
         } else {
             sender.sendMessage(NOT_PERMITTED_MSG);
         }
@@ -74,29 +97,28 @@ public class CommandHandler {
         } else {
             if (sender.hasPermission("egghunt.trackegg")) {
                 Player player = (Player) sender;
-                // roundabout way of getting the item the player is holding in their hotbar
-                ItemStack held_item = player.getInventory().getItemInMainHand();
-                if (held_item.getType().equals(Material.COMPASS)) {
+                // get the item the player is holding
+                ItemStack heldItem = player.getInventory().getItemInMainHand();
+                if (heldItem.getType().equals(Material.COMPASS)) {
 
-                    if (data.stored_as != Data.Egg_Storage_Type.DNE) {
-                        Location egg_loc = data.getEggLocation();
-                        if (player.getWorld().equals(egg_loc.getWorld())) {
+                    if (data.getEggType() != Data.Egg_Storage_Type.DNE) {
+                        Location eggLoc = data.getEggLocation();
+                        if (player.getWorld().equals(eggLoc.getWorld())) {
 
-                            CompassMeta meta = (CompassMeta) held_item.getItemMeta();
-                            meta.setLodestoneTracked(false);
-                            meta.setLodestone(egg_loc);
-                            held_item.setItemMeta(meta);
-                            sender.sendMessage("Compass set to track last known dragon egg position.");
+                            CompassMeta compassMeta = (CompassMeta) heldItem.getItemMeta();
+                            compassMeta.setLodestoneTracked(false);
+                            compassMeta.setLodestone(eggLoc);
+                            heldItem.setItemMeta(compassMeta);
+                            sender.sendMessage("Tracking last known dragon egg position.");
                         } else {
                             sender.sendMessage("Not in the same dimension as the egg.");
-                            sender.sendMessage(String.format("The egg is in %s.", egg_loc.getWorld().getName()));
+                            sender.sendMessage(String.format("The egg is in %s.", eggLoc.getWorld().getName()));
                         }
                     } else {
                         sender.sendMessage("The dragon egg does not exist.");
                     }
                 } else {
-                    sender.sendMessage(
-                            "You must be holding a compass to use this command, use /locateegg instead.");
+                    sender.sendMessage("You must be holding a compass to use this command, use /locateegg instead.");
                 }
             } else {
                 sender.sendMessage(NOT_PERMITTED_MSG);
@@ -107,12 +129,10 @@ public class CommandHandler {
 
     private boolean getOwner(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("egghunt.eggowner")) {
-            if (data.owner == null) {
-                sender.sendMessage("The dragon egg is currently unclaimed");
+            if (data.getEggOwner() == null) {
+                sender.sendMessage("The dragon egg has not been claimed.");
             } else {
-                sender.sendMessage(String.format("The dragon egg belongs to %s.",
-                        get_username_from_uuid(data.owner)));
-                sender.sendMessage("Don't steal it!");
+                sender.sendMessage(String.format("The dragon egg belongs to %s.", data.getEggOwner().getName()));
             }
         } else {
             sender.sendMessage(NOT_PERMITTED_MSG);
@@ -191,9 +211,5 @@ public class CommandHandler {
 
         // if no command is found
         return false;
-    }
-
-    public static String get_username_from_uuid(UUID id) {
-        return Bukkit.getOfflinePlayer(id).getName();
     }
 }

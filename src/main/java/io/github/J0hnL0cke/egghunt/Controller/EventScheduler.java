@@ -1,5 +1,7 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
+import java.util.logging.Logger;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -23,31 +25,58 @@ public class EventScheduler extends BukkitRunnable {
 
     private Data data;
     private Configuration config;
+    private Logger logger;
 
-    public EventScheduler(Configuration config, Data data) {
+    public EventScheduler(Configuration config, Data data, Logger logger) {
         this.data = data;
         this.config = config;
+        this.logger = logger;
     }
 
     @Override
     public void run() {
         // check if the entity storing the egg has fallen out of the world
-        if (data.stored_as.equals(Data.Egg_Storage_Type.ENTITY_INV)) {
-            Entity entity = data.stored_entity;
-            if (entity != null) {
-                // TODO: check if this check is needed
-                if (hasEgg(entity)) {
-                    if (isUnderWorld(entity)) {
-                        removeEgg(entity);
+        //TODO handle launching egg into void faster than the timer tick
+        //TODO first check if chunk is loaded
+        if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
+            if (isUnderWorld(data.getEggEntity())) {
+                Location respawnLoc = data.getEggEntity().getLocation();
+                removeMaterialFromEntity(Material.DRAGON_EGG, data.getEggEntity());
+                if (config.getEggInvincible()) {
+                    
+                    // get coords for egg to spawn at
+                    //get highest block
+                    Block highestBlock = respawnLoc.getWorld().getHighestBlockAt(respawnLoc);
+                    int yPos = highestBlock.getY();
+
+                    //if no highest block, default to sea level (world height / 2)
+                    if (highestBlock.isEmpty()) {
+                        yPos = respawnLoc.getWorld().getMaxHeight() / 2;
                     }
+                    respawnLoc.setY(yPos);
+                    EggRespawn.spawnEggItem(respawnLoc, config, data);
+                } else {
+                    eggDestroyed();
+                    respawnEgg(respawnLoc);
                 }
+                data.resetEggOwner(true);
             }
-        } else if (data.stored_as.equals(Data.Egg_Storage_Type.ITEM)) {
-            Entity item = data.stored_entity;
-            if (item != null) {
-                if (isUnderWorld(item)) {
-                    removeEgg(item);
-                }
+
+        }
+    }
+    
+    private void eggDestroyed() {
+        Announcement.announce("The dragon egg has been destroyed!", logger);
+        data.resetEggOwner(false);
+    }
+    
+    private void respawnEgg(Location respawnLoc) {
+        if (config.getRespawnEgg()) {
+            if (config.getRespawnImmediately()) {
+                
+            } else {
+                data.resetEggLocation();
+                Announcement.announce("It will respawn the next time the dragon is defeated", logger);
             }
         }
     }
@@ -76,35 +105,29 @@ public class EventScheduler extends BukkitRunnable {
         return entity.getLocation().getY() < UNDER_WORLD_HEIGHT;
     }
 
-    public void removeEgg(Entity container) {
-        Location l = container.getLocation();
-        removeMaterialFromEntity(Material.DRAGON_EGG, container);
-        if (config.getEggInvincible()) {
-            // get coords for egg to spawn at
-            // TODO: handle negative y coords in 1.17
-
-            Block block_pos = l.getWorld().getHighestBlockAt(l);
-            int y_pos = block_pos.getY();
-            if (block_pos.isEmpty()) {
-                y_pos = l.getWorld().getMaxHeight()/2; //respawn around sea level (world height / 2) if no blocks underneath
-            }
-            l.setY(y_pos);
-            EggHuntListener.spawnEggItem(l);
-        } else {
-            EggHuntListener.eggDestroyed();
-        }
-        EggHuntListener.resetEggOwner(true);
-    }
-
     public void removeMaterialFromEntity(Material m, Entity entity) {
-        data.stored_as = Data.Egg_Storage_Type.DNE;
-        if (entity instanceof Player) {
-            Player player = (Player) entity;
-            player.getInventory().remove(m);
-        } else if (entity instanceof LivingEntity) {
+        switch (entity.getType()) {
+            case PLAYER: {
+                Player player = (Player) entity;
+                player.getInventory().remove(m);
+                return;
+            }
+            case DROPPED_ITEM: {
+                ((Item) entity).remove();
+                return;
+            }
+            case FALLING_BLOCK: {
+                ((FallingBlock) entity).remove();
+                return;
+            }
+            default: {
+            }
+        }
+        
+        if (entity instanceof LivingEntity) {
+            LivingEntity live = (LivingEntity) entity;
             EntityEquipment equipment = ((LivingEntity) entity).getEquipment();
             if (equipment != null) {
-                // TODO: consider all armor slots, not just hands
                 if (equipment.getItemInMainHand().getType().equals(m)) {
                     equipment.setItemInMainHand(null);
                 }
@@ -112,10 +135,6 @@ public class EventScheduler extends BukkitRunnable {
                     equipment.setItemInOffHand(null);
                 }
             }
-        } else if (entity instanceof Item) {
-            ((Item) entity).remove();
-        } else if (entity instanceof FallingBlock) {
-            ((FallingBlock) entity).remove();
         }
     }
 

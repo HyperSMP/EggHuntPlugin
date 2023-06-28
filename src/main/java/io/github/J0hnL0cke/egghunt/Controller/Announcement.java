@@ -12,10 +12,10 @@ public class Announcement {
     public static void announce(String message, Logger logger) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
-        for (Player player: players)
-        	if (player.hasPermission("egghunt.notify")) {
-        		((CommandSender) player).sendMessage(message);
-        	}
+        for (Player player : players)
+            if (player.hasPermission("egghunt.notify")) {
+                ((CommandSender) player).sendMessage(message);
+            }
 
         logger.info(String.format("Told %d players %s", players.size(), message));
     }

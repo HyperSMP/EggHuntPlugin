@@ -8,24 +8,24 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class DataDAO {
+public class DataFileDAO {
 
     public static final String DATA_FILE = "data.yml";
     
-    private static DataDAO thisDao;
+    private static DataFileDAO thisDao;
     private FileConfiguration fileConfig;
     private File file;
 
     JavaPlugin plugin;
 
-    private DataDAO(JavaPlugin plugin){
+    private DataFileDAO(JavaPlugin plugin){
         this.plugin = plugin;
         loadData(plugin, DATA_FILE);
     }
 
-    public static DataDAO getDataDAO(JavaPlugin plugin){
+    public static DataFileDAO getDataDAO(JavaPlugin plugin){
         if(thisDao == null){
-            thisDao = new DataDAO(plugin);
+            thisDao = new DataFileDAO(plugin);
         }
         return thisDao;
     }

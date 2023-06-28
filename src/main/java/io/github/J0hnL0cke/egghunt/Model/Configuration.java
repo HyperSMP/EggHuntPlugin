@@ -3,7 +3,7 @@ package io.github.J0hnL0cke.egghunt.Model;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
-import io.github.J0hnL0cke.egghunt.Persistence.ConfigDAO;
+import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
 
 /**
  * Retrieve settings for this plugin
@@ -19,9 +19,9 @@ public class Configuration {
     
     public static String defaultEnd = "world_end"; /** default end world name for most spigot servers */
     
-    ConfigDAO fileDao;
+    ConfigFileDAO fileDao;
     
-    public Configuration(ConfigDAO fileDao) {
+    public Configuration(ConfigFileDAO fileDao) {
         this.fileDao = fileDao;
         loadData();
     }
