@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.J0hnL0cke</groupId>
   <artifactId>EggHunt</artifactId>
-  <version>1.16.4</version>
+  <version>1.20.1</version>
      <build>
       <plugins>
           <plugin>
@@ -59,10 +59,5 @@
          <artifactId>gson</artifactId>
          <version>2.10.1</version>
        </dependency>
-       <dependency>
-         <groupId>org.mongodb</groupId>
-         <artifactId>bson</artifactId>
-         <version>4.1.1</version>
-         </dependency>
    </dependencies>
 </project>

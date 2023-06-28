@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
@@ -12,7 +11,6 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
@@ -125,7 +123,6 @@ public class EventScheduler extends BukkitRunnable {
         }
         
         if (entity instanceof LivingEntity) {
-            LivingEntity live = (LivingEntity) entity;
             EntityEquipment equipment = ((LivingEntity) entity).getEquipment();
             if (equipment != null) {
                 if (equipment.getItemInMainHand().getType().equals(m)) {

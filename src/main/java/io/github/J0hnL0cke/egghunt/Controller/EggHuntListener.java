@@ -1,6 +1,5 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -26,7 +25,6 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.util.Vector;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -34,7 +32,6 @@ import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 
 import java.util.List;
 
-import java.util.UUID;
 import java.util.logging.Logger;
 
 public class EggHuntListener implements Listener {
@@ -54,10 +51,6 @@ public class EggHuntListener implements Listener {
         this.config = config;
         this.data = data;
     }
-
-    private static String get_username_from_uuid(UUID id) {
-		return Bukkit.getOfflinePlayer(id).getName();
-	}
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAutosave(WorldSaveEvent event) {
