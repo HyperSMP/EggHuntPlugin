@@ -105,34 +105,31 @@ public class EventScheduler extends BukkitRunnable {
 
     public void removeMaterialFromEntity(Material m, Entity entity) {
         switch (entity.getType()) {
-            case PLAYER: {
+            case PLAYER:
                 Player player = (Player) entity;
                 player.getInventory().remove(m);
-                return;
-            }
-            case DROPPED_ITEM: {
+                break;
+            
+            case DROPPED_ITEM:
                 ((Item) entity).remove();
-                return;
-            }
-            case FALLING_BLOCK: {
+                break;
+            
+            case FALLING_BLOCK:
                 ((FallingBlock) entity).remove();
-                return;
-            }
-            default: {
-            }
-        }
-        
-        if (entity instanceof LivingEntity) {
-            EntityEquipment equipment = ((LivingEntity) entity).getEquipment();
-            if (equipment != null) {
-                if (equipment.getItemInMainHand().getType().equals(m)) {
-                    equipment.setItemInMainHand(null);
+                break;
+            
+            default:
+                if (entity instanceof LivingEntity) {
+                    EntityEquipment equipment = ((LivingEntity) entity).getEquipment();
+                    if (equipment != null) {
+                        if (equipment.getItemInMainHand().getType().equals(m)) {
+                            equipment.setItemInMainHand(null);
+                        }
+                        if (equipment.getItemInOffHand().getType().equals(m)) {
+                            equipment.setItemInOffHand(null);
+                        }
+                    }
                 }
-                if (equipment.getItemInOffHand().getType().equals(m)) {
-                    equipment.setItemInOffHand(null);
-                }
-            }
         }
     }
-
 }

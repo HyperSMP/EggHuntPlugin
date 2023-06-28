@@ -53,24 +53,27 @@ public class CommandHandler {
                     Entity eggEntity = data.getEggEntity();
 
                     switch (eggEntity.getType()) {
-                        case DROPPED_ITEM: {
+                        case DROPPED_ITEM:
                             storageMsg = "is a dropped item";
-                        }
-                        case ITEM_FRAME: {
+                            break;
+                        case ITEM_FRAME:
                             storageMsg = "is in an item frame";
-                        }
-                        case FALLING_BLOCK: {
+                            break;
+
+                        case FALLING_BLOCK:
                             storageMsg = "is a falling block entity";
-                        }
-                        case PLAYER: {
+                            break;
+
+                        case PLAYER:
                             storageMsg = String.format("is in the inventory of %s", eggEntity.getName());
-                        }
-                        default: {
+                            break;
+
+                        default:
                             storageMsg = String.format("is held by a(n) %s", eggEntity.getType().toString());
                             if (eggEntity.getCustomName() != null) {
                                 storageMsg += String.format(" named %s", eggEntity.getCustomName());
                             }
-                        }
+                        
                     }
                 }
             

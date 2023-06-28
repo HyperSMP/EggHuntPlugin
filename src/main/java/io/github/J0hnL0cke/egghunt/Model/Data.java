@@ -133,15 +133,14 @@ public class Data {
         storedAs=Egg_Storage_Type.BLOCK;
         
         switch (block.getType()) {
-            case DRAGON_EGG: {
+            case DRAGON_EGG:
                 //egg is stored as a block
                 log(String.format("The egg is placed as a block"));
-            }
+                break;
 
-            default: {
+            default:
                 //egg is stored within the inventory of a tile entity (chest, hopper, furnace, etc)
                 log(String.format("The egg is in a(n) %s", block.getType()));
-            }
         }
         
         saveData();
@@ -154,26 +153,26 @@ public class Data {
         storedAs = Egg_Storage_Type.ENTITY;
 
         switch (holderEntity.getType()) {
-            case PLAYER: {
+            case PLAYER:
                 //TODO Switch posession here
                 log(String.format("The egg is in the inventory of the player \"%s\"", entity.getName()));
-            }
+                break;
 
-            case FALLING_BLOCK: {
+            case FALLING_BLOCK:
                 log(String.format("The egg is a falling block"));
-            }
+                break;
 
-            case DROPPED_ITEM: {
+            case DROPPED_ITEM:
                 log(String.format("The egg is a dropped item"));
-            }
+                break;
 
-            case ITEM_FRAME: {
+            case ITEM_FRAME:
                 log(String.format("The egg is an item frame"));
-            }
+                break;
 
-            case ARMOR_STAND: {
+            case ARMOR_STAND:
                 log(String.format("The egg is held by an armor stand"));
-            }
+                break;
 
             default:
                 //stored in the inventory of a non-player entity (zombie, hopper minecart, etc)
