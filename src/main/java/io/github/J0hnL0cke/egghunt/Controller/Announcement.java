@@ -5,18 +5,27 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 public class Announcement {
     public static void announce(String message, Logger logger) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
+        int playersNotified = 0;
 
         for (Player player : players)
             if (player.hasPermission("egghunt.notify")) {
-                ((CommandSender) player).sendMessage(message);
+                playersNotified += 1;
+                player.sendMessage(message);
             }
 
-        logger.info(String.format("Told %d players %s", players.size(), message));
+        logger.info(String.format("Told %d player(s) \"%s\"", playersNotified, message));
+    }
+
+    public static void claimEggEffects(Player Player){
+        Player.playSound(Player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 10, 0);
+        Player.spawnParticle(Particle.SPELL_WITCH, Player.getLocation(), 50, 0.3, 0.1, 0.3);
+        Player.spawnParticle(Particle.PORTAL, Player.getLocation(), 50, 0.3, 0.1, 0.3);
     }
 }

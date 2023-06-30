@@ -22,10 +22,10 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.BundleMeta;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -107,16 +107,23 @@ public class EggHuntListener implements Listener {
         }
     }
 
-    // Handle the egg being held in an entity's inventory
+    /**
+     * Handle the egg being picked up by an entity
+     */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPickupItem(EntityPickupItemEvent event) {
-    	// Check if item dropped is an egg
-    	if(isEgg(event.getItem())) {
-    		data.updateEggLocation(event.getEntity());
-    	}
+        // Check if item picked up is an egg
+        if (isEgg(event.getItem())) {
+            data.updateEggLocation(event.getEntity());
+            if (event.getEntity() instanceof Player) {
+                data.setEggOwner((Player)event.getEntity());
+            }
+        }
     }
 
-    // Handle the egg being held in an item-based entity's inventory
+    /**
+     * Handle the egg being picked up by a container (hopper or hopper minecart)
+     */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHopperCollect(InventoryPickupItemEvent event) {
     	
@@ -143,7 +150,28 @@ public class EggHuntListener implements Listener {
         Player player = (Player) event.getPlayer();
         Inventory otherInv = event.getInventory();
 
-        
+        //force an egg in the ender chest to be dropped if enabled in config and if the player is not in creative
+        if (otherInv.getType().equals(InventoryType.ENDER_CHEST)){
+            if (config.getDropEnderchestedEgg() && player.getGameMode() != GameMode.CREATIVE) {
+                if (otherInv.contains(Material.DRAGON_EGG)) {
+                    ItemStack egg = otherInv.getItem(otherInv.first(Material.DRAGON_EGG));
+                    Location playerLoc = player.getLocation();
+                    otherInv.remove(egg);
+                    Item i = playerLoc.getWorld().dropItem(playerLoc, egg); //TODO use drop item function
+                    console_log(String.format(
+                            "Dropped the dragon egg on the ground since %s had it in their ender chest.",
+                            player.getName()));
+                    console_log(
+                            "Set ignore_echest_egg to \"true\" in the config file to disable this feature.");
+                    data.updateEggLocation(i);
+                }
+            }
+            //whether the egg is dropped or not, ignore all other checking
+            //since either egg should be dropped and location has already been updated
+            //or it should not move and this egg should be ignored entirely
+            return;
+        }
+
         if (player.getInventory().contains(Material.DRAGON_EGG)) {
             //if the player has the egg in their inventory, it will stay there
             data.updateEggLocation(player);
@@ -153,31 +181,16 @@ public class EggHuntListener implements Listener {
 
             if (otherInv.getType() != InventoryType.PLAYER) { //TODO check how this affects player viewing own inventory (egg on head/offhand?)
                 
-                if (otherInv.getHolder() instanceof Container) { //TODO test this works
+                if (otherInv.getHolder() instanceof Container || otherInv instanceof AbstractHorseInventory) { //not instanceof entity- chest llama but not wandering trader
                     //this is a container (chest, furnace, hopper minecart, etc), so the egg will remain here when the inventory is closed
                     data.updateEggLocation(otherInv);
+                    
 
                 } else {
                     //this is not a container (anvil, crafting table, villager, etc), so it will move back to the player's inventory
                     //note- if the player's inventory is full, it will instead drop as an item, which will trigger the item drop event
+                    data.updateEggLocation(player);
                     
-                    //force an egg in the ender chest to be dropped if enabled in config and if the player is not in creative
-                    if (otherInv.getType().equals(InventoryType.ENDER_CHEST) && config.getDropEnderchestedEgg() && player.getGameMode() != GameMode.CREATIVE) {
-                        ItemStack egg = otherInv.getItem(otherInv.first(Material.DRAGON_EGG));
-                        Location playerLoc = player.getLocation();
-                        otherInv.remove(egg);
-                        Item i = playerLoc.getWorld().dropItem(playerLoc, egg); //TODO use drop item function
-                        console_log(String.format(
-                                "Dropped the dragon egg on the ground since %s had it in their ender chest.",
-                                player.getName()));
-                        console_log(
-                                "Set ignore_echest_egg to \"true\" in the config file to disable this feature.");
-                        data.updateEggLocation(i);
-
-                    } else {
-                        //the egg will appear in the player's inventory
-                        data.updateEggLocation(player);
-                    }
                 }
             }
         }
@@ -230,13 +243,13 @@ public class EggHuntListener implements Listener {
 
             if (!config.getAccurateLocation()) {
                 //TODO disable accuracy here
-                console_log("The egg teleported, location is set to show location before teleport");
+                console_log("The egg teleported, showing players the egg's location before teleport");
             } else {
-                console_log("The egg teleported, location is set to show location after teleport");
+                console_log("The egg teleported, showing players the egg's up-to-date location");
             }
 
             if (config.resetOwnerOnTeleport()) {
-                if (data.getEggOwner()!=null) {
+                if (data.getEggOwner() != null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", data.getEggOwner().getName()));
                     data.resetEggOwner(false);
                 }
@@ -297,14 +310,23 @@ public class EggHuntListener implements Listener {
             }
         }
         
+        else if (event.getEntity().getType().equals(EntityType.ITEM_FRAME)
+                || event.getEntity().getType().equals(EntityType.GLOW_ITEM_FRAME)) {
+            ItemFrame frame = (ItemFrame) event.getEntity();
+            if (isEgg(frame.getItem())) {
+                frame.setItem(null); //make sure the item is destroyed
+                eggDestroyed();
+            }
+        }
+
     	//if the dragon is killed, respawn the egg
-    	if (config.getRespawnEgg()) {
+    	else if (config.getRespawnEgg()) {
             if (data.getEggType() == Egg_Storage_Type.DNE) {
-                //
+                //if the egg does not exist
     			if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
-    				//dragon is killed
+    				//if the dragon is killed
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
-                        //dragon has already been beaten
+                        //if the dragon has already been beaten
     					spawnEggBlock();
     				}
     			}
@@ -340,7 +362,7 @@ public class EggHuntListener implements Listener {
     			}
     		}
     		console_log(String.format("%s tried to overwrite egg with a portal",entityName));
-    		data.resetEggOwner(true);
+    		data.resetEggOwner(false);
     		if (l!=null) {
     			EggRespawn.spawnEggItem(l, config, data);
     		} else {
@@ -388,23 +410,38 @@ public class EggHuntListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onGrow(StructureGrowEvent event) {
-        boolean cancel = false;
-        if (event.getSpecies().equals(TreeType.BROWN_MUSHROOM) || event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
+        boolean destroy = false;
+        if (event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
             List<BlockState> blocks = event.getBlocks();
-            for (BlockState block : blocks) {
-                if (isEgg(block.getBlock())) {
-                    cancel = true;
-                    break;
+            for (BlockState blockState : blocks) {
+                Block block = blockState.getBlock();
+                if (isEgg(block)) {
+                    destroy = true;
+                    if (!config.getEggInvincible()){ //if egg will be replaced, make sure it gets removed
+                        block.setType(Material.AIR);
+                    }
+                } else {
+                    if (blockState instanceof Container) { //TODO exclude item frames, which aren't destroyed by this
+                        Container cont = (Container) blockState;
+                        if (cont.getInventory().contains(Material.DRAGON_EGG)) {
+                            destroy = true;
+                            cont.getInventory().remove(Material.DRAGON_EGG); //make sure egg is removed from container
+                        }
+                    }
                 }
             }
-            if (cancel) {
-                event.setCancelled(true);
-                Player p = event.getPlayer();
-                if (p != null) {
-                    p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-                    p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
-                    p.setCooldown(Material.BONE_MEAL, 100);
-                    console_log(String.format("%s tried to mushroom the dragon egg", p.getName()));
+            if (destroy) {
+                if (config.getEggInvincible()){
+                    event.setCancelled(true);
+                    Player p = event.getPlayer();
+                    if (p != null) {
+                        p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                        p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
+                        p.setCooldown(Material.BONE_MEAL, 100);
+                        console_log(String.format("%s tried to mushroom the dragon egg", p.getName()));
+                    }
+                } else {
+                    eggDestroyed();
                 }
             }
         }
@@ -427,6 +464,14 @@ public class EggHuntListener implements Listener {
                                 event.getWhoClicked().getName()));
                     }
                 }
+                if (event.getCursor() != null){
+                    if (isEgg(event.getCursor())) {
+                        event.setCancelled(true);
+                        console_log(String.format("Stopped %s from dropping egg from cursor to ender chest",
+                                event.getWhoClicked().getName()));
+                    }
+                }
+
                 //don't allow hotkeying either
                 if (event.getClick().equals(ClickType.NUMBER_KEY)) {
                     ItemStack item = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
@@ -502,9 +547,9 @@ public class EggHuntListener implements Listener {
     
     private void portalOverwriteEgg(Location res) {
     	res.getBlock().setType(Material.AIR);
-    	console_log("Prevented egg overwrite with a portal");
-    	data.resetEggOwner(true); //TODO see if this can be used to spam chat, update if needed
-    	if (config.getEggInvincible()) {
+    	console_log("Egg was overwritten with a portal");
+        if (config.getEggInvincible()) {
+            console_log("Spawning new egg");
     		EggRespawn.spawnEggItem(res, config, data);
     	} else {
     		eggDestroyed();
@@ -569,7 +614,8 @@ public class EggHuntListener implements Listener {
     }
 
     private void spawnEggBlock() {
-    	Block newEggLoc=config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0).getBlock();
+        Block newEggLoc = config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0).getBlock();
+        newEggLoc.setType(Material.DRAGON_EGG);
     	data.updateEggLocation(newEggLoc);
     	announce("The dragon egg has spawned in the end!");
     }
@@ -579,7 +625,7 @@ public class EggHuntListener implements Listener {
     }
 
     private boolean isEgg(Item item) {
-        return item.getType().equals(Material.DRAGON_EGG);
+        return item.getItemStack().getType().equals(Material.DRAGON_EGG);
     }
 
     private boolean isEgg(Block block) {

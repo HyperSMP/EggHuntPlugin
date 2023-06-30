@@ -39,6 +39,7 @@ public final class egghunt extends JavaPlugin {
         //create controller instances
         listener = new EggHuntListener(getLogger(), config, data);
         schedule = new EventScheduler(config, data, logger);
+        commandHandler = new CommandHandler(data);
 		
 		//register event handlers
 		log("registering event listeners.");

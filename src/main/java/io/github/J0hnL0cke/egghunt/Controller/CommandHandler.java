@@ -57,6 +57,7 @@ public class CommandHandler {
                             storageMsg = "is a dropped item";
                             break;
                         case ITEM_FRAME:
+                        case GLOW_ITEM_FRAME:
                             storageMsg = "is in an item frame";
                             break;
 
@@ -83,7 +84,7 @@ public class CommandHandler {
                 int y = locMsg.getBlockY();
                 int z = locMsg.getBlockZ();
                 String world = locMsg.getWorld().getName();
-                String locStr = String.format(" at %d, %d, %d in %s", x, y, z, world);
+                String locStr = String.format("at %d/%d/%d in %s", x, y, z, world);
 
                 sender.sendMessage(String.format("The dragon egg %s %s.", storageMsg, locStr));
             }

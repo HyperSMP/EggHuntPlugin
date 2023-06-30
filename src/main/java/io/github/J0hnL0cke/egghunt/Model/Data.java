@@ -1,16 +1,26 @@
 package io.github.J0hnL0cke.egghunt.Model;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
+import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+
 import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
@@ -66,44 +76,102 @@ public class Data {
     }
 
     public OfflinePlayer getEggOwner() {
+        if (owner == null) {
+            return null;
+        }
         return Bukkit.getOfflinePlayer(owner);
     }
     
+    private Map<String, Object> serializeLocation(Location loc) {
+        if (loc == null) {
+            return null;
+        }
+        return loc.serialize();
+    }
+    
+    private Location deserializeLocation(Map<String, Object> locObj) {
+        if (locObj == null) {
+            return null;
+        } else {
+            return Location.deserialize(locObj);
+        }
+    }
+
+    private Map<String, Object> serializeBlock(Block block) {
+        if (block == null) {
+            return null;
+        } else {
+            return serializeLocation(block.getLocation());
+        }
+    }
+
+    private Block deserializeBlock(Map<String, Object> blockStr) {
+        if (blockStr == null) {
+            return null;
+        } else {
+            return deserializeLocation(blockStr).getBlock();
+        }
+    }
+
+    private UUID serializeEntity(Entity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return entity.getUniqueId();
+    }
+    
+    private Entity deserializeEntity(UUID uuid) {
+        if (uuid != null) {
+            return Bukkit.getEntity(uuid);
+        }
+        return null;
+    }
+
     public void loadData() {
-		owner = dataDao.read("owner", UUID.class, null);
-        block = dataDao.read("block", Block.class, null);
-        entity = dataDao.read("entity", Entity.class, null);
-        approxLocation = dataDao.read("lastLocation", Location.class, null);
-        storedAs = dataDao.read("storedAs", Egg_Storage_Type.class, null);
+        owner = dataDao.read("owner", UUID.class, null);
+        block = deserializeBlock(dataDao.read("block", Map.class, null));
+        entity = deserializeEntity(dataDao.read("entity", UUID.class, null));
+        approxLocation = deserializeLocation(dataDao.read("lastLocation", Map.class, null));
+        String storageString = dataDao.read("storedAs", String.class, null);
 
         if (storedAs == null) {
             logger.warning("Could not correctly load egg location data! Was this plugin's data folder deleted?\n" +
                     "If this is the first time this plugin has run, it is safe to ignore this error.");
             storedAs = Egg_Storage_Type.DNE;
             saveData();
+        } else {
+            storedAs = Egg_Storage_Type.valueOf(storageString);
         }
 	}
 
     public void saveData() {
         dataDao.write("owner", owner);
-        dataDao.write("block", block);
-        dataDao.write("entity", entity);
-        dataDao.write("lastLocation", approxLocation);
-        dataDao.write("storedAs", storedAs);
+        dataDao.write("block", serializeBlock(block));
+        dataDao.write("entity", serializeEntity(entity));
+        dataDao.write("lastLocation", serializeLocation(approxLocation));
+        dataDao.write("storedAs", storedAs.name());
 
         //save timestamp
-        dataDao.write("FileWriteTime", LocalDateTime.now().toString());
+        dataDao.write("writeTime", LocalDateTime.now().toString());
 
         //write to file
         dataDao.save();
-    }    
+    }
     
     public void setEggOwner(Player player) {
         setEggOwner(player.getUniqueId());
     }
 
     private void setEggOwner(UUID playerUUID) {
-        owner = playerUUID;
+        if (!playerUUID.equals(owner)) { //only announce if the egg has actually changed posession
+            owner = playerUUID;
+            Announcement.announce(
+                    String.format("%s has claimed the dragon egg!", Bukkit.getOfflinePlayer(owner).getName()), logger);
+            Player p = Bukkit.getPlayer(playerUUID);
+            if (p != null) { //make sure player is online
+                Announcement.claimEggEffects(p);
+            }   
+        }
     }
 
     public void resetEggOwner(boolean announce) {
@@ -167,6 +235,7 @@ public class Data {
                 break;
 
             case ITEM_FRAME:
+            case GLOW_ITEM_FRAME:
                 log(String.format("The egg is an item frame"));
                 break;
 
@@ -188,15 +257,26 @@ public class Data {
         saveData();
     }
     
-    public void updateEggLocation(Inventory holder) {
+    public void updateEggLocation(Inventory inv) {
         //likely to be called when a generic inventory is the most info given for what picked up an item, like on hopper collect event
         //if more info is available (such as Entity or Block instance), better to pass that instead, although this should still work
-        if (holder instanceof Entity){
-            // Hopper minecart (or some other entity) picked up the egg
-            updateEggLocation((Entity)holder);
+        if (inv.getHolder() instanceof Entity){
+            // Hopper minecart, llama, or some other entity has the egg
+            for (Entity e : inv.getLocation().getWorld().getEntities()) {
+                //search all entities in the world
+                if (e instanceof InventoryHolder) {
+                    if (inv.getHolder().equals((InventoryHolder) e)) {
+                        //if they are this inventory's holder, this is the entity to target
+                        updateEggLocation(e);
+                        return;
+                    }
+                }
+            }
+            log("could not find correct inventoryHolder entity!");
+            
         } else {
             // Hopper picked up the egg
-            updateEggLocation((Block)holder); //TODO check if this cast works or if .getLocation().getBlock() is needed
+            updateEggLocation(inv.getLocation().getBlock()); //TODO check if this cast works or if .getLocation().getBlock() is needed
         }
     }
     

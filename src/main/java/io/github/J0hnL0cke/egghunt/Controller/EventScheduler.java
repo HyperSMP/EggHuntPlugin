@@ -18,7 +18,7 @@ import io.github.J0hnL0cke.egghunt.Model.Data;
 
 public class EventScheduler extends BukkitRunnable {
 
-    public final int UNDER_WORLD_HEIGHT = -40; // TODO this is wrong as of caves and cliffs
+    public final int UNDER_WORLD_HEIGHT = -80;
     public final int VOID_RESPAWN_OFFSET = 2; // how much higher than the highest block to respawn the egg when it falls into the void
 
     private Data data;
