@@ -9,7 +9,7 @@ import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
  * Retrieve settings for this plugin
  */
 public class Configuration {
-    boolean eggInvincible; /** whether to make the egg immune to damage */
+    boolean eggInvulnerable; /** whether to make the egg immune to damage */
     boolean respawnEgg; /** whether the egg should respawn when destroyed */
     boolean respawnImmediately; /** if respawning the egg, whether it should immediately respawn in-place or whether it should generate after next dragon fight */
     boolean resetOwnerOnTeleport; /** whether the egg should become "lost" when it is teleported */
@@ -29,7 +29,7 @@ public class Configuration {
     private void loadData() {
 
         //load config settings
-        eggInvincible = fileDao.readBool("egg_inv");
+        eggInvulnerable = fileDao.readBool("egg_inv");
         respawnEgg = fileDao.readBool("resp_egg");
         respawnImmediately = fileDao.readBool("resp_imm");
         resetOwnerOnTeleport = fileDao.readBool("reset_owner");
@@ -40,8 +40,8 @@ public class Configuration {
     }
 
 
-    public boolean getEggInvincible() {
-        return eggInvincible;
+    public boolean getEggInvulnerable() {
+        return eggInvulnerable;
     }
     public boolean getRespawnEgg() {
         return respawnEgg;

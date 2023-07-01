@@ -16,13 +16,17 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
 import org.bukkit.event.entity.EntityCreatePortalEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -64,8 +68,30 @@ public class EggDestroyListener implements Listener {
     }
 
     /**
-     * Notifies that the egg is destroyed if the egg item dies
-     * Also respawns the egg when the dragon is killed
+     * Prevents the egg from being destroyed if the item frame it is in is exploded.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onFrameBreak(HangingBreakEvent event) {
+        if(event.getCause().equals(RemoveCause.EXPLOSION)){
+            if (event.getEntity().getType().equals(EntityType.ITEM_FRAME)
+                || event.getEntity().getType().equals(EntityType.GLOW_ITEM_FRAME)) {
+                ItemFrame frame = (ItemFrame) event.getEntity();
+                if (Egg.isEgg(frame.getItem())) {
+                    if (config.getEggInvulnerable()) {
+                        logToConsole("canceled explosion of egg item frame");
+                        event.setCancelled(true);
+                    } else {
+                        eggDestroyed();
+                        frame.setItem(null); //make sure item is removed
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Notifies that the egg is destroyed if the egg item dies.
+     * Also respawns the egg when the dragon is killed.
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
@@ -77,22 +103,12 @@ public class EggDestroyListener implements Listener {
                 eggDestroyed();
             }
         }
-        
-        else if (event.getEntity().getType().equals(EntityType.ITEM_FRAME)
-                || event.getEntity().getType().equals(EntityType.GLOW_ITEM_FRAME)) {
-            ItemFrame frame = (ItemFrame) event.getEntity();
-            if (Egg.isEgg(frame.getItem())) {
-                frame.setItem(null); //make sure the item is destroyed
-                eggDestroyed();
-            }
-        }
 
-    	//if the dragon is killed, respawn the egg
-    	else if (config.getRespawnEgg()) {
-            if (data.getEggType() == Egg_Storage_Type.DNE) {
-                //if the egg does not exist
-    			if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
-    				//if the dragon is killed
+        else if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
+            //if the dragon is killed, respawn the egg
+            if (config.getRespawnEgg()) {
+                if (data.getEggType() == Egg_Storage_Type.DNE) {
+                    //if the egg does not exist
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
                         //if the dragon has already been beaten
     					respawnEgg();
@@ -111,9 +127,9 @@ public class EggDestroyListener implements Listener {
         boolean egg_affected = false;
         Location l = null;
         List<BlockState> blocks = event.getBlocks();
-        console_log(String.format("blocks: %s", blocks.toString()));
+        logToConsole(String.format("blocks: %s", blocks.toString()));
         for (BlockState blockState : blocks) {
-            console_log(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
+            logToConsole(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
                     blockState.getBlock().getType(), blockState.getType()));
             if (Egg.isEgg(blockState.getBlock())) {
                 egg_affected = true;
@@ -131,12 +147,12 @@ public class EggDestroyListener implements Listener {
                     entityName = event.getEntity().getCustomName();
                 }
             }
-            console_log(String.format("%s tried to overwrite egg with a portal", entityName));
+            logToConsole(String.format("%s tried to overwrite egg with a portal", entityName));
             data.resetEggOwner(false);
             if (l != null) {
                 data.updateEggLocation(Egg.spawnEggItem(l, config, data));
             } else {
-                console_log("Could not spawn egg item! Invalid block location.");
+                logToConsole("Could not spawn egg item! Invalid block location.");
             }
         }
 
@@ -151,7 +167,7 @@ public class EggDestroyListener implements Listener {
             event.setCancelled(true);
             //set the age back to 1 so it doesn't try to despawn every tick
             event.getEntity().setTicksLived(1);
-            console_log("Canceled egg despawn");
+            logToConsole("Canceled egg despawn");
         }
     }
     
@@ -167,7 +183,7 @@ public class EggDestroyListener implements Listener {
                 Block block = blockState.getBlock();
                 if (Egg.isEgg(block)) {
                     destroy = true;
-                    if (!config.getEggInvincible()) { //if egg will be replaced, make sure it gets removed
+                    if (!config.getEggInvulnerable()) { //if egg will be replaced, make sure it gets removed
                         block.setType(Material.AIR);
                     }
                 } else {
@@ -181,14 +197,14 @@ public class EggDestroyListener implements Listener {
                 }
             }
             if (destroy) {
-                if (config.getEggInvincible()) {
+                if (config.getEggInvulnerable()) {
                     event.setCancelled(true);
                     Player p = event.getPlayer();
                     if (p != null) {
                         p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                         p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
                         p.setCooldown(Material.BONE_MEAL, 100);
-                        console_log(String.format("%s tried to mushroom the dragon egg", p.getName()));
+                        logToConsole(String.format("%s tried to mushroom the dragon egg", p.getName()));
                     }
                 } else {
                     eggDestroyed();
@@ -199,11 +215,12 @@ public class EggDestroyListener implements Listener {
 
     /**
      * Cancel events that damage the egg item if enabled in config
+     * Note: cannot cancel damage to item frames, since damage is used to remove an item but is not called when burned/exploded
      * TODO: figure out if this is still needed, since when active, egg is set to be invlunerable
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onConsiderEntityDamageEvent(EntityDamageEvent event) {
-        if (config.getEggInvincible()) {
+        if (config.getEggInvulnerable()) {
             Entity entity = event.getEntity();
             if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
                 if (Egg.isEgg((Item) entity)) {
@@ -232,9 +249,9 @@ public class EggDestroyListener implements Listener {
      */
     private void portalOverwriteEgg(Location res) {
     	res.getBlock().setType(Material.AIR);
-    	console_log("Egg was overwritten with a portal");
-        if (config.getEggInvincible()) {
-            console_log("Spawning new egg");
+    	logToConsole("Egg was overwritten with a portal");
+        if (config.getEggInvulnerable()) {
+            logToConsole("Spawning new egg");
     		data.updateEggLocation(Egg.spawnEggItem(res, config, data));
     	} else {
     		eggDestroyed();
@@ -290,7 +307,7 @@ public class EggDestroyListener implements Listener {
         Announcement.announce(msg, logger);
     }
 
-    private void console_log(String message) {
+    private void logToConsole(String message) {
         logger.info(message);
     }
 

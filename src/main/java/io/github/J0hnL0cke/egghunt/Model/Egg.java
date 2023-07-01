@@ -22,7 +22,7 @@ public class Egg {
      * Makes the given entity invulnerable if enabled in the config
      */
     public static void makeEggInvulnerable(Entity entity, Configuration config, Logger logger) {
-        if (config.getEggInvincible()) {
+        if (config.getEggInvulnerable()) {
             entity.setInvulnerable(true);
             logger.info("made drop invulnerable");
         }
@@ -50,7 +50,7 @@ public class Egg {
 		drop.setGravity(false);
 		drop.setGlowing(true);
 		drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
-        if (config.getEggInvincible()) {
+        if (config.getEggInvulnerable()) {
             drop.setInvulnerable(true);
         }
         return drop;

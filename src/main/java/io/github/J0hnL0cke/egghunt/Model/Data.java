@@ -142,7 +142,7 @@ public class Data {
         approxLocation = deserializeLocation(dataDao.read("lastLocation", Map.class, null));
         String storageString = dataDao.read("storedAs", String.class, null);
 
-        if (storedAs == null) {
+        if (storageString == null) {
             logger.warning("Could not correctly load egg location data! Was this plugin's data folder deleted?\n" +
                     "If this is the first time this plugin has run, it is safe to ignore this error.");
             storedAs = Egg_Storage_Type.DNE;
@@ -185,7 +185,7 @@ public class Data {
     public void resetEggOwner(boolean announce) {
         if (announce) { //TODO move announcements somewhere else?
             if (owner != null) {
-                Announcement.announce(String.format("%s no longer owns the dragon egg", Bukkit.getOfflinePlayer(owner)), logger);
+                Announcement.announce(String.format("%s no longer owns the dragon egg", Bukkit.getOfflinePlayer(owner).getName()), logger);
             }
         }
         logger.info("Egg owner has been reset");

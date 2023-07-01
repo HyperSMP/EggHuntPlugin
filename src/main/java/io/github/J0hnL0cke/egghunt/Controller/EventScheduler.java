@@ -19,7 +19,7 @@ import io.github.J0hnL0cke.egghunt.Model.Egg;
 
 public class EventScheduler extends BukkitRunnable {
 
-    public final int UNDER_WORLD_HEIGHT = -80;
+    public final int UNDER_WORLD_HEIGHT = -65; //below overworld bedrock and just above where items stop in the end (-66/67)
     public final int VOID_RESPAWN_OFFSET = 2; // how much higher than the highest block to respawn the egg when it falls into the void
 
     private Data data;
@@ -38,19 +38,24 @@ public class EventScheduler extends BukkitRunnable {
         //TODO handle launching egg into void faster than the timer tick
         //TODO first check if chunk is loaded
         if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
-            if (isUnderWorld(data.getEggEntity())) {
+            if (data.getEggEntity() == null) {
+                    logger.warning("Lost track of the dragon egg entity!");
+                    logger.warning("Resetting egg location to prevent repeated warnings");
+                    data.resetEggLocation();
+                    return;
+            } else if (isUnderWorld(data.getEggEntity())) {
                 Location respawnLoc = data.getEggEntity().getLocation();
                 removeMaterialFromEntity(Material.DRAGON_EGG, data.getEggEntity());
-                if (config.getEggInvincible()) {
+                if (config.getEggInvulnerable()) {
                     
                     // get coords for egg to spawn at
                     //get highest block
                     Block highestBlock = respawnLoc.getWorld().getHighestBlockAt(respawnLoc);
-                    int yPos = highestBlock.getY();
+                    int yPos = highestBlock.getY()+1;
 
-                    //if no highest block, default to sea level (world height / 2)
+                    //if no highest block, default to sea level
                     if (highestBlock.isEmpty()) {
-                        yPos = respawnLoc.getWorld().getMaxHeight() / 2;
+                        yPos = respawnLoc.getWorld().getSeaLevel();
                     }
                     respawnLoc.setY(yPos);
                     Egg.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called

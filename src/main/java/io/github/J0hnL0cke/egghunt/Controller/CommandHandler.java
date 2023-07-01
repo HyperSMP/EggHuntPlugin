@@ -42,7 +42,7 @@ public class CommandHandler {
                 if (type == Egg_Storage_Type.BLOCK) {
                     Block eggBlock = data.getEggBlock();
 
-                    if (Egg.isEgg(eggBlock.getType())) {
+                    if (Egg.isEgg(eggBlock)) {
                         storageMsg = "has been placed";
 
                     } else {
