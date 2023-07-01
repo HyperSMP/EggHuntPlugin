@@ -6,18 +6,11 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Effect;
-import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -113,24 +106,39 @@ public class Data {
         }
     }
 
-    private UUID serializeEntity(Entity entity) {
+    private String serializeEntity(Entity entity) {
         if (entity == null) {
             return null;
         }
-        return entity.getUniqueId();
+        return serializeUUID(entity.getUniqueId());
     }
     
-    private Entity deserializeEntity(UUID uuid) {
+    private Entity deserializeEntity(String idStr) {
+        UUID uuid = deserializeUUID(idStr);
         if (uuid != null) {
             return Bukkit.getEntity(uuid);
         }
         return null;
     }
 
+    private UUID deserializeUUID(String uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return UUID.fromString(uuid);
+    }
+    
+    private String serializeUUID(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return uuid.toString();
+    }
+
     public void loadData() {
-        owner = dataDao.read("owner", UUID.class, null);
+        owner = deserializeUUID(dataDao.read("owner", String.class, null));
         block = deserializeBlock(dataDao.read("block", Map.class, null));
-        entity = deserializeEntity(dataDao.read("entity", UUID.class, null));
+        entity = deserializeEntity(dataDao.read("entity", String.class, null));
         approxLocation = deserializeLocation(dataDao.read("lastLocation", Map.class, null));
         String storageString = dataDao.read("storedAs", String.class, null);
 
@@ -145,7 +153,7 @@ public class Data {
 	}
 
     public void saveData() {
-        dataDao.write("owner", owner);
+        dataDao.write("owner", serializeUUID(owner));
         dataDao.write("block", serializeBlock(block));
         dataDao.write("entity", serializeEntity(entity));
         dataDao.write("lastLocation", serializeLocation(approxLocation));
