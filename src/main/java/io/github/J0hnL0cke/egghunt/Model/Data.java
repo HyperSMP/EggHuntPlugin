@@ -169,7 +169,7 @@ public class Data {
                     String.format("%s has claimed the dragon egg!", Bukkit.getOfflinePlayer(owner).getName()), logger);
             Player p = Bukkit.getPlayer(playerUUID);
             if (p != null) { //make sure player is online
-                Announcement.claimEggEffects(p);
+                Announcement.ShowEggClaimEffects(p);
             }   
         }
     }

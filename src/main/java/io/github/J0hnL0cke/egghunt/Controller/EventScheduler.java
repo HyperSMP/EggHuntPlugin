@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.Egg;
 
 public class EventScheduler extends BukkitRunnable {
 
@@ -52,7 +53,7 @@ public class EventScheduler extends BukkitRunnable {
                         yPos = respawnLoc.getWorld().getMaxHeight() / 2;
                     }
                     respawnLoc.setY(yPos);
-                    EggRespawn.spawnEggItem(respawnLoc, config, data);
+                    Egg.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
                 } else {
                     eggDestroyed();
                     respawnEgg(respawnLoc);
