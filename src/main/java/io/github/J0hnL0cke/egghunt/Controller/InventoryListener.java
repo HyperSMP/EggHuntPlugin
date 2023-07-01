@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Merchant;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -134,7 +135,7 @@ public class InventoryListener implements Listener {
 
             if (otherInv.getType() != InventoryType.PLAYER) { //TODO check how this affects player viewing own inventory (egg on head/offhand?)
 
-                if (otherInv.getHolder() instanceof Container || otherInv instanceof AbstractHorseInventory) { //not instanceof entity- chest llama but not wandering trader
+                if (!(otherInv.getHolder() instanceof Merchant)) { //chest boat/llama but not villager/wandering trader
                     //this is a container (chest, furnace, hopper minecart, etc), so the egg will remain here when the inventory is closed
                     data.updateEggLocation(otherInv);
 
