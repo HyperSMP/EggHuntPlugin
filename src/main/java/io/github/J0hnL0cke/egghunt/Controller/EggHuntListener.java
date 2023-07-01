@@ -24,6 +24,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -417,7 +418,7 @@ public class EggHuntListener implements Listener {
                 Block block = blockState.getBlock();
                 if (isEgg(block)) {
                     destroy = true;
-                    if (!config.getEggInvincible()){ //if egg will be replaced, make sure it gets removed
+                    if (!config.getEggInvincible()) { //if egg will be replaced, make sure it gets removed
                         block.setType(Material.AIR);
                     }
                 } else {
@@ -431,7 +432,7 @@ public class EggHuntListener implements Listener {
                 }
             }
             if (destroy) {
-                if (config.getEggInvincible()){
+                if (config.getEggInvincible()) {
                     event.setCancelled(true);
                     Player p = event.getPlayer();
                     if (p != null) {
@@ -446,46 +447,117 @@ public class EggHuntListener implements Listener {
             }
         }
     }
+
+    /**
+     * Stops players from holding the egg in their cursor then dragging to drop it into an ender chest or shulker box.
+     * 
+     * Note: due to limitations with the API, this prevents dragging the egg when viewing an ender chest or shulker box,
+     * even if the egg is only dragged over slots in the player's inventory.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryDragConsider(InventoryDragEvent event) {
+        InventoryType inv = event.getInventory().getType(); //this only gets the currently viewed ("top") inventory, which is not necessairly where the items are dragged in/over
+        if (event.getWhoClicked().getGameMode() != GameMode.CREATIVE) {
+            if (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX)) {
+                boolean holdEgg = isEgg(event.getOldCursor());
+                if (holdEgg) {
+                    event.setCancelled(true);
+                    console_log(String.format("Stopped %s from dragging egg while viewing shulker/ender chest",
+                                event.getWhoClicked().getName()));
+                }
+            }
+        }
+    }
     
     /**
-     * stop players from storing the egg in an ender chest, shulker box, or bundle
+     * Stop players from storing the egg in an ender chest or shulker box.
+     * Also stops the player from putting the egg into a bundle regardless of open inventory.
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryMoveConsider(InventoryClickEvent event) {
         InventoryType inv = event.getInventory().getType();
         if (event.getWhoClicked().getGameMode() != GameMode.CREATIVE) {
             if (inv.equals(InventoryType.ENDER_CHEST) || inv.equals(InventoryType.SHULKER_BOX)) {
+                boolean hoverEgg = isEgg(event.getCurrentItem());
+                boolean holdEgg = isEgg(event.getCursor());
+                Boolean clickedContainer = null;
+                if (event.getClickedInventory() != null) {
+                    clickedContainer = event.getClickedInventory().equals(event.getInventory());
+                }
+
                 //if the other inventory is an ender chest or shulker box
-                if (event.getCurrentItem() != null) {
-                    if (isEgg(event.getCurrentItem())) {
+                if (hoverEgg || holdEgg) {
+                    //clicked on the egg or holding the egg with the cursor
+                    boolean cancel = false;
+
+                    if (clickedContainer == null){
+                        logger.info(event.getAction().toString());
+                    } else if (clickedContainer) {
+                        //player clicked the container
+                        switch (event.getAction()) {
+                            case COLLECT_TO_CURSOR:
+                            case HOTBAR_MOVE_AND_READD:
+                            case MOVE_TO_OTHER_INVENTORY:
+                            case HOTBAR_SWAP:
+                                if (hoverEgg) {
+                                    //the egg is on the current item so these are not allowed
+                                    cancel = true;
+                                }
+                                //if the current item is not an egg, allow this action
+                                //(eg allow shift+clicking items out of the ender chest while cursor holding the egg)
+                                break;
+                            default:
+                                cancel = true; //no interaction is allowed in this case
+                        }
+                        
+
+                    } else {
+                        //player clicked on own inventory
+                        //prevent any action that would move the egg into/from the ender chest (other than hotkey, which is prevented below)
+                        switch (event.getAction()) {
+                            case MOVE_TO_OTHER_INVENTORY:
+                                if(hoverEgg){ //prevent only if hovering over the egg, not if holding it
+                                    cancel=true; 
+                                }
+                                break;
+                            case COLLECT_TO_CURSOR:
+                            
+                                cancel = true; //cancel these actions
+                            default:
+                                break;
+                        }
+                    }
+
+                    if (cancel) {
                         //if the item clicked was the egg
                         event.setCancelled(true);
-                        console_log(String.format("Stopped %s from moving egg to ender chest",
+                        console_log(String.format("Stopped %s from moving egg to shulker/ender chest",
                                 event.getWhoClicked().getName()));
                     }
                 }
-                if (event.getCursor() != null){
-                    if (isEgg(event.getCursor())) {
-                        event.setCancelled(true);
-                        console_log(String.format("Stopped %s from dropping egg from cursor to ender chest",
-                                event.getWhoClicked().getName()));
-                    }
-                }
+                
+                
+                
+                
 
                 //don't allow hotkeying either
                 if (event.getClick().equals(ClickType.NUMBER_KEY)) {
                     ItemStack item = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
                     if (item != null) {
-                        if (isEgg(item)) {
-                            event.setCancelled(true);
-                            console_log(String.format("Stopped %s from hotkeying egg to ender chest",
-                                    event.getWhoClicked().getName()));
+                        if (event.getClickedInventory().equals(event.getInventory())) {
+                            //make sure the destination is the ender chest
+                            //this allows hotkeying the egg around in the player's inventory
+                            if (isEgg(item)) {
+                                event.setCancelled(true);
+                                console_log(String.format("Stopped %s from hotkeying egg to shulker/ender chest",
+                                        event.getWhoClicked().getName()));
+                            }
                         }
                     }
                 }
             }
 
-            //prevent using bundles on the egg in any inventory
+            //prevent using bundles on the egg in *any* inventory
             if(event.getCurrentItem() != null){
                 if(event.getCursor()!=null){
 
@@ -621,18 +693,30 @@ public class EggHuntListener implements Listener {
     }
     
     private boolean isEgg(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
         return stack.getType().equals(Material.DRAGON_EGG);
     }
 
     private boolean isEgg(Item item) {
+        if (item == null) {
+            return false;
+        }
         return item.getItemStack().getType().equals(Material.DRAGON_EGG);
     }
 
     private boolean isEgg(Block block) {
+        if (block == null) {
+            return false;
+        }
         return block.getType().equals(Material.DRAGON_EGG);
     }
 
     private boolean isEgg(FallingBlock block) {
+        if (block == null) {
+            return false;
+        }
         return block.getBlockData().getMaterial().equals(Material.DRAGON_EGG);
     }
     
