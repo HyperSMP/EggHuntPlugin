@@ -97,16 +97,45 @@ public class MiscListener implements Listener {
     }
 
     /**
-     * Handle the egg being placed in an item frame
+     * Handle the egg being placed in an item frame or allay
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteract(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof ItemFrame) {
-            PlayerInventory player_inv = event.getPlayer().getInventory();
-            if (Egg.isEgg(player_inv.getItemInMainHand()) || Egg.isEgg(player_inv.getItemInOffHand())) {
-                data.updateEggLocation(event.getRightClicked());
-                data.setEggOwner(event.getPlayer());
-            }
+        PlayerInventory playerInv = event.getPlayer().getInventory();
+
+        switch (event.getRightClicked().getType()) {
+            case ALLAY:
+                Allay allay = (Allay) event.getRightClicked();    
+
+                if (!(allay.getEquipment().getItemInMainHand().getType().equals(Material.AIR))) { //if allay has an item
+                    if (Egg.isEgg(allay.getEquipment().getItemInMainHand())
+                            && playerInv.getItemInMainHand().getType().equals(Material.AIR)) {
+                        //interaction with empty main hand will remove the egg from the allay and put it in the player's inventory
+                        data.updateEggLocation(event.getPlayer());
+                        data.setEggOwner(event.getPlayer());
+
+                    }
+                    break; //allay has an item, giving it the egg is not possible
+                }
+                
+                //otherwise, continue to next check
+            case ITEM_FRAME:
+            case GLOW_ITEM_FRAME:
+                
+                ItemStack heldItem = playerInv.getItemInMainHand();
+                if (heldItem.getType().equals(Material.AIR)) { //if main hand empty, check offhand
+                    heldItem = playerInv.getItemInOffHand();
+                }
+                
+                if (!heldItem.getType().equals(Material.AIR)) { //if item in either hand
+                    if (Egg.isEgg(heldItem)) {
+                        data.updateEggLocation(event.getRightClicked());
+                        data.setEggOwner(event.getPlayer());
+                    }
+                }
+
+            default:
+                break;
         }
     }
 
@@ -150,7 +179,7 @@ public class MiscListener implements Listener {
                     //egg lands
                     data.updateEggLocation(event.getBlock());
                     
-    			} else if (event.getBlock().getType() == Material.DRAGON_EGG) {
+    			} else if (Egg.isEgg(event.getBlock())) {
                     //egg begins falling
     				data.updateEggLocation(event.getEntity());
     			}

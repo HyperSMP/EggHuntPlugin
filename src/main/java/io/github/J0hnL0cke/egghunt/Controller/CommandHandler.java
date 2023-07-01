@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 
 import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 
 public class CommandHandler {
@@ -41,7 +42,7 @@ public class CommandHandler {
                 if (type == Egg_Storage_Type.BLOCK) {
                     Block eggBlock = data.getEggBlock();
 
-                    if (eggBlock.getType() == Material.DRAGON_EGG) {
+                    if (Egg.isEgg(eggBlock.getType())) {
                         storageMsg = "has been placed";
 
                     } else {

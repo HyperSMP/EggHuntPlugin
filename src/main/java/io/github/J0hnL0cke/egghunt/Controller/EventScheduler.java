@@ -86,16 +86,16 @@ public class EventScheduler extends BukkitRunnable {
         } else if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));
             EntityEquipment inv = mob.getEquipment();
-            if (inv.getItemInMainHand().getType().equals(Material.DRAGON_EGG)) {
+            if (Egg.isEgg(inv.getItemInMainHand())) {
                 return true;
             }
-            if (inv.getItemInOffHand().getType().equals(Material.DRAGON_EGG)) {
+            if (Egg.isEgg(inv.getItemInOffHand())) {
                 return true;
             }
         } else if (entity instanceof FallingBlock) {
-            return ((FallingBlock) entity).getBlockData().getMaterial().equals(Material.DRAGON_EGG);
+            return Egg.isEgg(((FallingBlock) entity));
         } else if (entity instanceof Item) {
-            return ((Item) entity).getItemStack().getType().equals(Material.DRAGON_EGG);
+            return Egg.isEgg((Item) entity);
         }
         return false;
     }

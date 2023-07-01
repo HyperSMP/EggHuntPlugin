@@ -115,7 +115,7 @@ public class EggDestroyListener implements Listener {
         for (BlockState blockState : blocks) {
             console_log(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
                     blockState.getBlock().getType(), blockState.getType()));
-            if (blockState.getBlock().getType().equals(Material.DRAGON_EGG)) {
+            if (Egg.isEgg(blockState.getBlock())) {
                 egg_affected = true;
                 l = blockState.getLocation();
                 //extra check to make sure egg is removed
