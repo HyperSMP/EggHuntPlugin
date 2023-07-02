@@ -1,6 +1,8 @@
 # Egg Hunt
 **A plugin for hunting down the dragon egg and stealing it from other players.**
 
+<img src="https://github.com/HyperSMP/EggHuntPlugin/assets/51202569/c0c860ee-bfa1-480f-baad-12874467416c" width="200" height="200">
+
 **With this plugin:**
 
 - You aren't able to put the egg in an ender chest, bundle, or shulker box
