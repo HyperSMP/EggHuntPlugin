@@ -1,5 +1,5 @@
 # EggHuntPlugin
-**A plugin for hunting down the dragon egg.**
+**A plugin for hunting down the dragon egg and stealing it from other players.**
 
 **With this plugin:**
 
