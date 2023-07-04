@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.J0hnL0cke</groupId>
   <artifactId>EggHunt</artifactId>
-  <version>1.20.1</version>
+  <version>1.19.4</version>
      <build>
       <plugins>
           <plugin>
