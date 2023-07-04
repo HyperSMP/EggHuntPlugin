@@ -1,9 +1,16 @@
 package io.github.J0hnL0cke.egghunt.Persistence;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.io.File;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,10 +62,50 @@ public class DataFileDAO {
         }
     }
     
-    public void write(String key, Object value) {
+    public void writeString(String key, Object value) {
         fileConfig.set(key, value);
     }
+
+    public void writeLocation(String key, Location value) {
+        if (value == null) {
+            fileConfig.set(key, null);
+            return;
+        }
+        fileConfig.set(key, value.serialize());
+    }
+
+    public void writeUUID(String key, UUID value) {
+        if (value == null) {
+            fileConfig.set(key, null);
+            return;
+        }
+        fileConfig.set(key, value.toString());
+    }
     
+    public Location readLocation(String key, Location notFound) {
+        //Locations can't deserialize themselves for some reason
+        //manually deserialize the Location
+        ConfigurationSection loc = fileConfig.getConfigurationSection(key);
+        if (loc == null) {
+            return notFound;
+        }
+        World world = Bukkit.getWorld(loc.getString("world"));
+        double locX = loc.getDouble("x");
+        double locY = loc.getDouble("y");
+        double locZ = loc.getDouble("z");
+        //skipping roll and yaw since they don't matter for most cases
+
+        return new Location(world, locX, locY, locZ, 0, 0);
+    }
+
+    public UUID readUUID(String key, UUID notFound) {
+        String idStr = fileConfig.getString(key, null);
+        if (idStr == null) {
+            return notFound;
+        }
+        return UUID.fromString(idStr);
+    }
+
     public <V> V read(String key, Class<V> clazz, V notFound) {
         return fileConfig.getObject(key, clazz, notFound);
     }

@@ -17,6 +17,8 @@ import org.bukkit.inventory.PlayerInventory;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
+
 import java.util.logging.Logger;
 
 /**
@@ -36,14 +38,13 @@ public class MiscListener implements Listener {
     }
 
     /**
-     * Save data when the server autosaves.
+     * Save data when the server autosaves or closes.
      * Need to do this because a server crash could roll back the server data but not the plugin.
      * In this case data loss is beneficial, because being in sync with server's reality is more important.
      * TODO test this
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAutosave(WorldSaveEvent event) {
-        //TODO: don't save data until an autosave happens
         data.saveData();
     }
 
@@ -54,21 +55,10 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLogoff(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-
-        // Check if the player has a dragon egg
-        if (player.getInventory().contains(Material.DRAGON_EGG)) {
-
-            // Set owner and remove
-            data.setEggOwner(player); //TODO is this necessary? player will likely already be owner
-            player.getInventory().remove(Material.DRAGON_EGG);
-
-            // Drop it on the floor and set its location
-            //TODO use drop egg method in EggRespawn
-            Item egg_drop = event.getPlayer().getWorld().dropItem(player.getLocation(),
-                    new ItemStack(Material.DRAGON_EGG));
-            data.updateEggLocation(egg_drop);
-        }
+        Egg.dropEgg(player, data);
     }
+
+    
 
     /**
      * Track the egg droping as an item.

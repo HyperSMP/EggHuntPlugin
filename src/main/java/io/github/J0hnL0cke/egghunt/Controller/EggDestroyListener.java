@@ -299,7 +299,9 @@ public class EggDestroyListener implements Listener {
      * Respawns the dragon egg in the end
      */
     private void respawnEgg() {
-        data.updateEggLocation(Egg.respawnEgg(config));
+        Block eggBlock = Egg.respawnEgg(config);
+        data.updateEggLocation(eggBlock);
+        Announcement.ShowEggEffects(eggBlock.getLocation());
         announce("The dragon egg has spawned in the end!");
     }
     

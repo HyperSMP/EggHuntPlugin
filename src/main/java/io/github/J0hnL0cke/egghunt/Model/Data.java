@@ -1,7 +1,6 @@
 package io.github.J0hnL0cke.egghunt.Model;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -37,6 +36,7 @@ public class Data {
     
     private Block block;
     private Entity entity;
+    private UUID entityFallback;
    
 
     public Data(DataFileDAO dataDao, Logger logger) {
@@ -74,51 +74,44 @@ public class Data {
         }
         return Bukkit.getOfflinePlayer(owner);
     }
-    
-    private Map<String, Object> serializeLocation(Location loc) {
-        if (loc == null) {
-            return null;
-        }
-        return loc.serialize();
-    }
-    
-    private Location deserializeLocation(Map<String, Object> locObj) {
-        if (locObj == null) {
-            return null;
-        } else {
-            return Location.deserialize(locObj);
-        }
-    }
 
-    private Map<String, Object> serializeBlock(Block block) {
+    private Location serializeBlock(Block block) {
         if (block == null) {
             return null;
         } else {
-            return serializeLocation(block.getLocation());
+            return block.getLocation();
         }
     }
 
-    private Block deserializeBlock(Map<String, Object> blockStr) {
-        if (blockStr == null) {
+    private Block deserializeBlock(Location loc) {
+        if (loc == null) {
             return null;
         } else {
-            return deserializeLocation(blockStr).getBlock();
+            return loc.getBlock();
         }
     }
 
-    private String serializeEntity(Entity entity) {
+    private UUID serializeEntity(Entity entity) {
         if (entity == null) {
             return null;
         }
-        return serializeUUID(entity.getUniqueId());
+        return entity.getUniqueId();
     }
     
-    private Entity deserializeEntity(String idStr) {
-        UUID uuid = deserializeUUID(idStr);
-        if (uuid != null) {
-            return Bukkit.getEntity(uuid);
+    private Entity deserializeEntity(UUID uuid, Location loc) {
+        if (uuid == null) {
+            return null;
         }
-        return null;
+        if (approxLocation == null) {
+            logger.warning("Approximate location is null! Unable to find egg entity.");
+            return null;
+        }
+
+        boolean chunkLoaded = approxLocation.getChunk().load();
+        if (!chunkLoaded) {
+            logger.warning("Failed to load chunk with egg entity!");
+        }
+        return Bukkit.getEntity(entityFallback);
     }
 
     private UUID deserializeUUID(String uuid) {
@@ -127,19 +120,13 @@ public class Data {
         }
         return UUID.fromString(uuid);
     }
-    
-    private String serializeUUID(UUID uuid) {
-        if (uuid == null) {
-            return null;
-        }
-        return uuid.toString();
-    }
 
     public void loadData() {
-        owner = deserializeUUID(dataDao.read("owner", String.class, null));
-        block = deserializeBlock(dataDao.read("block", Map.class, null));
-        entity = deserializeEntity(dataDao.read("entity", String.class, null));
-        approxLocation = deserializeLocation(dataDao.read("lastLocation", Map.class, null));
+        owner = dataDao.readUUID("owner", null);
+        block = deserializeBlock(dataDao.readLocation("block", null));
+        entityFallback = deserializeUUID(dataDao.read("entity", String.class, null));
+        approxLocation = dataDao.readLocation("lastLocation", null);
+        entity = deserializeEntity(entityFallback, approxLocation);
         String storageString = dataDao.read("storedAs", String.class, null);
 
         if (storageString == null) {
@@ -149,18 +136,35 @@ public class Data {
             saveData();
         } else {
             storedAs = Egg_Storage_Type.valueOf(storageString);
+
+            //make sure data was properly loaded
+            if (entity == null && storedAs.equals(Egg_Storage_Type.ENTITY)) {
+                logger.warning("Could not locate the egg entity!");
+                resetEggLocation();
+            } else if (block == null && storedAs.equals(Egg_Storage_Type.BLOCK)) {
+                logger.warning("Could not locate egg block!");
+                resetEggLocation();
+            } else if (storedAs.equals(Egg_Storage_Type.DNE)) {
+                logger.info("Dragon egg has not been claimed.");
+            } else {
+                logger.info("Successfully found dragon egg.");
+            }
         }
 	}
 
     public void saveData() {
-        dataDao.write("owner", serializeUUID(owner));
-        dataDao.write("block", serializeBlock(block));
-        dataDao.write("entity", serializeEntity(entity));
-        dataDao.write("lastLocation", serializeLocation(approxLocation));
-        dataDao.write("storedAs", storedAs.name());
+        dataDao.writeUUID("owner", owner);
+        dataDao.writeLocation("block", serializeBlock(block));
+        dataDao.writeUUID("entity", serializeEntity(entity));
+        if (storedAs.equals(Egg_Storage_Type.ENTITY)) {
+            approxLocation = entity.getLocation(); //update latest entity location
+            //this is important for getting entity when server restarts
+        }
+        dataDao.writeLocation("lastLocation", approxLocation);
+        dataDao.writeString("storedAs", storedAs.name());
 
         //save timestamp
-        dataDao.write("writeTime", LocalDateTime.now().toString());
+        dataDao.writeString("writeTime", LocalDateTime.now().toString());
 
         //write to file
         dataDao.save();
@@ -177,7 +181,7 @@ public class Data {
                     String.format("%s has claimed the dragon egg!", Bukkit.getOfflinePlayer(owner).getName()), logger);
             Player p = Bukkit.getPlayer(playerUUID);
             if (p != null) { //make sure player is online
-                Announcement.ShowEggClaimEffects(p);
+                Announcement.ShowEggEffects(p);
             }   
         }
     }
@@ -190,7 +194,6 @@ public class Data {
         }
         logger.info("Egg owner has been reset");
         owner = null;
-        saveData();
 
     }
 
@@ -199,7 +202,6 @@ public class Data {
         block = null;
         entity = null;
         storedAs = Egg_Storage_Type.DNE;
-        saveData();
     }
 
     public void updateEggLocation(Block block) {
@@ -219,7 +221,6 @@ public class Data {
                 log(String.format("The egg is in a(n) %s", block.getType()));
         }
         
-        saveData();
     }
     
     public void updateEggLocation(Entity holderEntity) {
@@ -261,8 +262,6 @@ public class Data {
                 }
 
         }
-
-        saveData();
     }
     
     public void updateEggLocation(Inventory inv) {

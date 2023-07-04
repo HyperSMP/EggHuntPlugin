@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -29,9 +30,17 @@ public class Announcement {
     /**
      * Creates sound/particle effects to let the given player know that they have claimed the dragon egg
      */
-    public static void ShowEggClaimEffects(Player Player){
-        Player.playSound(Player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 10, 0);
-        Player.spawnParticle(Particle.SPELL_WITCH, Player.getLocation(), 50, 0.3, 0.1, 0.3);
-        Player.spawnParticle(Particle.PORTAL, Player.getLocation(), 50, 0.3, 0.1, 0.3);
+    public static void ShowEggEffects(Location loc) {
+        for (Player p : loc.getWorld().getPlayers()) {
+            p.spawnParticle(Particle.SPELL_WITCH, loc, 50, 0.3, 0.1, 0.3);
+            p.spawnParticle(Particle.PORTAL, loc, 50, 0.3, 0.1, 0.3);
+        }
     }
+
+    public static void ShowEggEffects(Player p) {
+        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 10, 0);
+        ShowEggEffects(p.getLocation());
+    }
+    
+
 }

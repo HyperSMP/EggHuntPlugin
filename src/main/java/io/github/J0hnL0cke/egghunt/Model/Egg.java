@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -36,6 +37,25 @@ public class Egg {
         Block newEggLoc = config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0).getBlock();
         newEggLoc.setType(Material.DRAGON_EGG);
         return newEggLoc;
+    }
+
+    /**
+     * Drop the egg out of the given player's inventory
+     */
+    public static void dropEgg(Player player, Data data) {
+        // Check if the player has a dragon egg
+        if (player.getInventory().contains(Material.DRAGON_EGG)) {
+
+            // Set owner and remove
+            data.setEggOwner(player); //TODO is this necessary? player will likely already be owner
+            player.getInventory().remove(Material.DRAGON_EGG);
+
+            // Drop it on the floor and set its location
+            //TODO use drop egg method in EggRespawn
+            Item egg_drop = player.getWorld().dropItem(player.getLocation(),
+                    new ItemStack(Material.DRAGON_EGG));
+            data.updateEggLocation(egg_drop);
+        }
     }
 
     /**
