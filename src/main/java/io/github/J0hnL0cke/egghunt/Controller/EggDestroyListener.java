@@ -16,11 +16,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
 import org.bukkit.event.entity.EntityCreatePortalEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -78,7 +76,7 @@ public class EggDestroyListener implements Listener {
                 ItemFrame frame = (ItemFrame) event.getEntity();
                 if (Egg.isEgg(frame.getItem())) {
                     if (config.getEggInvulnerable()) {
-                        logToConsole("canceled explosion of egg item frame");
+                        log("canceled explosion of egg item frame");
                         event.setCancelled(true);
                     } else {
                         eggDestroyed();
@@ -127,9 +125,9 @@ public class EggDestroyListener implements Listener {
         boolean egg_affected = false;
         Location l = null;
         List<BlockState> blocks = event.getBlocks();
-        logToConsole(String.format("blocks: %s", blocks.toString()));
+        log(String.format("blocks: %s", blocks.toString()));
         for (BlockState blockState : blocks) {
-            logToConsole(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
+            log(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
                     blockState.getBlock().getType(), blockState.getType()));
             if (Egg.isEgg(blockState.getBlock())) {
                 egg_affected = true;
@@ -147,12 +145,12 @@ public class EggDestroyListener implements Listener {
                     entityName = event.getEntity().getCustomName();
                 }
             }
-            logToConsole(String.format("%s tried to overwrite egg with a portal", entityName));
+            log(String.format("%s tried to overwrite egg with a portal", entityName));
             data.resetEggOwner(false);
             if (l != null) {
                 data.updateEggLocation(Egg.spawnEggItem(l, config, data));
             } else {
-                logToConsole("Could not spawn egg item! Invalid block location.");
+                log("Could not spawn egg item! Invalid block location.");
             }
         }
 
@@ -167,7 +165,7 @@ public class EggDestroyListener implements Listener {
             event.setCancelled(true);
             //set the age back to 1 so it doesn't try to despawn every tick
             event.getEntity().setTicksLived(1);
-            logToConsole("Canceled egg despawn");
+            log("Canceled egg despawn");
         }
     }
     
@@ -204,7 +202,7 @@ public class EggDestroyListener implements Listener {
                         p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                         p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
                         p.setCooldown(Material.BONE_MEAL, 100);
-                        logToConsole(String.format("%s tried to mushroom the dragon egg", p.getName()));
+                        log(String.format("%s tried to mushroom the dragon egg", p.getName()));
                     }
                 } else {
                     eggDestroyed();
@@ -249,9 +247,9 @@ public class EggDestroyListener implements Listener {
      */
     private void portalOverwriteEgg(Location res) {
     	res.getBlock().setType(Material.AIR);
-    	logToConsole("Egg was overwritten with a portal");
+    	log("Egg was overwritten with a portal");
         if (config.getEggInvulnerable()) {
-            logToConsole("Spawning new egg");
+            log("Spawning new egg");
     		data.updateEggLocation(Egg.spawnEggItem(res, config, data));
     	} else {
     		eggDestroyed();
@@ -309,7 +307,7 @@ public class EggDestroyListener implements Listener {
         Announcement.announce(msg, logger);
     }
 
-    private void logToConsole(String message) {
+    private void log(String message) {
         logger.info(message);
     }
 

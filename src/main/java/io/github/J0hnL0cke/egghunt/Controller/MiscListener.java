@@ -139,9 +139,9 @@ public class MiscListener implements Listener {
 
             if (!config.getAccurateLocation()) {
                 //TODO disable accuracy here
-                console_log("The egg teleported, showing players the egg's location before teleport");
+                log("The egg teleported, showing players the egg's location before teleport");
             } else {
-                console_log("The egg teleported, showing players the egg's up-to-date location");
+                log("The egg teleported, showing players the egg's up-to-date location");
             }
 
             if (config.resetOwnerOnTeleport()) {
@@ -163,7 +163,7 @@ public class MiscListener implements Listener {
             //if the falling block is the egg
     		if (Egg.isEgg((FallingBlock)event.getEntity())) {
     			 
-    			console_log("Gravity event involving dragon egg occured");
+    			log("Gravity event involving dragon egg occured");
     			
                 if (event.getBlock().getType() == Material.AIR) {
                     //egg lands
@@ -207,7 +207,7 @@ public class MiscListener implements Listener {
         Announcement.announce(msg, logger);
     }
 
-    private void console_log(String message) {
+    private void log(String message) {
         logger.info(message);
     }
 

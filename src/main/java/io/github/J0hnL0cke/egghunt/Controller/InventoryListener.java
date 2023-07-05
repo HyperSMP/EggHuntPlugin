@@ -112,10 +112,10 @@ public class InventoryListener implements Listener {
                     Location playerLoc = player.getLocation();
                     otherInv.remove(egg);
                     Item i = playerLoc.getWorld().dropItem(playerLoc, egg); //TODO use drop item function
-                    console_log(String.format(
+                    log(String.format(
                             "Dropped the dragon egg on the ground since %s had it in their ender chest.",
                             player.getName()));
-                    console_log(
+                    log(
                             "Set ignore_echest_egg to \"true\" in the config file to disable this feature.");
                     data.updateEggLocation(i);
                 }
@@ -177,7 +177,7 @@ public class InventoryListener implements Listener {
                 boolean holdEgg = Egg.isEgg(event.getOldCursor());
                 if (holdEgg) {
                     event.setCancelled(true);
-                    console_log(String.format("Stopped %s from dragging egg while viewing shulker/ender chest",
+                    log(String.format("Stopped %s from dragging egg while viewing shulker/ender chest",
                                 event.getWhoClicked().getName()));
                 }
             }
@@ -207,7 +207,7 @@ public class InventoryListener implements Listener {
                     boolean cancel = false;
 
                     if (clickedContainer == null){
-                        logger.info(event.getAction().toString());
+                        log(event.getAction().toString());
                     } else if (clickedContainer) {
                         //player clicked the container
                         switch (event.getAction()) {
@@ -247,7 +247,7 @@ public class InventoryListener implements Listener {
                     if (cancel) {
                         //if the item clicked was the egg
                         event.setCancelled(true);
-                        console_log(String.format("Stopped %s from moving egg to shulker/ender chest",
+                        log(String.format("Stopped %s from moving egg to shulker/ender chest",
                                 event.getWhoClicked().getName()));
                     }
                 }
@@ -265,7 +265,7 @@ public class InventoryListener implements Listener {
                             //this allows hotkeying the egg around in the player's inventory
                             if (Egg.isEgg(item)) {
                                 event.setCancelled(true);
-                                console_log(String.format("Stopped %s from hotkeying egg to shulker/ender chest",
+                                log(String.format("Stopped %s from hotkeying egg to shulker/ender chest",
                                         event.getWhoClicked().getName()));
                             }
                         }
@@ -283,7 +283,7 @@ public class InventoryListener implements Listener {
                     if ((Egg.isEgg(cursor) && clicked.getType() == Material.BUNDLE)
                             || (Egg.isEgg(clicked) && cursor.getType() == Material.BUNDLE)) {
                         event.setCancelled(true);
-                        console_log(String.format("Stopped %s from bundling the egg",
+                        log(String.format("Stopped %s from bundling the egg",
                                     event.getWhoClicked().getName()));
                     }
 
@@ -305,7 +305,7 @@ public class InventoryListener implements Listener {
         }
     }
 
-    private void console_log(String message) {
+    private void log(String message) {
         logger.info(message);
     }
 

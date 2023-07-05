@@ -145,9 +145,9 @@ public class Data {
                 logger.warning("Could not locate egg block!");
                 resetEggLocation();
             } else if (storedAs.equals(Egg_Storage_Type.DNE)) {
-                logger.info("Dragon egg has not been claimed.");
+                log("Dragon egg has not been claimed.");
             } else {
-                logger.info("Successfully found dragon egg.");
+                log("Successfully found dragon egg.");
             }
         }
 	}
@@ -192,7 +192,7 @@ public class Data {
                 Announcement.announce(String.format("%s no longer owns the dragon egg", Bukkit.getOfflinePlayer(owner).getName()), logger);
             }
         }
-        logger.info("Egg owner has been reset");
+        log("Egg owner has been reset");
         owner = null;
 
     }
