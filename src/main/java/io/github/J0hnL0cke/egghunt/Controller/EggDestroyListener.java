@@ -57,7 +57,7 @@ public class EggDestroyListener implements Listener {
         Entity entity = event.getEntity();
         if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
             ItemStack item = ((Item)entity).getItemStack();
-            if (Egg.isEgg(item)) {
+            if (Egg.hasEgg(item)) {
             	//make sure item is destroyed to prevent dupes
             	event.getEntity().remove();
                 eggDestroyed();
@@ -74,7 +74,7 @@ public class EggDestroyListener implements Listener {
             if (event.getEntity().getType().equals(EntityType.ITEM_FRAME)
                 || event.getEntity().getType().equals(EntityType.GLOW_ITEM_FRAME)) {
                 ItemFrame frame = (ItemFrame) event.getEntity();
-                if (Egg.isEgg(frame.getItem())) {
+                if (Egg.hasEgg(frame.getItem())) {
                     if (config.getEggInvulnerable()) {
                         log("canceled explosion of egg item frame");
                         event.setCancelled(true);
@@ -95,7 +95,7 @@ public class EggDestroyListener implements Listener {
     public void onEntityDeath(EntityDeathEvent event) {
         //if the egg item dies, notify that it has been destroyed
         if (event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
-            if (Egg.isEgg((ItemStack) event.getEntity())) {
+            if (Egg.hasEgg((ItemStack) event.getEntity())) {
                 //remove just in case to prevent dupes
                 event.getEntity().remove();
                 eggDestroyed();
@@ -129,7 +129,7 @@ public class EggDestroyListener implements Listener {
         for (BlockState blockState : blocks) {
             log(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
                     blockState.getBlock().getType(), blockState.getType()));
-            if (Egg.isEgg(blockState.getBlock())) {
+            if (Egg.hasEgg(blockState.getBlock())) {
                 egg_affected = true;
                 l = blockState.getLocation();
                 //extra check to make sure egg is removed
@@ -161,7 +161,7 @@ public class EggDestroyListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDespawn(ItemDespawnEvent event) {
-        if (Egg.isEgg(event.getEntity().getItemStack())) {
+        if (Egg.hasEgg(event.getEntity().getItemStack())) {
             event.setCancelled(true);
             //set the age back to 1 so it doesn't try to despawn every tick
             event.getEntity().setTicksLived(1);
@@ -179,7 +179,7 @@ public class EggDestroyListener implements Listener {
             List<BlockState> blocks = event.getBlocks();
             for (BlockState blockState : blocks) {
                 Block block = blockState.getBlock();
-                if (Egg.isEgg(block)) {
+                if (Egg.hasEgg(block)) {
                     destroy = true;
                     if (!config.getEggInvulnerable()) { //if egg will be replaced, make sure it gets removed
                         block.setType(Material.AIR);
@@ -221,7 +221,7 @@ public class EggDestroyListener implements Listener {
         if (config.getEggInvulnerable()) {
             Entity entity = event.getEntity();
             if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-                if (Egg.isEgg((Item) entity)) {
+                if (Egg.hasEgg((Item) entity)) {
                     event.setCancelled(true);
                 }
             }

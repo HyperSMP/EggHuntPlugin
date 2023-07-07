@@ -1,15 +1,17 @@
 package io.github.J0hnL0cke.egghunt.Model;
 
-import java.util.logging.Logger;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.util.Vector;
 
 /**
@@ -22,10 +24,9 @@ public class Egg {
     /**
      * Makes the given entity invulnerable if enabled in the config
      */
-    public static void makeEggInvulnerable(Entity entity, Configuration config, Logger logger) {
+    public static void makeEggInvulnerable(Entity entity, Configuration config) {
         if (config.getEggInvulnerable()) {
             entity.setInvulnerable(true);
-            logger.info("made drop invulnerable");
         }
     }
     
@@ -63,13 +64,13 @@ public class Egg {
      * This should trigger the item drop event, so it should not be necessary to immediately update the data file with the returned item.
      * @return the egg item that was spawned
      */
-    public static Item spawnEggItem(Location loc, Configuration config, Data data){
-		ItemStack egg=new ItemStack(Material.DRAGON_EGG);
-		egg.setAmount(1);
-		Item drop=loc.getWorld().dropItem(loc, egg);
-		drop.setGravity(false);
-		drop.setGlowing(true);
-		drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
+    public static Item spawnEggItem(Location loc, Configuration config, Data data) {
+        ItemStack egg = new ItemStack(Material.DRAGON_EGG);
+        egg.setAmount(1);
+        Item drop = loc.getWorld().dropItem(loc, egg);
+        drop.setGravity(false);
+        drop.setGlowing(true);
+        drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
         if (config.getEggInvulnerable()) {
             drop.setInvulnerable(true);
         }
@@ -77,11 +78,125 @@ public class Egg {
     }
 
     /**
+     * Checks if the given ItemStack is a container that is holding the dragon egg. Also returns false if the provided stack is null.
+     * @param stack ItemStack to check
+     * @return True if the stack is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean containsEgg(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        switch (stack.getType()) {
+            case SHULKER_BOX:
+                ShulkerBox box = (ShulkerBox) stack.getItemMeta();
+                return hasOnlyEgg(box.getInventory());
+            case BUNDLE:
+                BundleMeta bundle = (BundleMeta) stack.getItemMeta();
+                return hasOnlyEgg(bundle);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Checks if the given Block is a container that is holding the dragon egg. Also returns false if the provided block is null.
+     * @param block Block to check
+     * @return True if the block is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean containsEgg(Block block) {
+        if (block == null) {
+            return false;
+        }
+        if (block.getType().equals(Material.SHULKER_BOX)) {
+            ShulkerBox box = (ShulkerBox) block;
+            return hasOnlyEgg(box.getInventory());
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the given BlockData is a container that is holding the dragon egg. Also returns false if the provided block data is null.
+     * @param data BlockData to check
+     * @return True if the block data is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean containsEgg(BlockData data) {
+        if (data == null) {
+            return false;
+        }
+        if (data.getMaterial().equals(Material.SHULKER_BOX)) {
+            ShulkerBox box = (ShulkerBox) data;
+            return hasOnlyEgg(box.getInventory());
+        }
+        return false;
+    }
+    
+    
+    /**
+     * Check if the given Material is the dragon egg. Also returns false if the provided material is null.
+     * @param material Material to check
+     * @return True if the stack material is a dragon egg, otherwise false
+     */
+    public static boolean isEgg(Material material){
+        if (material == null) {
+            return false;
+        }
+        return material.equals(egg);
+    }
+
+    /**
+     * Check if the given ItemStack is the dragon egg or is holding the egg. Also returns false if the provided stack is null.
+     * @param stack ItemStack to check
+     * @return True if the stack material is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean hasEgg(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        return isEgg(stack.getType()) || containsEgg(stack);
+    }
+
+    /**
+     * Check if the given Item is the dragon egg or is holding the egg. Also returns false if the provided item is null.
+     * @param item Item to check
+     * @return True if the item material is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean hasEgg(Item item) {
+        if (item == null) {
+            return false;
+        }
+        return isEgg(item.getItemStack().getType()) || containsEgg(item.getItemStack());
+    }
+
+    /**
+     * Check if the given Block is the dragon egg or is holding the egg. Also returns false if the provided block is null.
+     * @param block Block to check
+     * @return True if the block material is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean hasEgg(Block block) {
+        if (block == null) {
+            return false;
+        }
+        return isEgg(block.getType()) || containsEgg(block.getBlockData());
+    }
+
+    /**
+     * Check if the given FallingBlock is the dragon egg or is holding the egg. Also returns false if the provided block is null.
+     * @param block FallingBlock to check
+     * @return True if the block material is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean hasEgg(FallingBlock block) {
+        if (block == null) {
+            return false;
+        }
+        return isEgg(block.getBlockData().getMaterial()) || containsEgg(block.getBlockData());
+    }
+
+    /**
      * Check if the given ItemStack is the dragon egg. Also returns false if the provided stack is null.
      * @param stack ItemStack to check
      * @return True if the stack material is a dragon egg, otherwise false
      */
-    public static boolean isEgg(ItemStack stack) {
+    public static boolean isOnlyEgg(ItemStack stack) {
         if (stack == null) {
             return false;
         }
@@ -93,7 +208,7 @@ public class Egg {
      * @param item Item to check
      * @return True if the item material is a dragon egg, otherwise false
      */
-    public static boolean isEgg(Item item) {
+    public static boolean isOnlyEgg(Item item) {
         if (item == null) {
             return false;
         }
@@ -105,7 +220,7 @@ public class Egg {
      * @param block Block to check
      * @return True if the block material is a dragon egg, otherwise false
      */
-    public static boolean isEgg(Block block) {
+    public static boolean isOnlyEgg(Block block) {
         if (block == null) {
             return false;
         }
@@ -117,11 +232,38 @@ public class Egg {
      * @param block FallingBlock to check
      * @return True if the block material is a dragon egg, otherwise false
      */
-    public static boolean isEgg(FallingBlock block) {
+    public static boolean isOnlyEgg(FallingBlock block) {
         if (block == null) {
             return false;
         }
         return block.getBlockData().getMaterial().equals(egg);
     }
+
+    /**
+     * Check if the given Inventory contains the dragon egg. Also returns false if the provided inventory is null.
+     * @param inventory Inventory to check
+     * @return True if the inventorry contains a dragon egg, otherwise false
+     */
+    public static boolean hasOnlyEgg(Inventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+        return inventory.contains(Material.DRAGON_EGG);
+    }
+    
+    /**
+     * Check if the given BundleMeta contains the dragon egg. Also returns false if the provided bundle is null.
+     * @param bundle Bundle to check
+     * @return True if the bundle contains a dragon egg, otherwise false
+     */
+    public static boolean hasOnlyEgg(BundleMeta bundle) {
+        for (ItemStack stack : bundle.getItems()) {
+            if (isOnlyEgg(stack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 
 }

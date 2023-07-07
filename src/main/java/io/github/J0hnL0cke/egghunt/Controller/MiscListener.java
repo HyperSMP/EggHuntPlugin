@@ -69,9 +69,10 @@ public class MiscListener implements Listener {
         // Check if the spawned item is the egg
         Item item = event.getEntity();
 
-        if (Egg.isEgg(item)) {
+        if (Egg.hasEgg(item)) {
             data.updateEggLocation(item);
-            Egg.makeEggInvulnerable(event.getEntity(), config, logger);
+            Egg.makeEggInvulnerable(event.getEntity(), config);
+            log("made entity invulnerable");
         }
     }
 
@@ -80,7 +81,7 @@ public class MiscListener implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace (BlockPlaceEvent event) {
-        if (Egg.isEgg(event.getBlock())) {
+        if (Egg.hasEgg(event.getBlock())) {
             data.updateEggLocation(event.getBlock());
             data.setEggOwner(event.getPlayer());
         }
@@ -98,7 +99,7 @@ public class MiscListener implements Listener {
                 Allay allay = (Allay) event.getRightClicked();    
 
                 if (!(allay.getEquipment().getItemInMainHand().getType().equals(Material.AIR))) { //if allay has an item
-                    if (Egg.isEgg(allay.getEquipment().getItemInMainHand())
+                    if (Egg.hasEgg(allay.getEquipment().getItemInMainHand())
                             && playerInv.getItemInMainHand().getType().equals(Material.AIR)) {
                         //interaction with empty main hand will remove the egg from the allay and put it in the player's inventory
                         data.updateEggLocation(event.getPlayer());
@@ -118,7 +119,7 @@ public class MiscListener implements Listener {
                 }
                 
                 if (!heldItem.getType().equals(Material.AIR)) { //if item in either hand
-                    if (Egg.isEgg(heldItem)) {
+                    if (Egg.hasEgg(heldItem)) {
                         data.updateEggLocation(event.getRightClicked());
                         data.setEggOwner(event.getPlayer());
                     }
@@ -134,7 +135,7 @@ public class MiscListener implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSpread(BlockFromToEvent event) {
-        if (Egg.isEgg(event.getBlock())) {
+        if (Egg.hasEgg(event.getBlock())) {
             data.updateEggLocation(event.getToBlock());
 
             if (!config.getAccurateLocation()) {
@@ -161,7 +162,7 @@ public class MiscListener implements Listener {
         //check if this is dealing with a falling block, since EntityChangeBlockEvent is generic
     	if (event.getEntityType() == EntityType.FALLING_BLOCK) {
             //if the falling block is the egg
-    		if (Egg.isEgg((FallingBlock)event.getEntity())) {
+    		if (Egg.hasEgg((FallingBlock)event.getEntity())) {
     			 
     			log("Gravity event involving dragon egg occured");
     			
@@ -169,7 +170,7 @@ public class MiscListener implements Listener {
                     //egg lands
                     data.updateEggLocation(event.getBlock());
                     
-    			} else if (Egg.isEgg(event.getBlock())) {
+    			} else if (Egg.hasEgg(event.getBlock())) {
                     //egg begins falling
     				data.updateEggLocation(event.getEntity());
     			}

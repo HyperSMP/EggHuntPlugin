@@ -5,7 +5,7 @@
 
 **With this plugin:**
 
-- The dragon egg cannot be stored in an ender chest, bundle, or shulker box.
+- The dragon egg cannot be stored in an ender chest.
 - The egg item will drop on the ground if you leave the game with it in your inventory.
 - The egg item cannot despawn.
 - The plugin has an owner system. Taking the egg will give you ownership.
@@ -24,6 +24,7 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - If set to respawn, the egg can either respawn immediately, or only after the dragon is beaten again
 - When the egg teleports, it will become "lost", so it won't have an owner until someone finds it again
 - Dragon eggs that are already stored in a player's ender chest can be excluded from the hunt.
+- Shulker boxes and bundles can be prevented from being used to store the egg
 
 **Installation**
 - Save the provided .jar file to your server's `/plugins` directory. Alternatively, you can compile the .jar file yourself by cloning this repository to a local directory and running the maven command `mvn package`. The packaged .jar will appear in `/EggHuntPlugin/target/`
