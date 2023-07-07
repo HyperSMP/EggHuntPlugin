@@ -3,11 +3,9 @@ package io.github.J0hnL0cke.egghunt.Controller;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.TreeType;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
@@ -19,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityCreatePortalEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
@@ -117,46 +114,6 @@ public class EggDestroyListener implements Listener {
     }
     
     /**
-     * Stop portals from removing the egg
-     */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onCreatePortal(EntityCreatePortalEvent event) {
-        //not specific to any particular creation reason because multiple events could cause the egg to be removed (obby platform regen, gateway portal spawning, stronghold portal activation)
-        boolean egg_affected = false;
-        Location l = null;
-        List<BlockState> blocks = event.getBlocks();
-        log(String.format("blocks: %s", blocks.toString()));
-        for (BlockState blockState : blocks) {
-            log(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
-                    blockState.getBlock().getType(), blockState.getType()));
-            if (Egg.hasEgg(blockState.getBlock())) {
-                egg_affected = true;
-                l = blockState.getLocation();
-                //extra check to make sure egg is removed
-                blockState.getBlock().setType(Material.AIR);
-
-            }
-        }
-
-        if (egg_affected) {
-            String entityName = "Unknown entity";
-            if (event.getEntity() != null) {
-                if (event.getEntity().getCustomName() != null) {
-                    entityName = event.getEntity().getCustomName();
-                }
-            }
-            log(String.format("%s tried to overwrite egg with a portal", entityName));
-            data.resetEggOwner(false);
-            if (l != null) {
-                data.updateEggLocation(Egg.spawnEggItem(l, config, data));
-            } else {
-                log("Could not spawn egg item! Invalid block location.");
-            }
-        }
-
-    }
-    
-    /**
      * Prevent the egg from despawning
      */
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -228,54 +185,6 @@ public class EggDestroyListener implements Listener {
         }
     }
     
-    /**
-     * When a portal is updated, check if the egg will be replaced
-     */
-    private void checkPortalBlocks() {
-        //TODO there has to be a better way to do this
-        //Check end platform
-        Location l1 = new Location(config.getEndWorld(), 102, 48, 2);
-        Location l2 = new Location(config.getEndWorld(), 98, 51, -2);
-        Location res = checkBlockMaterialFromLocation(config.getEndWorld(), Material.DRAGON_EGG, l1, l2);
-        if (res != null) {
-            portalOverwriteEgg(res);
-        }
-    }
-    
-    /**
-     * Update data and spawn a new egg when the egg is overwritten with a portal
-     */
-    private void portalOverwriteEgg(Location res) {
-    	res.getBlock().setType(Material.AIR);
-    	log("Egg was overwritten with a portal");
-        if (config.getEggInvulnerable()) {
-            log("Spawning new egg");
-    		data.updateEggLocation(Egg.spawnEggItem(res, config, data));
-    	} else {
-    		eggDestroyed();
-    	}
-    }
-    
-    /**
-     * Checks blocks within the cube created by the given locations.
-     * Returns the first location corresponding to the block found with the given material.
-     * Returns null if no matching block is found or locations are in different worlds.
-     */
-    private static Location checkBlockMaterialFromLocation(World w, Material m, Location l1, Location l2) {
-        if (l1.getWorld().equals(l2.getWorld())) {
-            for (int x = l1.getBlockX(); x < l2.getBlockX(); x++) {
-                for (int y = l1.getBlockY(); y < l2.getBlockY(); y++) {
-                    for (int z = l1.getBlockZ(); z < l2.getBlockZ(); z++) {
-                        if (w.getBlockAt(x, y, z).getType().equals(m)) {
-                            return new Location(w, x, y, z);
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * Alerts when the egg is destroyed and respawns it if needed
      */
