@@ -3,6 +3,8 @@ package io.github.J0hnL0cke.egghunt.Model;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
@@ -11,6 +13,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.util.Vector;
 
@@ -88,7 +91,8 @@ public class Egg {
         }
         switch (stack.getType()) {
             case SHULKER_BOX:
-                ShulkerBox box = (ShulkerBox) stack.getItemMeta();
+                BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
+                ShulkerBox box = (ShulkerBox) meta.getBlockState();
                 return hasOnlyEgg(box.getInventory());
             case BUNDLE:
                 BundleMeta bundle = (BundleMeta) stack.getItemMeta();
@@ -107,29 +111,13 @@ public class Egg {
         if (block == null) {
             return false;
         }
-        if (block.getType().equals(Material.SHULKER_BOX)) {
-            ShulkerBox box = (ShulkerBox) block;
-            return hasOnlyEgg(box.getInventory());
+        BlockState state = block.getState();
+        if (state instanceof Container) {
+            Container cont = (Container) state;
+            return hasOnlyEgg(cont.getInventory());
         }
         return false;
     }
-
-    /**
-     * Checks if the given BlockData is a container that is holding the dragon egg. Also returns false if the provided block data is null.
-     * @param data BlockData to check
-     * @return True if the block data is a dragon egg or holding the egg, otherwise false
-     */
-    public static boolean containsEgg(BlockData data) {
-        if (data == null) {
-            return false;
-        }
-        if (data.getMaterial().equals(Material.SHULKER_BOX)) {
-            ShulkerBox box = (ShulkerBox) data;
-            return hasOnlyEgg(box.getInventory());
-        }
-        return false;
-    }
-    
     
     /**
      * Check if the given Material is the dragon egg. Also returns false if the provided material is null.
@@ -176,7 +164,7 @@ public class Egg {
         if (block == null) {
             return false;
         }
-        return isEgg(block.getType()) || containsEgg(block.getBlockData());
+        return isEgg(block.getType()) || containsEgg(block);
     }
 
     /**
@@ -188,7 +176,7 @@ public class Egg {
         if (block == null) {
             return false;
         }
-        return isEgg(block.getBlockData().getMaterial()) || containsEgg(block.getBlockData());
+        return isEgg(block.getBlockData().getMaterial()); //don't check containsEgg because shulker can't be falling block
     }
 
     /**

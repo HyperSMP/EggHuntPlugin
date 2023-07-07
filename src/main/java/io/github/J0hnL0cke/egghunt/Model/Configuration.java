@@ -66,7 +66,7 @@ public class Configuration {
     }
 
     public boolean getCanPackageEgg() {
-        return canPackageEgg;
+        return false; //canPackageEgg; TODO implement checks for this
     }
 
     public World getEndWorld() {

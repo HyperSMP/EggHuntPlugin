@@ -17,4 +17,5 @@ resp_imm: false
 #Setting this to false will prevent the player from removing that egg from their ender chest.
 drop_enderchested_egg: false
 #Whether the egg is allowed to be stored in bundles and shulker boxes
-can_package_egg: true
+#WIP
+#can_package_egg: true

@@ -24,7 +24,7 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - If set to respawn, the egg can either respawn immediately, or only after the dragon is beaten again
 - When the egg teleports, it will become "lost", so it won't have an owner until someone finds it again
 - Dragon eggs that are already stored in a player's ender chest can be excluded from the hunt.
-- Shulker boxes and bundles can be prevented from being used to store the egg
+- ~~Shulker boxes and bundles can be prevented from being used to store the egg~~ WIP
 
 **Installation**
 - Save the provided .jar file to your server's `/plugins` directory. Alternatively, you can compile the .jar file yourself by cloning this repository to a local directory and running the maven command `mvn package`. The packaged .jar will appear in `/EggHuntPlugin/target/`
