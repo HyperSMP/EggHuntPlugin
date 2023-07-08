@@ -185,7 +185,7 @@ public class MiscListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (!event.getKeepInventory() && event.getEntity().getInventory().contains(Material.DRAGON_EGG)) {
+        if (!event.getKeepInventory() && Egg.hasEgg(event.getEntity().getInventory())) {
             data.resetEggOwner(false);
     
             //change the death message

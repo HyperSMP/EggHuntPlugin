@@ -107,8 +107,8 @@ public class InventoryListener implements Listener {
         //force an egg in the ender chest to be dropped if enabled in config and if the player is not in creative
         if (otherInv.getType().equals(InventoryType.ENDER_CHEST)) {
             if (config.getDropEnderchestedEgg() && player.getGameMode() != GameMode.CREATIVE) {
-                if (otherInv.contains(Material.DRAGON_EGG)) {
-                    ItemStack egg = otherInv.getItem(otherInv.first(Material.DRAGON_EGG));
+                if (otherInv.contains(Material.DRAGON_EGG)) { 
+                    ItemStack egg = otherInv.getItem(otherInv.first(Material.DRAGON_EGG)); //TODO make this work with bundles/shulkers
                     Location playerLoc = player.getLocation();
                     otherInv.remove(egg);
                     Item i = playerLoc.getWorld().dropItem(playerLoc, egg); //TODO use drop item function
@@ -126,12 +126,12 @@ public class InventoryListener implements Listener {
             return;
         }
 
-        if (player.getInventory().contains(Material.DRAGON_EGG)) {
+        if (Egg.hasEgg(player.getInventory())) {
             //if the player has the egg in their inventory, it will stay there
             data.updateEggLocation(player);
             data.setEggOwner(player);
 
-        } else if (otherInv.contains(Material.DRAGON_EGG)) {
+        } else if (Egg.hasEgg(otherInv)) {
 
             if (otherInv.getType() != InventoryType.PLAYER) { //TODO check how this affects player viewing own inventory (egg on head/offhand?)
 
@@ -156,7 +156,7 @@ public class InventoryListener implements Listener {
     public void onInventoryMove(InventoryMoveItemEvent event) {
         //check if the item being moved is the egg
         if (Egg.hasEgg(event.getItem())) {
-            if (event.getDestination().firstEmpty() != -1 || event.getDestination().contains(Material.DRAGON_EGG)) {
+            if (event.getDestination().firstEmpty() != -1 || Egg.hasEgg(event.getDestination())) {
                 data.updateEggLocation(event.getDestination());
             }
         }

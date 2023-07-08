@@ -10,7 +10,9 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
@@ -93,10 +95,10 @@ public class Egg {
             case SHULKER_BOX:
                 BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
                 ShulkerBox box = (ShulkerBox) meta.getBlockState();
-                return hasOnlyEgg(box.getInventory());
+                return hasEgg(box.getInventory());
             case BUNDLE:
                 BundleMeta bundle = (BundleMeta) stack.getItemMeta();
-                return hasOnlyEgg(bundle);
+                return hasEgg(bundle);
             default:
                 return false;
         }
@@ -114,7 +116,63 @@ public class Egg {
         BlockState state = block.getState();
         if (state instanceof Container) {
             Container cont = (Container) state;
-            return hasOnlyEgg(cont.getInventory());
+            return hasEgg(cont.getInventory());
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the given Entity is holding the dragon egg. Also returns false if the provided entity is null.
+     * @param entity
+     * @return True if the entity is holding the dragon egg or a container that is holding the egg, otherwise false
+     */
+    public boolean hasEgg(Entity entity) {
+        if (entity instanceof Player) {
+            return Egg.hasEgg(((Player) entity).getInventory());
+        } else if (entity instanceof LivingEntity) {
+            LivingEntity mob = (((LivingEntity) entity));
+            EntityEquipment inv = mob.getEquipment();
+            if (Egg.hasEgg(inv.getItemInMainHand())) {
+                return true;
+            } else if (Egg.hasEgg(inv.getItemInOffHand())) {
+                return true;
+            }
+        } else if (entity instanceof FallingBlock) {
+            return Egg.hasEgg(((FallingBlock) entity));
+        } else if (entity instanceof Item) {
+            return Egg.hasEgg(((Item) entity));
+        }
+        return false;
+    }
+
+
+    public boolean removeEgg(Entity entity) {
+        if (entity instanceof Player) {
+            if (Egg.hasEgg(((Player) entity).getInventory())) {
+                //TODO
+            }
+        } else if (entity instanceof LivingEntity) {
+            LivingEntity mob = (((LivingEntity) entity));
+            EntityEquipment inv = mob.getEquipment();
+            if (Egg.hasEgg(inv.getItemInMainHand())) {
+                inv.setItemInMainHand(null);
+                return true;
+            } else if (Egg.hasEgg(inv.getItemInOffHand())) {
+                inv.setItemInOffHand(null);
+                return true;
+            }
+        } else if (entity instanceof FallingBlock) {
+            FallingBlock block = (FallingBlock) entity;
+            if (Egg.hasEgg(block)) {
+                block.remove();
+                return true;
+            }
+        } else if (entity instanceof Item) {
+            Item item = (Item) entity;
+            if (Egg.hasEgg(item)) {
+                item.remove();
+                return true;
+            }
         }
         return false;
     }
@@ -141,6 +199,23 @@ public class Egg {
             return false;
         }
         return isEgg(stack.getType()) || containsEgg(stack);
+    }
+
+    /**
+     * Check if the given Inventory contains the dragon egg or a container holding the egg. Also returns false if the provided inventory is null.
+     * @param inventory Inventory to check
+     * @return True if the inventory contains the a dragon egg item or an item holding the egg, otherwise false
+     */
+    public static boolean hasEgg(Inventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+        for (ItemStack stack : inventory.getContents()) {
+            if (hasEgg(stack)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -177,6 +252,20 @@ public class Egg {
             return false;
         }
         return isEgg(block.getBlockData().getMaterial()); //don't check containsEgg because shulker can't be falling block
+    }
+
+    /**
+     * Check if the given BundleMeta contains the dragon egg or a container holding the egg. Also returns false if the provided bundle is null.
+     * @param bundle Bundle to check
+     * @return True if the bundle contains either the dragon egg or a container (another bundle) holding the egg, otherwise false
+     */
+    public static boolean hasEgg(BundleMeta bundle) {
+        for (ItemStack stack : bundle.getItems()) {
+            if (hasEgg(stack)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -237,20 +326,6 @@ public class Egg {
             return false;
         }
         return inventory.contains(Material.DRAGON_EGG);
-    }
-    
-    /**
-     * Check if the given BundleMeta contains the dragon egg. Also returns false if the provided bundle is null.
-     * @param bundle Bundle to check
-     * @return True if the bundle contains a dragon egg, otherwise false
-     */
-    public static boolean hasOnlyEgg(BundleMeta bundle) {
-        for (ItemStack stack : bundle.getItems()) {
-            if (isOnlyEgg(stack)) {
-                return true;
-            }
-        }
-        return false;
     }
     
 

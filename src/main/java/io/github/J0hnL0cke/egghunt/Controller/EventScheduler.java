@@ -77,34 +77,14 @@ public class EventScheduler extends BukkitRunnable {
     private void respawnEgg(Location respawnLoc) {
         if (config.getRespawnEgg()) {
             if (config.getRespawnImmediately()) {
-                
+                Egg.respawnEgg(config);
             } else {
                 data.resetEggLocation();
                 Announcement.announce("It will respawn the next time the dragon is defeated", logger);
             }
         }
     }
-
-    public boolean hasEgg(Entity entity) {
-        if (entity instanceof Player) {
-            return ((Player) entity).getInventory().contains(Material.DRAGON_EGG);
-        } else if (entity instanceof LivingEntity) {
-            LivingEntity mob = (((LivingEntity) entity));
-            EntityEquipment inv = mob.getEquipment();
-            if (Egg.hasEgg(inv.getItemInMainHand())) {
-                return true;
-            }
-            if (Egg.hasEgg(inv.getItemInOffHand())) {
-                return true;
-            }
-        } else if (entity instanceof FallingBlock) {
-            return Egg.hasEgg(((FallingBlock) entity));
-        } else if (entity instanceof Item) {
-            return Egg.hasEgg((Item) entity);
-        }
-        return false;
-    }
-
+    
     public boolean isUnderWorld(Entity entity) {
         return entity.getLocation().getY() < UNDER_WORLD_HEIGHT;
     }

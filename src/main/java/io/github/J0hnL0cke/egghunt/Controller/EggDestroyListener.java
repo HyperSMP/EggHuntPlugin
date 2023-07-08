@@ -142,9 +142,10 @@ public class EggDestroyListener implements Listener {
                         block.setType(Material.AIR);
                     }
                 } else {
+
                     if (blockState instanceof Container) { //TODO exclude item frames, which aren't destroyed by this
                         Container cont = (Container) blockState;
-                        if (cont.getInventory().contains(Material.DRAGON_EGG)) {
+                        if (cont.getInventory().contains(Material.DRAGON_EGG)) { //TODO update for egg in shulker/bundle
                             destroy = true;
                             cont.getInventory().remove(Material.DRAGON_EGG); //make sure egg is removed from container
                         }
