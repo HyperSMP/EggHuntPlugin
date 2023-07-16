@@ -63,7 +63,7 @@ public class EventScheduler extends BukkitRunnable {
                     eggDestroyed();
                     respawnEgg(respawnLoc);
                 }
-                data.resetEggOwner(true);
+                data.resetEggOwner(true, config);
             }
 
         }
@@ -71,7 +71,7 @@ public class EventScheduler extends BukkitRunnable {
     
     private void eggDestroyed() {
         Announcement.announce("The dragon egg has been destroyed!", logger);
-        data.resetEggOwner(false);
+        data.resetEggOwner(false, config);
     }
     
     private void respawnEgg(Location respawnLoc) {
