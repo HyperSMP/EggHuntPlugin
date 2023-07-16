@@ -170,31 +170,42 @@ public class Data {
         dataDao.save();
     }
     
-    public void setEggOwner(Player player) {
-        setEggOwner(player.getUniqueId());
+    public void setEggOwner(Player player, Configuration config) {
+        setEggOwner(player.getUniqueId(), config);
     }
 
-    private void setEggOwner(UUID playerUUID) {
-        if (!playerUUID.equals(owner)) { //only announce if the egg has actually changed posession
-            owner = playerUUID;
+    private void setEggOwner(UUID playerUUID, Configuration config) {
+        if (!playerUUID.equals(owner)) { //only update if the egg has actually changed posession
+            UUID oldOwner = owner;
+            owner = playerUUID; //set new owner
+
+            //if the old owner is online, remove their scoreboard tag
+            if (oldOwner != null) {
+                Egg.updateOwnerTag(Bukkit.getPlayer(oldOwner), this, config);
+            }
+
             Announcement.announce(
                     String.format("%s has claimed the dragon egg!", Bukkit.getOfflinePlayer(owner).getName()), logger);
             Player p = Bukkit.getPlayer(playerUUID);
             if (p != null) { //make sure player is online
                 Announcement.ShowEggEffects(p);
-            }   
+                Egg.updateOwnerTag(p, this, config); //update the scoreboard tag of the new owner
+            }
         }
     }
 
-    public void resetEggOwner(boolean announce) {
-        if (announce) { //TODO move announcements somewhere else?
-            if (owner != null) {
-                Announcement.announce(String.format("%s no longer owns the dragon egg", Bukkit.getOfflinePlayer(owner).getName()), logger);
+    public void resetEggOwner(boolean announce, Configuration config) {
+        if (owner != null) {
+            Player oldOwner = Bukkit.getPlayer(owner);
+            if (announce) { //TODO move announcements somewhere else?
+                String ownerName = Bukkit.getOfflinePlayer(owner).getName();
+                Announcement.announce(String.format("%s no longer owns the dragon egg", ownerName), logger);
             }
-        }
-        log("Egg owner has been reset");
-        owner = null;
 
+            log("Egg owner has been reset");
+            owner = null;
+            Egg.updateOwnerTag(oldOwner, this, config); //update tag after setting owner to null
+        }
     }
 
     public void resetEggLocation() {

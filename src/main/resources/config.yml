@@ -19,3 +19,10 @@ drop_enderchested_egg: false
 #Whether the egg is allowed to be stored in bundles and shulker boxes
 #WIP
 #can_package_egg: true
+
+#Whether to apply an entity tag to the egg owner (works like `/tag <playerName> add <tagName>`)
+tag_owner: true
+#The name of the tag to apply (selected like: `/tell @a[tag=<tagName>] <message>`)
+#Do not overlap with tag names used by other plugins.
+#If changing this while the egg is claimed, remove the old tag by running `/tag <playerName> remove <oldTagName>`.
+owner_tag_name: eggOwner

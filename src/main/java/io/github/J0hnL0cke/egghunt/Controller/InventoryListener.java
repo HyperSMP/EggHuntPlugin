@@ -56,7 +56,7 @@ public class InventoryListener implements Listener {
 
         // Check if the dropped item is the egg
         if (Egg.hasEgg(stack)) {
-            data.setEggOwner(event.getPlayer());
+            data.setEggOwner(event.getPlayer(), config);
             data.updateEggLocation(item);
             Egg.makeEggInvulnerable(event.getItemDrop(), config);
         }
@@ -71,7 +71,7 @@ public class InventoryListener implements Listener {
         if (Egg.hasEgg(event.getItem())) {
             data.updateEggLocation(event.getEntity());
             if (event.getEntity() instanceof Player) {
-                data.setEggOwner((Player) event.getEntity());
+                data.setEggOwner((Player) event.getEntity(), config);
             }
         }
     }
@@ -129,7 +129,7 @@ public class InventoryListener implements Listener {
         if (Egg.hasEgg(player.getInventory())) {
             //if the player has the egg in their inventory, it will stay there
             data.updateEggLocation(player);
-            data.setEggOwner(player);
+            data.setEggOwner(player, config);
 
         } else if (Egg.hasEgg(otherInv)) {
 

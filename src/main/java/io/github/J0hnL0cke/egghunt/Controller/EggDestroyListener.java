@@ -191,7 +191,7 @@ public class EggDestroyListener implements Listener {
      */
     public void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
-        data.resetEggOwner(false);
+        data.resetEggOwner(false, config);
 
         if (config.getRespawnEgg()) {
             if (config.getRespawnImmediately()) {

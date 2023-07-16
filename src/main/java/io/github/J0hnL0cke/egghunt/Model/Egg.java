@@ -2,6 +2,7 @@ package io.github.J0hnL0cke.egghunt.Model;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
@@ -48,12 +49,12 @@ public class Egg {
     /**
      * Drop the egg out of the given player's inventory
      */
-    public static void dropEgg(Player player, Data data) {
+    public static void dropEgg(Player player, Data data, Configuration config) {
         // Check if the player has a dragon egg
         if (player.getInventory().contains(Material.DRAGON_EGG)) {
 
             // Set owner and remove
-            data.setEggOwner(player); //TODO is this necessary? player will likely already be owner
+            data.setEggOwner(player, config); //TODO is this necessary? player will likely already be owner
             player.getInventory().remove(Material.DRAGON_EGG);
 
             // Drop it on the floor and set its location
@@ -61,6 +62,24 @@ public class Egg {
             Item egg_drop = player.getWorld().dropItem(player.getLocation(),
                     new ItemStack(Material.DRAGON_EGG));
             data.updateEggLocation(egg_drop);
+        }
+    }
+
+    /**
+     * Updates the egg ownership scoreboard tag for the given player if tagging is enabled
+     * Adds the tag if the player is the owner, otherwise removes it
+     */
+    public static void updateOwnerTag(Player player, Data data, Configuration config) {
+        if (player != null) {
+            if (config.getTagOwner()) {
+                OfflinePlayer owner = data.getEggOwner();
+                //if the given player owns the egg
+                if (owner != null && owner.getUniqueId().equals(player.getUniqueId())) {
+                    player.addScoreboardTag(config.getOwnerTagName());
+                } else {
+                    player.removeScoreboardTag(config.getOwnerTagName());
+                }
+            }
         }
     }
 

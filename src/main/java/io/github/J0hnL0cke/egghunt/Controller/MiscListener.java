@@ -9,6 +9,7 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -49,16 +50,23 @@ public class MiscListener implements Listener {
     }
 
     /**
+     * Update the player's entity tag when they join
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        Egg.updateOwnerTag(player, data, config);
+    }
+
+    /**
      * Drop egg if a player logs off with it in their inventory.
      * TODO check if item spawn and item drop events overlap, and check which can be replaced
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onLogoff(PlayerQuitEvent event) {
+    public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        Egg.dropEgg(player, data);
+        Egg.dropEgg(player, data, config);
     }
-
-    
 
     /**
      * Track the egg droping as an item.
@@ -83,7 +91,7 @@ public class MiscListener implements Listener {
     public void onBlockPlace (BlockPlaceEvent event) {
         if (Egg.hasEgg(event.getBlock())) {
             data.updateEggLocation(event.getBlock());
-            data.setEggOwner(event.getPlayer());
+            data.setEggOwner(event.getPlayer(), config);
         }
     }
 
@@ -103,7 +111,7 @@ public class MiscListener implements Listener {
                             && playerInv.getItemInMainHand().getType().equals(Material.AIR)) {
                         //interaction with empty main hand will remove the egg from the allay and put it in the player's inventory
                         data.updateEggLocation(event.getPlayer());
-                        data.setEggOwner(event.getPlayer());
+                        data.setEggOwner(event.getPlayer(), config);
 
                     }
                     break; //allay has an item, giving it the egg is not possible
@@ -121,7 +129,7 @@ public class MiscListener implements Listener {
                 if (!heldItem.getType().equals(Material.AIR)) { //if item in either hand
                     if (Egg.hasEgg(heldItem)) {
                         data.updateEggLocation(event.getRightClicked());
-                        data.setEggOwner(event.getPlayer());
+                        data.setEggOwner(event.getPlayer(), config);
                     }
                 }
 
@@ -148,7 +156,7 @@ public class MiscListener implements Listener {
             if (config.resetOwnerOnTeleport()) {
                 if (data.getEggOwner() != null) {
                     announce(String.format("The dragon egg has teleported. %s is no longer the owner.", data.getEggOwner().getName()));
-                    data.resetEggOwner(false);
+                    data.resetEggOwner(false, config);
                 }
             }
         }
@@ -186,7 +194,7 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (!event.getKeepInventory() && Egg.hasEgg(event.getEntity().getInventory())) {
-            data.resetEggOwner(false);
+            data.resetEggOwner(false, config);
     
             //change the death message
             String deathmsg = event.getDeathMessage();
