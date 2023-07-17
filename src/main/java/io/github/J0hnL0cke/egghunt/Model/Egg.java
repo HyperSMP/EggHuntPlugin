@@ -174,33 +174,41 @@ public class Egg {
     }
 
 
-    public boolean removeEgg(Entity entity) {
+    public static boolean removeEgg(Entity entity) {
         if (entity instanceof Player) {
-            if (Egg.hasEgg(((Player) entity).getInventory())) {
+            if (hasEgg(((Player) entity).getInventory())) {
                 //TODO
             }
         } else if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));
             EntityEquipment inv = mob.getEquipment();
-            if (Egg.hasEgg(inv.getItemInMainHand())) {
+            if (hasEgg(inv.getItemInMainHand())) {
                 inv.setItemInMainHand(null);
                 return true;
-            } else if (Egg.hasEgg(inv.getItemInOffHand())) {
+            } else if (hasEgg(inv.getItemInOffHand())) {
                 inv.setItemInOffHand(null);
                 return true;
             }
         } else if (entity instanceof FallingBlock) {
             FallingBlock block = (FallingBlock) entity;
-            if (Egg.hasEgg(block)) {
+            if (hasEgg(block)) {
                 block.remove();
                 return true;
             }
         } else if (entity instanceof Item) {
             Item item = (Item) entity;
-            if (Egg.hasEgg(item)) {
+            if (hasEgg(item)) {
                 item.remove();
                 return true;
             }
+        }
+        return false;
+    }
+    
+    public static boolean removeEgg(Block block) {
+        if (hasEgg(block)) {
+            block.setType(Material.AIR);
+            return true;
         }
         return false;
     }

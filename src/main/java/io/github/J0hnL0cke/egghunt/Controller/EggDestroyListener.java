@@ -1,5 +1,6 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -26,8 +27,10 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.units.qual.C;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -135,82 +138,105 @@ public class EggDestroyListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onGrow(StructureGrowEvent event) {
-        boolean destroy = false;
         if (event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
             List<BlockState> blocks = event.getBlocks();
-            for (BlockState blockState : blocks) {
-                Block block = blockState.getBlock();
-                if (Egg.hasEgg(block)) {
-                    destroy = true;
-                    if (!config.getEggInvulnerable()) { //if egg will be replaced, make sure it gets removed
-                        block.setType(Material.AIR);
-                    }
-                } else {
-
-                    if (blockState instanceof Container) { //TODO exclude item frames, which aren't destroyed by this
-                        Container cont = (Container) blockState;
-                        if (cont.getInventory().contains(Material.DRAGON_EGG)) { //TODO update for egg in shulker/bundle
-                            destroy = true;
-                            cont.getInventory().remove(Material.DRAGON_EGG); //make sure egg is removed from container
-                        }
-                    }
-                }
-            }
-            if (destroy) {
-                if (config.getEggInvulnerable()) {
-                    event.setCancelled(true);
-                    Player p = event.getPlayer();
-                    if (p != null) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-                        p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
-                        p.setCooldown(Material.BONE_MEAL, 100);
-                        log(String.format("%s tried to mushroom the dragon egg", p.getName()));
-                    }
-                } else {
-                    eggDestroyed();
-                }
-            }
-        }
-    }
-
-    /**
-     * Cancel events that damage the egg item if enabled in config
-     * Note: cannot cancel damage to item frames, since damage is used to remove an item but is not called when burned/exploded
-     * TODO: figure out if this is still needed, since when active, egg is set to be invlunerable
-     */
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onConsiderEntityDamageEvent(EntityDamageEvent event) {
-        if (config.getEggInvulnerable()) {
-            Entity entity = event.getEntity();
-            if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-                if (Egg.hasEgg((Item) entity)) {
-                    event.setCancelled(true);
-                }
-            }
+            handleBlockStateReplace(blocks);
+            //TODO need to handle egg respawn, since it could be immediately destroyed by the dragon after respawning
         }
     }
 
     /**
      * Listens for the dragon destroying the egg by flying into it
      */
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDragonDeleteBlock(final EntityExplodeEvent event) {
         //check if this event is dealing with the dragon, since the event is very generic
-
         Entity e = event.getEntity();
-        if (e instanceof ComplexEntityPart) { //if a part of a multi-part entity like the dragon, get the whole dragon
+        if (e instanceof ComplexEntityPart) {
+            //if a part of a multi-part entity like the dragon, get the whole dragon
             e = ((ComplexEntityPart) e).getParent();
         }
 
         if (e.getType().equals(EntityType.ENDER_DRAGON)) {
-            for (Block b : event.blockList()) {
-                if (Egg.hasEgg(b)) {
-                    //TODO need both a monitor and a HIGHEST check here to cancel the event
-                    b.setType(Material.AIR);
+            //if dragon is deleting blocks, check if any are the egg
+            handleBlockReplace(event.blockList());
+        }
+    }
 
-                    //TODO can't do normal respawn, since it might respawn where dragon is already perched
-                    eggDestroyed();
-                    
+    /**
+     * Looks through the provided blocks to see if the dragon egg is affected
+     * Notifies that the egg is destroyed or prevents its destruction
+     * @param blocks
+     */
+    private void handleBlockReplace(List<Block> blocks) {
+        ArrayList<Block> eggs = new ArrayList<>();
+        Boolean foundEgg = false;
+
+        for (Block block : blocks) {
+            if (Egg.hasEgg(block)) {
+                foundEgg = true;
+                eggs.add(block);
+            }
+        }
+
+        if (foundEgg) {
+            if (config.getEggInvulnerable()) { //prevent egg destruction
+                for (Block b : eggs) {
+                    blocks.remove(b); //remove egg from list of blocks to delete
+                }
+                log("Prevented egg from being replaced");
+
+            } else { //if egg will be replaced, make sure it gets removed
+                for (Block b : eggs) {
+                    Egg.removeEgg(b); //delete egg
+                }
+                log("Dragon egg was replaced");
+                eggDestroyed();
+            }
+        }
+    }
+
+    private void handleBlockStateReplace(List<BlockState> blockStates) {
+        //TODO refactor to merge these together without preventing shallow copy
+        ArrayList<BlockState> eggs = new ArrayList<>();
+        Boolean foundEgg = false;
+
+        for (BlockState blockState : blockStates) {
+            if (Egg.hasEgg(blockState.getBlock())) {
+                foundEgg = true;
+                eggs.add(blockState);
+            }
+        }
+
+        if (foundEgg) {
+            if (config.getEggInvulnerable()) { //prevent egg destruction
+                for (BlockState b : eggs) {
+                    blockStates.remove(b); //remove egg from list of blocks to delete
+                }
+                log("Prevented egg from being replaced");
+
+            } else { //if egg will be replaced, make sure it gets removed
+                for (BlockState b : eggs) {
+                    Egg.removeEgg(b.getBlock()); //delete egg
+                }
+                log("Dragon egg was replaced");
+                eggDestroyed();
+            }
+        }
+    }
+    
+    /**
+     * Cancel events that damage the egg item if enabled in config
+     * Note: cannot cancel damage to item frames, since damage is used to remove an item but is not called when burned/exploded
+     * TODO: figure out if this is still needed, since when active, egg is set to be invlunerable
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public ArrayList<Block> onConsiderEntityDamageEvent(EntityDamageEvent event) {
+        if (config.getEggInvulnerable()) {
+            Entity entity = event.getEntity();
+            if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+                if (Egg.hasEgg((Item) entity)) {
+                    event.setCancelled(true);
                 }
             }
         }
