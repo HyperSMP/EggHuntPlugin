@@ -106,7 +106,7 @@ public class MiscListener implements Listener {
         if (event.getBlock().getType().equals(Material.DISPENSER)) {
             if (Egg.hasEgg(event.getItem())) {
                 //if egg or egg container will be dispensed by a dispenser
-                if (event.getItem().getType().equals(Material.SHULKER_BOX)) {
+                if (Egg.isShulker(event.getItem().getType())) {
                     //if the item is a shulker box holding the egg (will be dispensed as a block)
                     event.setCancelled(true);
                     //log("Prevented shulker containing the egg from being dispensed");

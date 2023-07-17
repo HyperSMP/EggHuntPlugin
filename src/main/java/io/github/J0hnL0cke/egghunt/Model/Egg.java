@@ -3,11 +3,11 @@ package io.github.J0hnL0cke.egghunt.Model;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -110,17 +110,26 @@ public class Egg {
         if (stack == null) {
             return false;
         }
-        switch (stack.getType()) {
-            case SHULKER_BOX:
-                BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
-                ShulkerBox box = (ShulkerBox) meta.getBlockState();
-                return hasEgg(box.getInventory());
-            case BUNDLE:
-                BundleMeta bundle = (BundleMeta) stack.getItemMeta();
-                return hasEgg(bundle);
-            default:
-                return false;
+        if (isShulker(stack.getType())) { //check if shulker
+            BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
+            ShulkerBox box = (ShulkerBox) meta.getBlockState();
+            return hasEgg(box.getInventory());
+            
+        } else if (stack.getType().equals(Material.BUNDLE)) { //check if bundle
+            BundleMeta bundle = (BundleMeta) stack.getItemMeta();
+            return hasEgg(bundle);
         }
+        return false;
+    }
+
+    /**
+     * Check if the given material is any color of shulker box
+     */
+    public static boolean isShulker(Material material) {
+        if (material == null) {
+            return false;
+        }
+        return Tag.SHULKER_BOXES.getValues().contains(material);
     }
 
     /**
