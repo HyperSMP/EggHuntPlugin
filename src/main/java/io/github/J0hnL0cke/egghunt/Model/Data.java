@@ -56,14 +56,38 @@ public class Data {
         return null;
     }
 
+    /**
+     * Returns the current storage type for the dragon egg
+     * When getting the corresponding entity or block, that object is guaranteed to be non-null
+     */
     public Egg_Storage_Type getEggType() {
+        if ((storedAs == Egg_Storage_Type.BLOCK && block == null)
+                || (storedAs == Egg_Egg_Storage_Type.ENTITY && entity == null)) {
+            //make sure object is non-null
+            String msg = String.format(
+                    "Unable to find egg! storedAs = %s but corresponding object is null!\nResetting storedAs to prevent further errors",
+                    storedAs.toString());
+            resetEggLocation();
+            logger.warning(msg);
+        }
+
         return storedAs;
     }
     
+    /**
+     * Returns the entity currently associated with the dragon egg
+     * This should only be used after checking the egg is stored as an entity
+     * The provided entity should (but is not guaranteed to) contain the egg
+     */
     public Entity getEggEntity() {
         return entity;
     }
 
+    /**
+     * Returns the block currently associated with the dragon egg
+     * This should only be used after checking the egg is stored as a block
+     * The provided block should (but is not guaranteed to) contain the egg
+     */
     public Block getEggBlock() {
         return block;
     }
