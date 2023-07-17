@@ -9,6 +9,8 @@ import org.bukkit.TreeType;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
+import org.bukkit.entity.ComplexEntityPart;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -17,8 +19,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
@@ -181,6 +185,32 @@ public class EggDestroyListener implements Listener {
             if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
                 if (Egg.hasEgg((Item) entity)) {
                     event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    /**
+     * Listens for the dragon destroying the egg by flying into it
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDragonDeleteBlock(final EntityExplodeEvent event) {
+        //check if this event is dealing with the dragon, since the event is very generic
+
+        Entity e = event.getEntity();
+        if (e instanceof ComplexEntityPart) { //if a part of a multi-part entity like the dragon, get the whole dragon
+            e = ((ComplexEntityPart) e).getParent();
+        }
+
+        if (e.getType().equals(EntityType.ENDER_DRAGON)) {
+            for (Block b : event.blockList()) {
+                if (Egg.hasEgg(b)) {
+                    //TODO need both a monitor and a HIGHEST check here to cancel the event
+                    b.setType(Material.AIR);
+
+                    //TODO can't do normal respawn, since it might respawn where dragon is already perched
+                    eggDestroyed();
+                    
                 }
             }
         }

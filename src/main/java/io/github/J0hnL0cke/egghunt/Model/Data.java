@@ -62,7 +62,7 @@ public class Data {
      */
     public Egg_Storage_Type getEggType() {
         if ((storedAs == Egg_Storage_Type.BLOCK && block == null)
-                || (storedAs == Egg_Egg_Storage_Type.ENTITY && entity == null)) {
+                || (storedAs == Egg_Storage_Type.ENTITY && entity == null)) {
             //make sure object is non-null
             String msg = String.format(
                     "Unable to find egg! storedAs = %s but corresponding object is null!\nResetting storedAs to prevent further errors",
