@@ -34,12 +34,17 @@ permissions:
         children:
             egghunt.locateegg: true
             egghunt.trackegg: true
+            egghunt.eggowner: true
             egghunt.notify: true
+        default: true
     egghunt.locateegg:
         description: Allows you to locate the dragon egg using /locateegg
         default: true
     egghunt.trackegg:
         description: Allows you to track the egg with a compass using /trackegg
+        default: true
+    egghunt.eggowner:
+        description: Allows you to query the egg's current owner
         default: true
     egghunt.notify:
         description: Receive a chat message when the egg is claimed, stolen, lost, or destroyed
