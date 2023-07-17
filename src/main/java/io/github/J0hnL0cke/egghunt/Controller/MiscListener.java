@@ -5,6 +5,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
@@ -88,10 +89,29 @@ public class MiscListener implements Listener {
      * Handle the egg being placed as a block
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPlace (BlockPlaceEvent event) {
+    public void onBlockPlace(BlockPlaceEvent event) {
         if (Egg.hasEgg(event.getBlock())) {
             data.updateEggLocation(event.getBlock());
             data.setEggOwner(event.getPlayer(), config);
+        }
+    }
+    
+    /**
+     * Prevent the egg being dispensed when inside a shulker box
+     * TODO allow this to happen and just update the position of the egg
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockDispense(BlockDispenseEvent event) {
+        
+        if (event.getBlock().getType().equals(Material.DISPENSER)) {
+            if (Egg.hasEgg(event.getItem())) {
+                //if egg or egg container will be dispensed by a dispenser
+                if (event.getItem().getType().equals(Material.SHULKER_BOX)) {
+                    //if the item is a shulker box holding the egg (will be dispensed as a block)
+                    event.setCancelled(true);
+                    //log("Prevented shulker containing the egg from being dispensed");
+                }
+            }
         }
     }
 
