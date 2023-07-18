@@ -10,13 +10,13 @@ import org.bukkit.scheduler.BukkitTask;
 
 import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Controller.CommandHandler;
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Controller.EggDestroyListener;
 import io.github.J0hnL0cke.egghunt.Controller.MiscListener;
 import io.github.J0hnL0cke.egghunt.Controller.EventScheduler;
 import io.github.J0hnL0cke.egghunt.Controller.InventoryListener;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
-import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
@@ -77,7 +77,7 @@ public final class egghunt extends JavaPlugin {
                 if (eggHolder instanceof Player) {
                     logger.log("Egg is held by a player, dropping egg...");
                     Player p = (Player) eggHolder;
-                    Egg.dropEgg(p, data, config);
+                    EggController.dropEgg(p, data, config);
                     //in case the server isn't restarting, let the player know what happend
                     Announcement.sendMessage(p, "The dragon egg was dropped from your inventory");
                 }

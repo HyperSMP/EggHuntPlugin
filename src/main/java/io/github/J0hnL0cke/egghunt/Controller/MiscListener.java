@@ -54,7 +54,7 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        Egg.updateOwnerTag(player, data, config);
+        EggController.updateOwnerTag(player, data, config);
     }
 
     /**
@@ -64,7 +64,7 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        Egg.dropEgg(player, data, config);
+        EggController.dropEgg(player, data, config);
     }
 
     /**
@@ -78,7 +78,7 @@ public class MiscListener implements Listener {
 
         if (Egg.hasEgg(item)) {
             data.updateEggLocation(item);
-            Egg.makeEggInvulnerable(event.getEntity(), config);
+            EggController.makeEggInvulnerable(event.getEntity(), config);
             log("made entity invulnerable");
         }
     }

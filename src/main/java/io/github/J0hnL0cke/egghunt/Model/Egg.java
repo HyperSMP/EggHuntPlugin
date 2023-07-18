@@ -1,8 +1,6 @@
 package io.github.J0hnL0cke.egghunt.Model;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -11,135 +9,23 @@ import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
-import org.bukkit.util.Vector;
-
-import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 
 /**
- * Provides methods related to the dragon egg
+ * Provides methods related to checking for or removing the dragon egg
  */
 public class Egg {
 
     private static Material egg = Material.DRAGON_EGG;
-
-    /**
-     * Makes the given entity invulnerable if enabled in the config
-     */
-    public static void makeEggInvulnerable(Entity entity, Configuration config) {
-        if (config.getEggInvulnerable()) {
-            entity.setInvulnerable(true);
-        }
-    }
-
-    /**
-     * Alerts when the egg is destroyed and respawns it if needed
-     */
-    public static void eggDestroyed(Configuration config, Data data, LogHandler logger) {
-        logger.log("egg was destroyed");
-        OfflinePlayer oldOwner = data.getEggOwner();
-        data.resetEggOwner(false, config);
-        data.resetEggLocation();
-        String msg;
-
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
-                Egg.respawnEgg(config, data, logger);
-                msg = "The dragon egg has been destroyed and has respawned in The End!";
-                if (oldOwner != null) { //prevent spamming of egg destruction
-                    Announcement.announce(msg, logger);
-                }
-            } else {
-                msg = "The dragon egg has been destroyed! It will respawn the next time the Ender Dragon is defeated.";
-                Announcement.announce(msg, logger);
-            }
-        } else {
-            msg = "The dragon egg has been destroyed!";
-            Announcement.announce(msg, logger);
-        }
-
-        
-    }
-    
-    /**
-     * Returns the location above the end fountain where the dragon will respawn
-     */
-    public static Location getEggRespawnLocation(Configuration config) {
-        //the block above the bedrock fountain where the egg spawns
-        return config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0);
-    }
-
-    /**
-     * Drop the egg out of the given player's inventory
-     */
-    public static void dropEgg(Player player, Data data, Configuration config) {
-        // Check if the player has a dragon egg
-        if (player.getInventory().contains(Material.DRAGON_EGG)) {
-
-            // Set owner and remove
-            data.setEggOwner(player, config); //TODO is this necessary? player will likely already be owner
-            player.getInventory().remove(Material.DRAGON_EGG);
-
-            // Drop it on the floor and set its location
-            //TODO use drop egg method in EggRespawn
-            Item eggDrop = player.getWorld().dropItem(player.getLocation(),
-                    new ItemStack(Material.DRAGON_EGG));
-            eggDrop.setVelocity(new Vector(0, 0, 0));
-            data.updateEggLocation(eggDrop);
-        }
-    }
-
-    /**
-     * Updates the egg ownership scoreboard tag for the given player if tagging is enabled
-     * Adds the tag if the player is the owner, otherwise removes it
-     */
-    public static void updateOwnerTag(Player player, Data data, Configuration config) {
-        if (player != null) {
-            if (config.getTagOwner()) {
-                OfflinePlayer owner = data.getEggOwner();
-                //if the given player owns the egg
-                if (owner != null && owner.getUniqueId().equals(player.getUniqueId())) {
-                    player.addScoreboardTag(config.getOwnerTagName());
-                } else {
-                    player.removeScoreboardTag(config.getOwnerTagName());
-                }
-            }
-        }
-    }
-
-    /**
-     * Spawns a new egg item at the given location, sets it to invincible if enabled in the given config.
-     * This should trigger the item drop event, so it should not be necessary to immediately update the data file with the returned item.
-     * @return the egg item that was spawned
-     */
-    public static Item spawnEggItem(Location loc, Configuration config, Data data) {
-        ItemStack egg = new ItemStack(Material.DRAGON_EGG);
-        egg.setAmount(1);
-        Item drop = loc.getWorld().dropItem(loc, egg);
-        drop.setGravity(false);
-        drop.setGlowing(true);
-        drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
-        if (config.getEggInvulnerable()) {
-            drop.setInvulnerable(true);
-        }
-        return drop;
-    }
-
-    /**
-     * Respawns the dragon egg in the end
-     */
-    public static void respawnEgg(Configuration config, Data data, LogHandler logger) {
-        Block eggBlock = getEggRespawnLocation(config).getBlock();
-        eggBlock.setType(Material.DRAGON_EGG);
-        data.updateEggLocation(eggBlock);
-        Announcement.ShowEggEffects(eggBlock.getLocation().add(0.5, 0, 0.5)); //target the center bottom of the block
-    }
 
     /**
      * Checks if the given ItemStack is a container that is holding the dragon egg. Also returns false if the provided stack is null.
@@ -194,21 +80,35 @@ public class Egg {
      * @param entity
      * @return True if the entity is holding the dragon egg or a container that is holding the egg, otherwise false
      */
-    public boolean hasEgg(Entity entity) {
+    public static boolean hasEgg(Entity entity) {
         if (entity instanceof Player) {
-            return Egg.hasEgg(((Player) entity).getInventory());
-        } else if (entity instanceof LivingEntity) {
+            return Egg.hasEgg(((Player) entity).getInventory()); //Handles entire player check, including inventory, equipment, and custom slots
+        }
+
+        //Some entities can be instances of both LivingEntity and InventoryHolder (villager, allay, etc)
+        //therefore, check both inventory and equipment separately for the egg
+        if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));
             EntityEquipment inv = mob.getEquipment();
-            if (Egg.hasEgg(inv.getItemInMainHand())) {
-                return true;
-            } else if (Egg.hasEgg(inv.getItemInOffHand())) {
+            for (ItemStack item : inv.getArmorContents()) {
+                if (Egg.hasEgg(item)) {
+                    return true;
+                }
+            }
+        }
+
+        if (entity instanceof InventoryHolder) {
+            if (Egg.hasEgg(((InventoryHolder) entity).getInventory())) {
                 return true;
             }
-        } else if (entity instanceof FallingBlock) {
+        }
+        
+        if (entity instanceof FallingBlock) {
             return Egg.hasEgg(((FallingBlock) entity));
         } else if (entity instanceof Item) {
             return Egg.hasEgg(((Item) entity));
+        } else if (entity instanceof ItemFrame) {
+            return Egg.hasEgg(((ItemFrame) entity).getItem());
         }
         return false;
     }
@@ -289,11 +189,29 @@ public class Egg {
             return false;
         }
         for (ItemStack stack : inventory.getContents()) {
-            if (hasEgg(stack)){
+            if (hasEgg(stack)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Check if the given PlayerInventory contains the dragon egg or a container holding the egg. Also returns false if the provided inventory is null.
+     * Note: Player inventories can contain extra content slots on top of normal inventory contents
+     * @param inventory PlayerInventory to check
+     * @return True if the inventory contains the a dragon egg item or an item holding the egg, otherwise false
+     */
+    public static boolean hasEgg(PlayerInventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+        for (ItemStack stack : inventory.getExtraContents()) {
+            if (hasEgg(stack)){
+                return true;
+            }
+        }
+        return hasEgg((Inventory)inventory);
     }
 
     /**

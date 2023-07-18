@@ -42,12 +42,12 @@ public class EventScheduler extends BukkitRunnable {
                 logger.warning("Resetting egg location to prevent repeated warnings");
                 data.resetEggLocation();
                 return;
-            } else if (isUnderWorld(data.getEggEntity())) {
+            } else if (isUnderWorld(data.getEggEntity()) && !(data.getEggEntity() instanceof Player)) {
                 logger.log("Egg entity is under the word. Removing egg from entity");
                 Location respawnLoc = data.getEggEntity().getLocation();
                 Egg.removeEgg(data.getEggEntity());
+
                 if (config.getEggInvulnerable()) {
-                    
                     // get coords for egg to spawn at
                     //get highest block
                     Block highestBlock = respawnLoc.getWorld().getHighestBlockAt(respawnLoc);
@@ -58,12 +58,13 @@ public class EventScheduler extends BukkitRunnable {
                         yPos = respawnLoc.getWorld().getSeaLevel();
                     }
                     respawnLoc.setY(yPos);
-                    Egg.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
+                    EggController.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
+                    data.resetEggOwner(true, config);
                 } else {
                     //alert and respawn if applicable
-                    Egg.eggDestroyed(config, data, logger);
+                    EggController.eggDestroyed(config, data, logger);
                 }
-                data.resetEggOwner(true, config);
+                
             }
 
         }
