@@ -204,12 +204,7 @@ public class Egg {
         if (inventory == null) {
             return false;
         }
-        for (ItemStack stack : inventory.getContents()) {
-            if (hasEgg(stack)) {
-                return true;
-            }
-        }
-        return false;
+        return hasEgg(inventory.getContents());
     }
 
     /**

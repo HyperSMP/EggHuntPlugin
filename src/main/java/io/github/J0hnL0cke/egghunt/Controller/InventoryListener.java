@@ -4,6 +4,9 @@ package io.github.J0hnL0cke.egghunt.Controller;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Container;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +22,7 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Merchant;
 
@@ -133,15 +137,31 @@ public class InventoryListener implements Listener {
 
             if (otherInv.getType() != InventoryType.PLAYER) { //TODO check how this affects player viewing own inventory (egg on head/offhand?)
 
-                if (!(otherInv.getHolder() instanceof Merchant)) { //chest boat/llama but not villager/wandering trader
-                    //this is a container (chest, furnace, hopper minecart, etc), so the egg will remain here when the inventory is closed
-                    data.updateEggLocation(otherInv);
+                InventoryHolder holder = otherInv.getHolder();
 
-                } else {
-                    //this is not a container (anvil, crafting table, villager, etc), so it will move back to the player's inventory
-                    //note- if the player's inventory is full, it will instead drop as an item, which will trigger the item drop event
-                    data.updateEggLocation(player);
+                if (holder instanceof Entity) {
+                    if (holder instanceof Merchant) { //villager/wandering trader
+                        //items will not be stored in this inventory, and will instead revert to the player
+                        logger.log("inventory close- inside merchant entity (reverts to player)");
+                        data.updateEggLocation(player);
 
+                    } else {
+                        //this is an entity that stores items (hopper minecart, chest boat, llama, etc), so the egg will remain here when the inventory is closed
+                        logger.log("inventory close- inside non-merchant entity");
+                        data.updateEggLocation(otherInv);
+                    }
+                    
+                } else { //this inventory holder is a block
+                    if (holder instanceof Container || holder instanceof DoubleChest) { //DoubleChest implements InventoryHolder directly instead of implementing Container    
+                        //this is a container (furnace, chest boat, etc), so the egg will stay here
+                        logger.log("inventory close- inside container block");
+                        data.updateEggLocation(otherInv);
+                    } else {
+                        //this is not a container (anvil, crafting table, villager, etc), so it will move back to the player's inventory
+                        //note- if the player's inventory is full, it will instead drop as an item, which will trigger the item drop event
+                        logger.log("inventory close- inside non-container block (reverts to player)");
+                        data.updateEggLocation(player);
+                    }
                 }
             }
         }

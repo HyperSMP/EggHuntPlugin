@@ -352,9 +352,11 @@ public class Data {
         }
     }
     
+    /**
+     * likely to be called when a generic inventory is the most info given for what picked up an item, like on hopper collect event
+     * if more info is available (such as Entity or Block instance), better to pass that instead, although this should still work
+     */
     public void updateEggLocation(Inventory inv) {
-        //likely to be called when a generic inventory is the most info given for what picked up an item, like on hopper collect event
-        //if more info is available (such as Entity or Block instance), better to pass that instead, although this should still work
         if (inv.getHolder() instanceof Entity){
             // Hopper minecart, llama, or some other entity has the egg
             for (Entity e : inv.getLocation().getWorld().getEntities()) {
@@ -370,8 +372,8 @@ public class Data {
             log("could not find correct inventoryHolder entity!");
             
         } else {
-            // Hopper picked up the egg
-            updateEggLocation(inv.getLocation().getBlock()); //TODO check if this cast works or if .getLocation().getBlock() is needed
+            // Block contains the egg
+            updateEggLocation(inv.getLocation().getBlock());
         }
     }
     
