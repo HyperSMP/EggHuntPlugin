@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -17,9 +18,10 @@ import org.bukkit.entity.Player;
 public class Announcement {
 
     private static final String PREFIX_FORMAT_CODE = "§5§l";
-    private static final String LOCATION_FORMAT_CODE = "§a";
-    private static final String CORRECT_FORMAT_CODE = "§2";
-    private static final String INCORRECT_FORMAT_CODE = "§c";
+
+    private static final ChatColor LOCATION_COLOR = ChatColor.GREEN;
+    private static final ChatColor CORRECT_COLOR = ChatColor.DARK_GREEN;
+    private static final ChatColor INCORRECT_COLOR = ChatColor.RED;
     private static final String RESET_CODE = "§r";
     private static final String RAW_MESSAGE_PREFIX = "[Egg Hunt] ";
 
@@ -36,7 +38,9 @@ public class Announcement {
 
         String worldName = formatWorld(world, origin != null && origin.getWorld().equals(destination.getWorld()));
         
-        return String.format("%s[%d, %d, %d]%s in %s", LOCATION_FORMAT_CODE, x, y, z, RESET_CODE, worldName);
+        String loc = String.format("[%d, %d, %d]", x, y, z);
+        
+        return String.format("%s%s%s in %s", LOCATION_COLOR, loc, RESET_CODE, worldName);
     }
     
     public static String formatWorld(World world, boolean correctWorld) {
@@ -55,7 +59,7 @@ public class Announcement {
             default:
                 worldName = world.getName();
         }
-        String color = correctWorld ? CORRECT_FORMAT_CODE : INCORRECT_FORMAT_CODE;
+        ChatColor color = correctWorld ? CORRECT_COLOR : INCORRECT_COLOR;
 
         return String.format("%s%s%s", color, worldName, RESET_CODE);
     }
