@@ -1,5 +1,6 @@
 name: EggHunt
 main:  io.github.J0hnL0cke.egghunt.egghunt
+website: https://github.com/HyperSMP/EggHuntPlugin
 version: 1.20.1
 api-version: '1.20'
 
