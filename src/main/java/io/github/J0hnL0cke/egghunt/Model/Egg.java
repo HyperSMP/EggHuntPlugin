@@ -75,45 +75,6 @@ public class Egg {
         return false;
     }
 
-    /**
-     * Checks if the given Entity is holding the dragon egg. Also returns false if the provided entity is null.
-     * @param entity
-     * @return True if the entity is holding the dragon egg or a container that is holding the egg, otherwise false
-     */
-    public static boolean hasEgg(Entity entity) {
-        if (entity instanceof Player) {
-            return Egg.hasEgg(((Player) entity).getInventory()); //Handles entire player check, including inventory, equipment, and custom slots
-        }
-
-        //Some entities can be instances of both LivingEntity and InventoryHolder (villager, allay, etc)
-        //therefore, check both inventory and equipment separately for the egg
-        if (entity instanceof LivingEntity) {
-            LivingEntity mob = (((LivingEntity) entity));
-            EntityEquipment inv = mob.getEquipment();
-            for (ItemStack item : inv.getArmorContents()) {
-                if (Egg.hasEgg(item)) {
-                    return true;
-                }
-            }
-        }
-
-        if (entity instanceof InventoryHolder) {
-            if (Egg.hasEgg(((InventoryHolder) entity).getInventory())) {
-                return true;
-            }
-        }
-        
-        if (entity instanceof FallingBlock) {
-            return Egg.hasEgg(((FallingBlock) entity));
-        } else if (entity instanceof Item) {
-            return Egg.hasEgg(((Item) entity));
-        } else if (entity instanceof ItemFrame) {
-            return Egg.hasEgg(((ItemFrame) entity).getItem());
-        }
-        return false;
-    }
-
-
     public static boolean removeEgg(Entity entity) {
         //TODO update for containers
         if (entity instanceof Player) {
@@ -160,11 +121,66 @@ public class Egg {
      * @param material Material to check
      * @return True if the stack material is a dragon egg, otherwise false
      */
-    public static boolean isEgg(Material material){
+    public static boolean isEgg(Material material) {
         if (material == null) {
             return false;
         }
         return material.equals(egg);
+    }
+
+    /**
+     * Checks if the given Entity is holding the dragon egg. Also returns false if the provided entity is null.
+     * @param entity
+     * @return True if the entity is holding the dragon egg or a container that is holding the egg, otherwise false
+     */
+    public static boolean hasEgg(Entity entity) {
+        if (entity instanceof Player) {
+            return Egg.hasEgg(((Player) entity).getInventory()); //Handles entire player check, including inventory, equipment, and custom slots
+        }
+
+        //Some entities can be instances of both LivingEntity and InventoryHolder (villager, allay, etc)
+        //therefore, check both inventory and equipment separately for the egg
+        if (entity instanceof LivingEntity) {
+            LivingEntity mob = (((LivingEntity) entity));
+            EntityEquipment inv = mob.getEquipment();
+            if (Egg.hasEgg(inv.getArmorContents())) { //TODO check if includes main/offhand
+                return true;
+            }
+        }
+
+        if (entity instanceof InventoryHolder) {
+            if (Egg.hasEgg(((InventoryHolder) entity).getInventory())) {
+                return true;
+            }
+        }
+
+        if (entity instanceof FallingBlock) {
+            return Egg.hasEgg(((FallingBlock) entity));
+        } else if (entity instanceof Item) {
+            return Egg.hasEgg(((Item) entity));
+        } else if (entity instanceof ItemFrame) {
+            return Egg.hasEgg(((ItemFrame) entity).getItem());
+        }
+        return false;
+    }
+
+    /**
+     * Check if any of the given ItemStacks are the dragon egg or are holding the egg. Also returns false if the provided list is null.
+     * @param stack list of ItemStacks to check
+     * @return True if any of the stacks' material is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean hasEgg(ItemStack[] stacks) {
+        if (stacks == null) {
+            return false;
+        }
+
+        for (ItemStack item : stacks) {
+            if (Egg.hasEgg(item)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
