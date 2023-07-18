@@ -2,15 +2,17 @@ package io.github.J0hnL0cke.egghunt.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 /**
  * Misc helper methods relating to player notification
@@ -36,11 +38,22 @@ public class Announcement {
         int z = destination.getBlockZ();
         World world = destination.getWorld();
 
-        String worldName = formatWorld(world, origin != null && origin.getWorld().equals(destination.getWorld()));
+        //whether the two locations are in the same world, or false if origin is null
+        boolean sameWorld = origin != null && origin.getWorld().equals(destination.getWorld());
+
+        String worldName = formatWorld(world, sameWorld);
         
+        String distanceStr = "";
+        if (sameWorld) {
+            double distance = destination.distance(origin);
+            if (!Double.isNaN(distance)) {
+                distanceStr = String.format(" (%d blocks away)", (int)distance);
+            }
+        }
+
         String loc = String.format("[%d, %d, %d]", x, y, z);
         
-        return String.format("%s%s%s in %s", LOCATION_COLOR, loc, RESET_CODE, worldName);
+        return String.format("%s%s%s in %s%s", LOCATION_COLOR, loc, RESET_CODE, worldName, distanceStr);
     }
     
     public static String formatWorld(World world, boolean correctWorld) {
@@ -64,7 +77,7 @@ public class Announcement {
         return String.format("%s%s%s", color, worldName, RESET_CODE);
     }
 
-    public static void announce(String message, Logger logger) {
+    public static void announce(String message, LogHandler logger) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         int playersNotified = 0;
 
@@ -74,7 +87,7 @@ public class Announcement {
                 sendMessage(player, message);
             }
 
-        logger.info(String.format("Told %d player(s) \"%s\"", playersNotified, message));
+        logger.log(String.format("Told %d player(s) \"%s\"", playersNotified, message));
     }
 
     /**
@@ -88,13 +101,12 @@ public class Announcement {
     }
 
     public static void ShowEggEffects(Player p) {
-        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 10, 0);
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 10, 0); //min pitch is 0.5
         ShowEggEffects(p.getLocation());
     }
 
-    private static String formatMessage(String message){
+    private static String formatMessage(String message) {
         return String.format("%s%s%s%s", PREFIX_FORMAT_CODE, RAW_MESSAGE_PREFIX, RESET_CODE, message);
     }
-    
 
 }

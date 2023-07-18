@@ -19,21 +19,20 @@ import org.bukkit.inventory.PlayerInventory;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
-
-import java.util.logging.Logger;
 
 /**
  * Listens to miscellaneous Bukkit events
  */
 public class MiscListener implements Listener {
 
-    private Logger logger;
+    private LogHandler logger;
     private Configuration config;
     private Data data;
 
 
-    public MiscListener(Logger logger, Configuration config, Data data) {
+    public MiscListener(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
         this.config = config;
         this.data = data;
@@ -168,9 +167,9 @@ public class MiscListener implements Listener {
 
             if (!config.getAccurateLocation()) {
                 //TODO disable accuracy here
-                log("The egg teleported, showing players the egg's location before teleport");
+                //log("The egg teleported, showing players the egg's location before teleport");
             } else {
-                log("The egg teleported, showing players the egg's up-to-date location");
+                //log("The egg teleported, showing players the egg's up-to-date location");
             }
 
             if (config.resetOwnerOnTeleport()) {
@@ -237,7 +236,7 @@ public class MiscListener implements Listener {
     }
 
     private void log(String message) {
-        logger.info(message);
+        logger.log(message);
     }
 
 }

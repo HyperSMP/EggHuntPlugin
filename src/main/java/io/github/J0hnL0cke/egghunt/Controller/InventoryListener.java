@@ -1,6 +1,5 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
-import java.util.logging.Logger;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -28,17 +27,18 @@ import org.bukkit.inventory.Merchant;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 /**
  * Listens for Bukkit events related to inventories
  */
 public class InventoryListener implements Listener {
 
-    private Logger logger;
+    private LogHandler logger;
     private Configuration config;
     private Data data;
 
-    public InventoryListener(Logger logger, Configuration config, Data data) {
+    public InventoryListener(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
         this.config = config;
         this.data = data;
@@ -310,7 +310,7 @@ public class InventoryListener implements Listener {
     }
 
     private void log(String message) {
-        logger.info(message);
+        logger.log(message);
     }
 
 

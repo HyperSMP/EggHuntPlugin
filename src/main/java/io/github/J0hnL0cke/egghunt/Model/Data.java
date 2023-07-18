@@ -2,7 +2,6 @@ package io.github.J0hnL0cke.egghunt.Model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,7 +21,7 @@ import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 public class Data {
 
     private DataFileDAO dataDao;
-    private Logger logger;
+    private LogHandler logger;
     
     public enum Egg_Storage_Type {
         ENTITY,
@@ -39,7 +38,7 @@ public class Data {
     private UUID entityFallback;
    
 
-    public Data(DataFileDAO dataDao, Logger logger) {
+    public Data(DataFileDAO dataDao, LogHandler logger) {
         this.dataDao = dataDao;
         this.logger = logger;
         loadData();
@@ -323,7 +322,7 @@ public class Data {
     }
     
     private void log(String msg) {
-        logger.info(msg);
+        logger.log(msg);
     }
 
     

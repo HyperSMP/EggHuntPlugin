@@ -8,8 +8,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.boss.DragonBattle.RespawnPhase;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -69,9 +67,10 @@ public class Egg {
 
             // Drop it on the floor and set its location
             //TODO use drop egg method in EggRespawn
-            Item egg_drop = player.getWorld().dropItem(player.getLocation(),
+            Item eggDrop = player.getWorld().dropItem(player.getLocation(),
                     new ItemStack(Material.DRAGON_EGG));
-            data.updateEggLocation(egg_drop);
+            eggDrop.setVelocity(new Vector(0, 0, 0));
+            data.updateEggLocation(eggDrop);
         }
     }
 

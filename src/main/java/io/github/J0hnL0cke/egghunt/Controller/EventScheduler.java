@@ -1,7 +1,5 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
-import java.util.logging.Logger;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -16,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 public class EventScheduler extends BukkitRunnable {
 
@@ -24,9 +23,9 @@ public class EventScheduler extends BukkitRunnable {
 
     private Data data;
     private Configuration config;
-    private Logger logger;
+    private LogHandler logger;
 
-    public EventScheduler(Configuration config, Data data, Logger logger) {
+    public EventScheduler(Configuration config, Data data, LogHandler logger) {
         this.data = data;
         this.config = config;
         this.logger = logger;

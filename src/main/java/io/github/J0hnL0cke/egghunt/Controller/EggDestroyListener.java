@@ -2,7 +2,6 @@ package io.github.J0hnL0cke.egghunt.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.bukkit.TreeType;
 import org.bukkit.block.Block;
@@ -28,18 +27,19 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 /**
  * Listens for Bukkit events related to destruction of the dragon egg
  * Prevents destruction or respawns the egg, depending on config settings
  */
 public class EggDestroyListener implements Listener {
-    private Logger logger;
+    private LogHandler logger;
     private Configuration config;
     private Data data;
 
 
-    public EggDestroyListener(Logger logger, Configuration config, Data data) {
+    public EggDestroyListener(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
         this.config = config;
         this.data = data;
@@ -294,7 +294,7 @@ public class EggDestroyListener implements Listener {
     }
 
     private void log(String message) {
-        logger.info(message);
+        logger.log(message);
     }
 
 }

@@ -9,6 +9,7 @@ import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
  * Retrieve settings for this plugin
  */
 public class Configuration {
+    private boolean debug; /** whether to show debug information in console log */
     private boolean eggInvulnerable; /** whether to make the egg immune to damage */
     private boolean respawnEgg; /** whether the egg should respawn when destroyed */
     private boolean respawnImmediately; /** if respawning the egg, whether it should immediately respawn in-place or whether it should generate after next dragon fight */
@@ -32,6 +33,7 @@ public class Configuration {
     private void loadData() {
 
         //load config settings
+        debug = fileDao.readBool("debug");
         eggInvulnerable = fileDao.readBool("egg_inv");
         respawnEgg = fileDao.readBool("resp_egg");
         respawnImmediately = fileDao.readBool("resp_imm");
@@ -43,9 +45,12 @@ public class Configuration {
 
         ownerTagName = fileDao.read("owner_tag_name", null);
         endWorld = Bukkit.getServer().getWorld(fileDao.read("end", DEFAULT_END));
-        
+
     }
 
+    public boolean getDebugEnabled() {
+        return debug;
+    }
 
     public boolean getEggInvulnerable() {
         return eggInvulnerable;
