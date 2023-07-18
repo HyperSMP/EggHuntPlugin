@@ -40,7 +40,7 @@ public final class egghunt extends JavaPlugin {
 		
         //create model instances using dependency injection
         config = new Configuration(new ConfigFileDAO(this));
-        data = new Data(DataFileDAO.getDataDAO(this), logger);
+        data = new Data(DataFileDAO.getDataDAO(this, logger), logger);
 
         logger.setDebug(config.getDebugEnabled());
 

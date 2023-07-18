@@ -20,7 +20,6 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
-import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 
 /**
  * Listens to miscellaneous Bukkit events
