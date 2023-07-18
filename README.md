@@ -3,7 +3,7 @@
 # Egg Hunt
 A plugin for hunting down the dragon egg and stealing it from other players.
 
-## With this plugin
+## Plugin Summary
 
 - The dragon egg cannot be stored in an ender chest.
 - The egg item will drop on the ground if you leave the game with it in your inventory.
@@ -12,7 +12,7 @@ A plugin for hunting down the dragon egg and stealing it from other players.
 - Dying with the egg, having it stolen, or losing it will change ownership accordingly.
 - The egg can be located/tracked regardless of whether it's a block, an item, or in an inventory, and across any dimension.
 
-## Commands
+### Commands
 - `/eggowner` - displays the name of the player who currently owns the egg
 - `/locateegg` - displays the current coordinates of the egg, as well as how it's being stored
 - `/trackegg` - points the compass in your hand towards the egg
