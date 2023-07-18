@@ -154,7 +154,7 @@ public class Data {
 
         if (storageString == null) {
             logger.warning("Could not correctly load egg location data! Was this plugin's data folder deleted?\n" +
-                    "If this is the first time this plugin has run, it is safe to ignore this error.");
+                    "If this is the first time this plugin has run, it is safe to ignore this warning.");
             storedAs = Egg_Storage_Type.DNE;
             saveData();
         } else {

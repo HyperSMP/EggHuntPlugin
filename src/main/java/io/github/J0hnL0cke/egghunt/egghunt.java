@@ -63,7 +63,7 @@ public final class egghunt extends JavaPlugin {
 		logger.log("Scheduling task...");
         belowWorldTask = scheduler.runTaskTimer(this, 20, 20);
         
-		logger.info("Done!");
+		logger.info("EggHunt enabled.");
 	}
 
 	@Override

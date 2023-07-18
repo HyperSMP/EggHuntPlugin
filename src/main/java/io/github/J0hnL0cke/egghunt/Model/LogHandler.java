@@ -40,4 +40,8 @@ public class LogHandler {
     public void warning(String msg) {
         log(msg, Level.WARNING);
     }
+
+    public void severe(String msg) {
+        log(msg, Level.SEVERE);
+    }
 }

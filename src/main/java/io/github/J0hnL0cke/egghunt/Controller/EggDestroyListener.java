@@ -266,15 +266,15 @@ public class EggDestroyListener implements Listener {
      * Alerts when the egg is destroyed and respawns it if needed
      */
     private void eggDestroyed() {
-        announce("The dragon egg has been destroyed!");
         data.resetEggOwner(false, config);
 
         if (config.getRespawnEgg()) {
             if (config.getRespawnImmediately()) {
+                announce("The dragon egg has been destroyed!");
                 respawnEgg();
             } else {
                 data.resetEggLocation();
-                announce("It will respawn the next time the dragon is defeated");
+                announce("The dragon egg has been destroyed! It will respawn the next time the Ender Dragon is defeated.");
             }
         }
     }
