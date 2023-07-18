@@ -10,6 +10,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Controller.CommandHandler;
 import io.github.J0hnL0cke.egghunt.Controller.EggDestroyListener;
 import io.github.J0hnL0cke.egghunt.Controller.MiscListener;
@@ -75,7 +76,7 @@ public final class egghunt extends JavaPlugin {
                     Player p = (Player) eggHolder;
                     Egg.dropEgg(p, data, config);
                     //in case the server isn't restarting, let the player know what happend
-                    p.sendMessage("The dragon egg was dropped from your inventory");
+                    Announcement.sendMessage(p, "The dragon egg was dropped from your inventory");
                 }
             }
             log("saving data...");

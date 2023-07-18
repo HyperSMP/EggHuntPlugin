@@ -8,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
+import org.bukkit.boss.DragonBattle.RespawnPhase;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -37,11 +39,19 @@ public class Egg {
     }
     
     /**
+     * Returns the location above the end fountain where the dragon will respawn
+     */
+    public static Location getEggRespawnLocation(Configuration config) {
+        //the block above the bedrock fountain where the egg spawns
+        return config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0);
+    }
+
+    /**
      * Spawns the dragon egg in the end world specified by the given config.
      * @return The new egg block.
      */
     public static Block respawnEgg(Configuration config) {
-        Block newEggLoc = config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0).getBlock();
+        Block newEggLoc = getEggRespawnLocation(config).getBlock();
         newEggLoc.setType(Material.DRAGON_EGG);
         return newEggLoc;
     }

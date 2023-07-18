@@ -4,33 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.TreeType;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
 import org.bukkit.entity.ComplexEntityPart;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
-import org.checkerframework.checker.units.qual.C;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
@@ -141,7 +133,6 @@ public class EggDestroyListener implements Listener {
         if (event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
             List<BlockState> blocks = event.getBlocks();
             handleBlockStateReplace(blocks);
-            //TODO need to handle egg respawn, since it could be immediately destroyed by the dragon after respawning
         }
     }
 
@@ -157,10 +148,45 @@ public class EggDestroyListener implements Listener {
             e = ((ComplexEntityPart) e).getParent();
         }
 
+        //preserve the egg on the fountain if it's respawned there
+        //this is an edge case, since the dragon will perch above the egg unless the egg is placed mid-perch or the dragon is pushed into it
         if (e.getType().equals(EntityType.ENDER_DRAGON)) {
+            if (!config.getEggInvulnerable() && config.getRespawnEgg()) {
+                
+                ArrayList<Block> eggs = findEggs(event.blockList());
+
+                for (Block egg : eggs) {
+                    if (Egg.isOnlyEgg(egg)) {
+                        if (Egg.getEggRespawnLocation(config).getBlock().equals(egg)) {
+                            //if the egg is set to respawn, and is overlapped by the dragon at the respawn point,
+                            //preserve it rather than letting it be deleted
+                            data.resetEggOwner(false, config);
+                            event.blockList().remove(egg);
+                            //log("prevented dragon destroying respawned egg");
+                            //continue on to check if other blocks are the egg
+                        }
+                    }
+                }
+            }
+
             //if dragon is deleting blocks, check if any are the egg
             handleBlockReplace(event.blockList());
+
+            if(event.blockList().isEmpty()){
+                event.setCancelled(true);
+            }
         }
+    }
+
+    private ArrayList<Block> findEggs(List<Block> blocks){
+        ArrayList<Block> eggs = new ArrayList<>();
+
+        for (Block block : blocks) {
+            if (Egg.hasEgg(block)) {
+                eggs.add(block);
+            }
+        }
+        return eggs;
     }
 
     /**
@@ -169,22 +195,14 @@ public class EggDestroyListener implements Listener {
      * @param blocks
      */
     private void handleBlockReplace(List<Block> blocks) {
-        ArrayList<Block> eggs = new ArrayList<>();
-        Boolean foundEgg = false;
+        ArrayList<Block> eggs = findEggs(blocks);
 
-        for (Block block : blocks) {
-            if (Egg.hasEgg(block)) {
-                foundEgg = true;
-                eggs.add(block);
-            }
-        }
-
-        if (foundEgg) {
+        if (!eggs.isEmpty()) {
             if (config.getEggInvulnerable()) { //prevent egg destruction
                 for (Block b : eggs) {
                     blocks.remove(b); //remove egg from list of blocks to delete
                 }
-                log("Prevented egg from being replaced");
+                //log("Prevented egg from being replaced");
 
             } else { //if egg will be replaced, make sure it gets removed
                 for (Block b : eggs) {
@@ -197,27 +215,29 @@ public class EggDestroyListener implements Listener {
     }
 
     private void handleBlockStateReplace(List<BlockState> blockStates) {
-        //TODO refactor to merge these together without preventing shallow copy
-        ArrayList<BlockState> eggs = new ArrayList<>();
-        Boolean foundEgg = false;
+        ArrayList<Block> blocks = new ArrayList<>();
 
         for (BlockState blockState : blockStates) {
-            if (Egg.hasEgg(blockState.getBlock())) {
-                foundEgg = true;
-                eggs.add(blockState);
-            }
+            blocks.add(blockState.getBlock());
         }
 
-        if (foundEgg) {
+        ArrayList<Block> eggs = findEggs(blocks);
+
+        if (!eggs.isEmpty()) {
             if (config.getEggInvulnerable()) { //prevent egg destruction
-                for (BlockState b : eggs) {
-                    blockStates.remove(b); //remove egg from list of blocks to delete
+                for (Block b : eggs) {
+                    for (BlockState state : blockStates) {
+                        if (b.equals(state.getBlock())) {
+                            blockStates.remove(state); //remove egg from list of blocks to delete
+                        }
+                    }
+                    
                 }
-                log("Prevented egg from being replaced");
+                //log("Prevented egg from being replaced");
 
             } else { //if egg will be replaced, make sure it gets removed
-                for (BlockState b : eggs) {
-                    Egg.removeEgg(b.getBlock()); //delete egg
+                for (Block b : eggs) {
+                    Egg.removeEgg(b); //delete egg
                 }
                 log("Dragon egg was replaced");
                 eggDestroyed();
@@ -231,7 +251,7 @@ public class EggDestroyListener implements Listener {
      * TODO: figure out if this is still needed, since when active, egg is set to be invlunerable
      */
     @EventHandler(priority = EventPriority.HIGHEST)
-    public ArrayList<Block> onConsiderEntityDamageEvent(EntityDamageEvent event) {
+    public void onConsiderEntityDamageEvent(EntityDamageEvent event) {
         if (config.getEggInvulnerable()) {
             Entity entity = event.getEntity();
             if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
@@ -245,7 +265,7 @@ public class EggDestroyListener implements Listener {
     /**
      * Alerts when the egg is destroyed and respawns it if needed
      */
-    public void eggDestroyed() {
+    private void eggDestroyed() {
         announce("The dragon egg has been destroyed!");
         data.resetEggOwner(false, config);
 
@@ -265,7 +285,7 @@ public class EggDestroyListener implements Listener {
     private void respawnEgg() {
         Block eggBlock = Egg.respawnEgg(config);
         data.updateEggLocation(eggBlock);
-        Announcement.ShowEggEffects(eggBlock.getLocation());
+        Announcement.ShowEggEffects(eggBlock.getLocation().add(0.5, 0, 0.5)); //target the center bottom of the block
         announce("The dragon egg has spawned in the end!");
     }
     
