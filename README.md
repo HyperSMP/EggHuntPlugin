@@ -32,7 +32,7 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - If the dragon egg has already been found, update the plugin's record of the egg's location by picking up the egg item or by breaking and re-placing the egg block.
 
 ## Notes for Server Owners
-- Best paired with an anticheat to prevent duplication. (Unless you are using paperspigot, which disables falling block dupes by default)
+- Best paired with an anticheat to prevent duplication. (Unless you are using Paper or Spigot, which disable falling block dupes by default)
 - The egg location does not update when taken out of an inventory (eg chest) until the inventory is closed, so you should also enable [inventory close](https://github.com/NoCheatPlus/Docs/wiki/%5BInventory%5D-Open) on your anticheat to prevent the player from teleporting away with their inventory open.
 - Only players in creative mode can move the egg into an ender chest.
 - You can allow players to have dragon eggs in their ender chests that are not tracked. This is enabled by default in the config file under "ignore_echest_egg".
