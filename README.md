@@ -22,7 +22,7 @@
 This plugin's configuration file (`config.yml`) allows for several gameplay customizations to accomodate different types of servers.
 - The egg can be made invulnerable, or can be set to respawn in The End when it is destroyed
 - If set to respawn, the egg can either respawn immediately, or only after the dragon is beaten again
-- When the egg teleports, it will become "lost", so it will no longer have an owner until a player finds it
+- When the egg teleports, it can become "lost", so it will no longer have an owner until a player finds it
 - Dragon eggs that are already stored in a player's ender chest can be excluded from the hunt
 
 **Installation**

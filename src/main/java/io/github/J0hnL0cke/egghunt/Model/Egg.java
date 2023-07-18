@@ -20,6 +20,8 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.util.Vector;
 
+import io.github.J0hnL0cke.egghunt.Controller.Announcement;
+
 /**
  * Provides methods related to the dragon egg
  */
@@ -35,6 +37,35 @@ public class Egg {
             entity.setInvulnerable(true);
         }
     }
+
+    /**
+     * Alerts when the egg is destroyed and respawns it if needed
+     */
+    public static void eggDestroyed(Configuration config, Data data, LogHandler logger) {
+        logger.log("egg was destroyed");
+        OfflinePlayer oldOwner = data.getEggOwner();
+        data.resetEggOwner(false, config);
+        data.resetEggLocation();
+        String msg;
+
+        if (config.getRespawnEgg()) {
+            if (config.getRespawnImmediately()) {
+                Egg.respawnEgg(config, data, logger);
+                msg = "The dragon egg has been destroyed and has respawned in The End!";
+                if (oldOwner != null) { //prevent spamming of egg destruction
+                    Announcement.announce(msg, logger);
+                }
+            } else {
+                msg = "The dragon egg has been destroyed! It will respawn the next time the Ender Dragon is defeated.";
+                Announcement.announce(msg, logger);
+            }
+        } else {
+            msg = "The dragon egg has been destroyed!";
+            Announcement.announce(msg, logger);
+        }
+
+        
+    }
     
     /**
      * Returns the location above the end fountain where the dragon will respawn
@@ -42,16 +73,6 @@ public class Egg {
     public static Location getEggRespawnLocation(Configuration config) {
         //the block above the bedrock fountain where the egg spawns
         return config.getEndWorld().getEnderDragonBattle().getEndPortalLocation().add(0, 4, 0);
-    }
-
-    /**
-     * Spawns the dragon egg in the end world specified by the given config.
-     * @return The new egg block.
-     */
-    public static Block respawnEgg(Configuration config) {
-        Block newEggLoc = getEggRespawnLocation(config).getBlock();
-        newEggLoc.setType(Material.DRAGON_EGG);
-        return newEggLoc;
     }
 
     /**
@@ -108,6 +129,16 @@ public class Egg {
             drop.setInvulnerable(true);
         }
         return drop;
+    }
+
+    /**
+     * Respawns the dragon egg in the end
+     */
+    public static void respawnEgg(Configuration config, Data data, LogHandler logger) {
+        Block eggBlock = getEggRespawnLocation(config).getBlock();
+        eggBlock.setType(Material.DRAGON_EGG);
+        data.updateEggLocation(eggBlock);
+        Announcement.ShowEggEffects(eggBlock.getLocation().add(0.5, 0, 0.5)); //target the center bottom of the block
     }
 
     /**
@@ -184,9 +215,11 @@ public class Egg {
 
 
     public static boolean removeEgg(Entity entity) {
+        //TODO update for containers
         if (entity instanceof Player) {
             if (hasEgg(((Player) entity).getInventory())) {
-                //TODO
+                Player player = (Player)entity;
+                player.getInventory().remove(egg);
             }
         } else if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));

@@ -56,7 +56,7 @@ public class EggDestroyListener implements Listener {
             if (Egg.hasEgg(item)) {
             	//make sure item is destroyed to prevent dupes
             	event.getEntity().remove();
-                eggDestroyed();
+                Egg.eggDestroyed(config, data, logger);
             }
         }
     }
@@ -75,7 +75,7 @@ public class EggDestroyListener implements Listener {
                         log("canceled explosion of egg item frame");
                         event.setCancelled(true);
                     } else {
-                        eggDestroyed();
+                        Egg.eggDestroyed(config, data, logger);
                         frame.setItem(null); //make sure item is removed
                     }
                 }
@@ -94,7 +94,7 @@ public class EggDestroyListener implements Listener {
             if (Egg.hasEgg((ItemStack) event.getEntity())) {
                 //remove just in case to prevent dupes
                 event.getEntity().remove();
-                eggDestroyed();
+                Egg.eggDestroyed(config, data, logger);
             }
         }
 
@@ -105,7 +105,8 @@ public class EggDestroyListener implements Listener {
                     //if the egg does not exist
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
                         //if the dragon has already been beaten
-    					respawnEgg();
+                        Egg.respawnEgg(config, data, logger);
+                        Announcement.announce("The dragon egg has spawned in the end!", logger);
     				}
     			}
     		}
@@ -209,7 +210,7 @@ public class EggDestroyListener implements Listener {
                     Egg.removeEgg(b); //delete egg
                 }
                 log("Dragon egg was replaced");
-                eggDestroyed();
+                Egg.eggDestroyed(config, data, logger);
             }
         }
     }
@@ -240,7 +241,7 @@ public class EggDestroyListener implements Listener {
                     Egg.removeEgg(b); //delete egg
                 }
                 log("Dragon egg was replaced");
-                eggDestroyed();
+                Egg.eggDestroyed(config, data, logger);
             }
         }
     }
@@ -260,33 +261,6 @@ public class EggDestroyListener implements Listener {
                 }
             }
         }
-    }
-    
-    /**
-     * Alerts when the egg is destroyed and respawns it if needed
-     */
-    private void eggDestroyed() {
-        data.resetEggOwner(false, config);
-
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
-                announce("The dragon egg has been destroyed!");
-                respawnEgg();
-            } else {
-                data.resetEggLocation();
-                announce("The dragon egg has been destroyed! It will respawn the next time the Ender Dragon is defeated.");
-            }
-        }
-    }
-
-    /**
-     * Respawns the dragon egg in the end
-     */
-    private void respawnEgg() {
-        Block eggBlock = Egg.respawnEgg(config);
-        data.updateEggLocation(eggBlock);
-        Announcement.ShowEggEffects(eggBlock.getLocation().add(0.5, 0, 0.5)); //target the center bottom of the block
-        announce("The dragon egg has spawned in the end!");
     }
     
     private void announce(String msg) {

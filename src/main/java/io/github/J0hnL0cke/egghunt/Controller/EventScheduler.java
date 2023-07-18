@@ -38,13 +38,14 @@ public class EventScheduler extends BukkitRunnable {
         //TODO first check if chunk is loaded
         if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
             if (data.getEggEntity() == null) {
-                    logger.warning("Lost track of the dragon egg entity!");
-                    logger.warning("Resetting egg location to prevent repeated warnings");
-                    data.resetEggLocation();
-                    return;
+                logger.warning("Lost track of the dragon egg entity!");
+                logger.warning("Resetting egg location to prevent repeated warnings");
+                data.resetEggLocation();
+                return;
             } else if (isUnderWorld(data.getEggEntity())) {
+                logger.log("Egg entity is under the word. Removing egg from entity");
                 Location respawnLoc = data.getEggEntity().getLocation();
-                removeMaterialFromEntity(Material.DRAGON_EGG, data.getEggEntity());
+                Egg.removeEgg(data.getEggEntity());
                 if (config.getEggInvulnerable()) {
                     
                     // get coords for egg to spawn at
@@ -59,28 +60,12 @@ public class EventScheduler extends BukkitRunnable {
                     respawnLoc.setY(yPos);
                     Egg.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
                 } else {
-                    eggDestroyed();
-                    respawnEgg(respawnLoc);
+                    //alert and respawn if applicable
+                    Egg.eggDestroyed(config, data, logger);
                 }
                 data.resetEggOwner(true, config);
             }
 
-        }
-    }
-    
-    private void eggDestroyed() {
-        Announcement.announce("The dragon egg has been destroyed!", logger);
-        data.resetEggOwner(false, config);
-    }
-    
-    private void respawnEgg(Location respawnLoc) {
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
-                Egg.respawnEgg(config);
-            } else {
-                data.resetEggLocation();
-                Announcement.announce("It will respawn the next time the dragon is defeated", logger);
-            }
         }
     }
     

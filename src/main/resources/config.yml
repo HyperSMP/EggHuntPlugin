@@ -6,9 +6,6 @@ end: world_the_end
 
 #Whether the egg teleporting causes the owner to no longer count as the owner of the egg
 reset_owner: true
-#Whether to tell players the new location of the egg (true) or the previous location of the egg (false) when it teleports
-#!!! not yet implemented !!!
-#accurate_loc: false
 
 #Whether the egg should be invulnerable to damage
 egg_inv: false

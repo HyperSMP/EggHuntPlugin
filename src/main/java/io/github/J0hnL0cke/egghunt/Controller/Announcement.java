@@ -19,12 +19,12 @@ import io.github.J0hnL0cke.egghunt.Model.LogHandler;
  */
 public class Announcement {
 
-    private static final String PREFIX_FORMAT_CODE = "§5§l";
-
+    private static final String PREFIX_FORMAT_CODE = ChatColor.COLOR_CHAR+"l"; //bold
+    private static final ChatColor PREFIX_COLOR = ChatColor.DARK_PURPLE;
     private static final ChatColor LOCATION_COLOR = ChatColor.GREEN;
     private static final ChatColor CORRECT_COLOR = ChatColor.DARK_GREEN;
     private static final ChatColor INCORRECT_COLOR = ChatColor.RED;
-    private static final String RESET_CODE = "§r";
+    private static final ChatColor RESET_CODE = ChatColor.RESET;
     private static final String RAW_MESSAGE_PREFIX = "[Egg Hunt] ";
 
     public static void sendMessage(Player p, String message) {
@@ -106,7 +106,7 @@ public class Announcement {
     }
 
     private static String formatMessage(String message) {
-        return String.format("%s%s%s%s", PREFIX_FORMAT_CODE, RAW_MESSAGE_PREFIX, RESET_CODE, message);
+        return String.format("%s%s%s%s%s", PREFIX_FORMAT_CODE, PREFIX_COLOR, RAW_MESSAGE_PREFIX, RESET_CODE, message);
     }
 
 }
