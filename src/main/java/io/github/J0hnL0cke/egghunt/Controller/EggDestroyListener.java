@@ -20,7 +20,10 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 import org.bukkit.inventory.ItemStack;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
@@ -132,8 +135,31 @@ public class EggDestroyListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onGrow(StructureGrowEvent event) {
         if (event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
+            logger.log("Red mushroom grown");
             List<BlockState> blocks = event.getBlocks();
             handleBlockStateReplace(blocks);
+        }
+    }
+
+    /**
+     * Prevent end platform regeneration from overwriting the egg
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPortalCreate(PortalCreateEvent event) {
+        logger.log("Portal created");
+        if (event.getReason().equals(CreateReason.END_PLATFORM)) {
+            
+            ArrayList<Block> eggs = findEggs(getBlockListFromBlockStateList(event.getBlocks()));
+
+            //for some reason PortalCreateEvent's block list is not a shallow copy, unlike EntityExplode and StructureGrow Events
+            //that means editing the list does not change which blocks are actually affected by the event
+            //as a workaround, allow egg blocks to be destroyed, but respawn the egg as an item
+
+            for (Block egg : eggs) {
+                EggController.spawnEggItem(egg.getLocation(), config, data);
+            }
+            logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
+            
         }
     }
 
@@ -215,27 +241,29 @@ public class EggDestroyListener implements Listener {
         }
     }
 
-    private void handleBlockStateReplace(List<BlockState> blockStates) {
+    private ArrayList<Block> getBlockListFromBlockStateList(List<BlockState> blockStates) {
         ArrayList<Block> blocks = new ArrayList<>();
 
         for (BlockState blockState : blockStates) {
             blocks.add(blockState.getBlock());
         }
 
+        return blocks;
+    }
+
+    private void handleBlockStateReplace(List<BlockState> blockStates) {
+        ArrayList<Block> blocks = getBlockListFromBlockStateList(blockStates);
+
         ArrayList<Block> eggs = findEggs(blocks);
 
         if (!eggs.isEmpty()) {
             if (config.getEggInvulnerable()) { //prevent egg destruction
-                for (Block b : eggs) {
-                    for (BlockState state : blockStates) {
-                        if (b.equals(state.getBlock())) {
-                            blockStates.remove(state); //remove egg from list of blocks to delete
-                        }
-                    }
-                    
+                for (int i = eggs.size()-1; i >= 0; i--) { //iterate over every egg found backwards
+                    int index = blocks.indexOf(eggs.get(i)); //get where the egg is in block list
+                    blockStates.remove(index); //remove that item from the blockstate list
                 }
-                //log("Prevented egg from being replaced");
-
+                log("Prevented egg from being replaced");
+                
             } else { //if egg will be replaced, make sure it gets removed
                 for (Block b : eggs) {
                     Egg.removeEgg(b); //delete egg

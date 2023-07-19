@@ -108,10 +108,9 @@ public class EggController {
 
     /**
      * Spawns a new egg item at the given location, sets it to invincible if enabled in the given config.
-     * This should trigger the item drop event, so it should not be necessary to immediately update the data file with the returned item.
      * @return the egg item that was spawned
      */
-    public static Item spawnEggItem(Location loc, Configuration config, Data data) {
+    public static void spawnEggItem(Location loc, Configuration config, Data data) {
         ItemStack egg = new ItemStack(Material.DRAGON_EGG);
         egg.setAmount(1);
         Item drop = loc.getWorld().dropItem(loc, egg);
@@ -121,7 +120,7 @@ public class EggController {
         if (config.getEggInvulnerable()) {
             drop.setInvulnerable(true);
         }
-        return drop;
+        data.updateEggLocation(drop);
     }
 
     /**
