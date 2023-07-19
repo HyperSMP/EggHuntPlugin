@@ -298,7 +298,7 @@ public class Data {
         entity = null;
         storedAs = Egg_Storage_Type.BLOCK;
 
-        log(getEggHolderString());
+        log("The egg is "+getEggHolderString());
     }
     
     
@@ -308,7 +308,7 @@ public class Data {
         block = null;
         storedAs = Egg_Storage_Type.ENTITY;
 
-        log(getEggHolderString());
+        log("The egg is"+getEggHolderString());
     }
     
     /**
