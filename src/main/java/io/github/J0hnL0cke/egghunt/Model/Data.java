@@ -296,20 +296,11 @@ public class Data {
         approxLocation = block.getLocation();
         this.block = block;
         entity = null;
-        storedAs=Egg_Storage_Type.BLOCK;
-        
-        switch (block.getType()) {
-            case DRAGON_EGG:
-                //egg is stored as a block
-                log(String.format("The egg is placed as a block"));
-                break;
+        storedAs = Egg_Storage_Type.BLOCK;
 
-            default:
-                //egg is stored within the inventory of a tile entity (chest, hopper, furnace, etc)
-                log(String.format("The egg is in a(n) %s", block.getType()));
-        }
-        
+        log(getEggHolderString());
     }
+    
     
     public void updateEggLocation(Entity holderEntity) {
         approxLocation = holderEntity.getLocation();
@@ -317,39 +308,7 @@ public class Data {
         block = null;
         storedAs = Egg_Storage_Type.ENTITY;
 
-        switch (holderEntity.getType()) {
-            case PLAYER:
-                //TODO Switch posession here
-                log(String.format("The egg is in the inventory of the player \"%s\"", entity.getName()));
-                break;
-
-            case FALLING_BLOCK:
-                log(String.format("The egg is a falling block"));
-                break;
-
-            case DROPPED_ITEM:
-                log(String.format("The egg is a dropped item"));
-                break;
-
-            case ITEM_FRAME:
-            case GLOW_ITEM_FRAME:
-                log(String.format("The egg is an item frame"));
-                break;
-
-            case ARMOR_STAND:
-                log(String.format("The egg is held by an armor stand"));
-                break;
-
-            default:
-                //stored in the inventory of a non-player entity (zombie, hopper minecart, etc)
-                if (entity.getCustomName() != null) {
-                    log(String.format("The egg is held by a(n) %s named \"%s\"", entity.getType().toString(),
-                            entity.getName()));
-                } else {
-                    log(String.format("The egg is held by a(n) %s", entity.getType().toString()));
-                }
-
-        }
+        log(getEggHolderString());
     }
     
     /**
@@ -359,7 +318,7 @@ public class Data {
     public void updateEggLocation(Inventory inv) {
         if (inv.getHolder() instanceof Entity){
             // Hopper minecart, llama, or some other entity has the egg
-            for (Entity e : inv.getLocation().getWorld().getEntities()) {
+            for (Entity e : inv.getLocation().getChunk().getEntities()) {
                 //search all entities in the world
                 if (e instanceof InventoryHolder) {
                     if (inv.getHolder().equals((InventoryHolder) e)) {
@@ -369,14 +328,81 @@ public class Data {
                     }
                 }
             }
-            log("could not find correct inventoryHolder entity!");
+            logger.warning("Could not find the correct InventoryHolder entity for this Inventory! Are you using custom inventories?");
+            logger.warning(BUG_STR);
             
         } else {
             // Block contains the egg
             updateEggLocation(inv.getLocation().getBlock());
         }
     }
-    
+
+    /**
+     * Gives a human-readable string describing where the dragon egg is
+     * Will always start with "is <x>" unless the message is "does not exist"
+     */
+    public String getEggHolderString() {
+        Egg_Storage_Type type = getEggType();
+
+        String storageMsg;
+
+        if (type == Egg_Storage_Type.DNE) { //egg does not exist
+            storageMsg = "does not exist";
+
+        } else { //egg exists
+
+            if (type == Egg_Storage_Type.BLOCK) {
+                Block eggBlock = getEggBlock();
+
+                if (Egg.isOnlyEgg(eggBlock)) { //egg is an egg block
+                    storageMsg = "is a block";
+
+                } else { //egg is in a block
+                    //inside a container, so provide the name of the container
+                    storageMsg = String.format("is inside of a(n) %s", eggBlock.getType().toString());
+                }
+
+            } else { //egg is in an entity
+
+                Entity eggEntity = getEggEntity();
+
+                switch (eggEntity.getType()) {
+                    case PLAYER:
+                        storageMsg = String.format("is in the inventory of %s", entity.getName());
+                        break;
+
+                    case FALLING_BLOCK:
+                        storageMsg = String.format("is a falling block");
+                        break;
+
+                    case DROPPED_ITEM:
+                        storageMsg = String.format("is a dropped item");
+                        break;
+
+                    case ITEM_FRAME:
+                    case GLOW_ITEM_FRAME:
+                        storageMsg = String.format("is an item frame");
+                        break;
+
+                    case ARMOR_STAND:
+                        storageMsg = String.format("is held by an armor stand");
+                        break;
+
+                    default:
+                        //stored in the inventory of a non-player entity (zombie, hopper minecart, etc)
+                        if (entity.getCustomName() != null) {
+                            storageMsg = String.format("is held by a(n) %s named \"%s\"",
+                                    entity.getType().toString(),
+                                    entity.getName());
+                        } else {
+                            storageMsg = String.format("is held by a(n) %s", entity.getType().toString());
+                        }
+                }
+            }
+        }
+        return storageMsg;
+    }
+
     private void log(String msg) {
         logger.log(msg);
     }
