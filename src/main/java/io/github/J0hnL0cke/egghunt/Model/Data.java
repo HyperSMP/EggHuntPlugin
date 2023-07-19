@@ -308,7 +308,7 @@ public class Data {
         block = null;
         storedAs = Egg_Storage_Type.ENTITY;
 
-        log("The egg is"+getEggHolderString());
+        log("The egg is "+getEggHolderString());
     }
     
     /**
