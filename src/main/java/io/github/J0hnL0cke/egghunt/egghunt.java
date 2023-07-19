@@ -13,6 +13,7 @@ import io.github.J0hnL0cke.egghunt.Controller.CommandHandler;
 import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Controller.EggDestroyListener;
 import io.github.J0hnL0cke.egghunt.Controller.MiscListener;
+import io.github.J0hnL0cke.egghunt.Controller.ScoreboardHandler;
 import io.github.J0hnL0cke.egghunt.Controller.EventScheduler;
 import io.github.J0hnL0cke.egghunt.Controller.InventoryListener;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
@@ -45,7 +46,8 @@ public final class egghunt extends JavaPlugin {
         logger.setDebug(config.getDebugEnabled());
 
         //create controller instances
-        MiscListener miscListener = new MiscListener(logger, config, data);
+        ScoreboardHandler scoreboardHandler = new ScoreboardHandler(data, config, logger);
+        MiscListener miscListener = new MiscListener(logger, config, data, scoreboardHandler);
         InventoryListener inventoryListener = new InventoryListener(logger, config, data);
         EggDestroyListener destroyListener = new EggDestroyListener(logger, config, data);
         EventScheduler scheduler = new EventScheduler(config, data, logger);
