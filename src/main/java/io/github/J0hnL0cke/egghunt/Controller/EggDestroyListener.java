@@ -155,10 +155,12 @@ public class EggDestroyListener implements Listener {
             //that means editing the list does not change which blocks are actually affected by the event
             //as a workaround, allow egg blocks to be destroyed, but respawn the egg as an item
 
-            for (Block egg : eggs) {
-                EggController.spawnEggItem(egg.getLocation(), config, data);
+            if (!eggs.isEmpty()) {
+                for (Block egg : eggs) {
+                    EggController.spawnEggItem(egg.getLocation(), config, data);
+                }
+                logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
             }
-            logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
             
         }
     }
