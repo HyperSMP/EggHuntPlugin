@@ -19,7 +19,7 @@ A plugin for hunting down the dragon egg and stealing it from other players.
 
 ## Customization
 
-This plugin's configuration file (`config.yml`) allows for several gameplay customizations to accomodate different types of servers.
+This plugin's configuration file (`config.yml`) allows for several gameplay customizations to accommodate different types of servers.
 - The egg can be made invulnerable, or can be set to respawn in The End when it is destroyed
 - If set to respawn, the egg can either respawn immediately, or only after the dragon is beaten again
 - When the egg teleports, it can become "lost", so it will no longer have an owner until a player finds it
