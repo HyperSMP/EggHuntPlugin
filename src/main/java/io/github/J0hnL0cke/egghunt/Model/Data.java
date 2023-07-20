@@ -14,6 +14,7 @@ import org.bukkit.inventory.InventoryHolder;
 
 import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Controller.EggController;
+import io.github.J0hnL0cke.egghunt.Controller.ScoreboardController;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
 /**
@@ -221,6 +222,8 @@ public class Data {
 	}
 
     public void saveData() {
+        ScoreboardController.saveData(logger);
+
         dataDao.writeUUID("owner", owner);
         dataDao.writeLocation("block", serializeBlock(block));
         dataDao.writeUUID("entity", serializeEntity(entity));
@@ -244,6 +247,7 @@ public class Data {
 
     private void setEggOwner(UUID playerUUID, Configuration config) {
         if (!playerUUID.equals(owner)) { //only update if the egg has actually changed posession
+            ScoreboardController.saveData(logger);
             UUID oldOwner = owner;
             owner = playerUUID; //set new owner
             String ownerName = Bukkit.getOfflinePlayer(owner).getName();
@@ -270,6 +274,7 @@ public class Data {
     }
 
     public void resetEggOwner(boolean announce, Configuration config) {
+        ScoreboardController.saveData(logger);
         if (owner != null) {
             Player oldOwner = Bukkit.getPlayer(owner);
             if (announce) { //TODO move announcements somewhere else?

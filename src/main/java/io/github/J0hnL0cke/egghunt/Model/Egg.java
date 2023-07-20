@@ -143,7 +143,9 @@ public class Egg {
         if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));
             EntityEquipment inv = mob.getEquipment();
-            if (Egg.hasEgg(inv.getArmorContents())) { //TODO check if includes main/offhand
+            if (Egg.hasEgg(inv.getArmorContents())) {
+                return true;
+            } else if (Egg.hasEgg(inv.getItemInMainHand()) || Egg.hasEgg(inv.getItemInOffHand())) {
                 return true;
             }
         }

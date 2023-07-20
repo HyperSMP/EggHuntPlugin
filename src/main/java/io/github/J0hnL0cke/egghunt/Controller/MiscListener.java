@@ -29,14 +29,12 @@ public class MiscListener implements Listener {
     private LogHandler logger;
     private Configuration config;
     private Data data;
-    private ScoreboardHandler scoreboardHandler;
 
 
-    public MiscListener(LogHandler logger, Configuration config, Data data, ScoreboardHandler scoreboardHandler) {
+    public MiscListener(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
         this.config = config;
         this.data = data;
-        this.scoreboardHandler = scoreboardHandler;
     }
 
     /**
@@ -47,7 +45,6 @@ public class MiscListener implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAutosave(WorldSaveEvent event) {
-        scoreboardHandler.updateScores();
         data.saveData();
     }
 
