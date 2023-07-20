@@ -1,5 +1,6 @@
 name: EggHunt
 main:  io.github.J0hnL0cke.egghunt.egghunt
+website: https://github.com/HyperSMP/EggHuntPlugin
 version: 1.19.4
 api-version: '1.19'
 
@@ -34,12 +35,17 @@ permissions:
         children:
             egghunt.locateegg: true
             egghunt.trackegg: true
+            egghunt.eggowner: true
             egghunt.notify: true
+        default: true
     egghunt.locateegg:
         description: Allows you to locate the dragon egg using /locateegg
         default: true
     egghunt.trackegg:
         description: Allows you to track the egg with a compass using /trackegg
+        default: true
+    egghunt.eggowner:
+        description: Allows you to query the egg's current owner
         default: true
     egghunt.notify:
         description: Receive a chat message when the egg is claimed, stolen, lost, or destroyed

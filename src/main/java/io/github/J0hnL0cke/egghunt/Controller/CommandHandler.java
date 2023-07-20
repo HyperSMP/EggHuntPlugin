@@ -24,81 +24,42 @@ public class CommandHandler {
         this.data = data;
     }
 
+    /**
+     * Sends a message to the given CommandSender
+     */
+    private void sendMessage(CommandSender sender, String message) {
+        //make the message formatted
+        if (sender instanceof Player) {
+            Announcement.sendMessage((Player) sender, message);
+        } else {
+            sender.sendMessage(message);
+        }
+    }
+
     private boolean locateEgg(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("egghunt.locateegg")) {
 
-            final String msgStart = "The dragon egg ";
+            final String msgStart = "The dragon egg";
 
-            Data.Egg_Storage_Type type = data.getEggType();
+            String storageMsg = data.getEggHolderString(); //"is in <x>"
 
-            if (type == Egg_Storage_Type.DNE) {
-                //if the egg does not exist
-                sender.sendMessage(msgStart + "does not exist");
-
-            } else {
-                String storageMsg;
-
-                //figure out how the egg is contained
-                if (type == Egg_Storage_Type.BLOCK) {
-                    Block eggBlock = data.getEggBlock();
-
-                    if (Egg.isEgg(eggBlock)) {
-                        storageMsg = "has been placed";
-
-                    } else {
-                        //egg is inside a container, provide the name of the container
-                        storageMsg = String.format(" is inside of a(n) %s", eggBlock.getType().toString());
-                    }
-
-                } else {
-                    Entity eggEntity = data.getEggEntity();
-
-                    switch (eggEntity.getType()) {
-                        case DROPPED_ITEM:
-                            storageMsg = "is a dropped item";
-                            break;
-                        case ITEM_FRAME:
-                        case GLOW_ITEM_FRAME:
-                            storageMsg = "is in an item frame";
-                            break;
-
-                        case FALLING_BLOCK:
-                            storageMsg = "is a falling block entity";
-                            break;
-
-                        case PLAYER:
-                            storageMsg = String.format("is in the inventory of %s", eggEntity.getName());
-                            break;
-
-                        default:
-                            storageMsg = String.format("is held by a(n) %s", eggEntity.getType().toString());
-                            if (eggEntity.getCustomName() != null) {
-                                storageMsg += String.format(" named %s", eggEntity.getCustomName());
-                            }
-                        
-                    }
-                }
-            
-                //stringify the egg's location
-                Location locMsg = data.getEggLocation();
-                int x = locMsg.getBlockX();
-                int y = locMsg.getBlockY();
-                int z = locMsg.getBlockZ();
-                String world = locMsg.getWorld().getName();
-                String locStr = String.format("at %d/%d/%d in %s", x, y, z, world);
-
-                sender.sendMessage(String.format("The dragon egg %s %s.", storageMsg, locStr));
+            Location origin = null; //get location of player that sent the command for distance calculation
+            if(sender instanceof Player){
+                origin = ((Player) sender).getLocation();
             }
-            
+
+            String locStr = Announcement.formatLocation(data.getEggLocation(), origin);
+            sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
+
         } else {
-            sender.sendMessage(NOT_PERMITTED_MSG);
+            sendMessage(sender, NOT_PERMITTED_MSG);
         }
         return true;
     }
 
     private boolean trackEgg(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("This command can only be run by a player, use /locateegg instead.");
+            sendMessage(sender, "This command can only be run by a player, use /locateegg instead.");
         } else {
             if (sender.hasPermission("egghunt.trackegg")) {
                 Player player = (Player) sender;
@@ -114,19 +75,18 @@ public class CommandHandler {
                             compassMeta.setLodestoneTracked(false);
                             compassMeta.setLodestone(eggLoc);
                             heldItem.setItemMeta(compassMeta);
-                            sender.sendMessage("Tracking last known dragon egg position.");
+                            sendMessage(sender, "Tracking last known dragon egg position.");
                         } else {
-                            sender.sendMessage("Not in the same dimension as the egg.");
-                            sender.sendMessage(String.format("The egg is in %s.", eggLoc.getWorld().getName()));
+                            sendMessage(sender, String.format("Not in the same dimension as the egg. The egg is in %s.", Announcement.formatWorld(eggLoc.getWorld(), false)));
                         }
                     } else {
-                        sender.sendMessage("The dragon egg does not exist.");
+                        sendMessage(sender, "The dragon egg does not exist.");
                     }
                 } else {
-                    sender.sendMessage("You must be holding a compass to use this command, use /locateegg instead.");
+                    sendMessage(sender, "You must be holding a compass to use this command, use /locateegg instead.");
                 }
             } else {
-                sender.sendMessage(NOT_PERMITTED_MSG);
+                sendMessage(sender, NOT_PERMITTED_MSG);
             }
         }
         return true;
@@ -135,12 +95,12 @@ public class CommandHandler {
     private boolean getOwner(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("egghunt.eggowner")) {
             if (data.getEggOwner() == null) {
-                sender.sendMessage("The dragon egg has not been claimed.");
+                sendMessage(sender, "The dragon egg has not been claimed.");
             } else {
-                sender.sendMessage(String.format("The dragon egg belongs to %s.", data.getEggOwner().getName()));
+                sendMessage(sender, String.format("The dragon egg belongs to %s.", data.getEggOwner().getName()));
             }
         } else {
-            sender.sendMessage(NOT_PERMITTED_MSG);
+            sendMessage(sender, NOT_PERMITTED_MSG);
         }
         return true;
     }
