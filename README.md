@@ -24,6 +24,8 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - If set to respawn, the egg can either respawn immediately, or only after the dragon is beaten again
 - When the egg teleports, it can become "lost", so it will no longer have an owner until a player finds it
 - Dragon eggs that are already stored in a player's ender chest can be excluded from the hunt
+- The egg owner is tracked with an entity tag, so you target them with the selector `@a[tag=eggOwner]` in any commands.
+- Scoreboards track the amount of time each player has owned the dragon egg, and can be configured to track named entities as if those entities actually owned the egg.
 
 ## Installation
 - Save the provided .jar file to your server's `/plugins` directory. Alternatively, you can compile the .jar file yourself by cloning this repository to a local directory and running the maven command `mvn package`. The packaged .jar will appear in `/EggHuntPlugin/target/`.
@@ -40,3 +42,7 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - You can disallow players from using certain commands in this plugin. See the `plugin.yml` file for a list of permissions.
 - It is safe to use the Bukkit `/reload` command while this plugin is running.
 - When resetting the world, also delete the `data.yml` file.
+
+# Reporting Bugs
+Make sure you are running the latest version of this plugin and read that version's Known Issues list to make sure you aren't reporting a known issue.
+To report a bug, please open a new [Issue](https://github.com/HyperSMP/EggHuntPlugin/issues) in this repository and fill out the bug report template.

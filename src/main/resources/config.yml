@@ -16,13 +16,16 @@ resp_imm: false
 #Whether to drop any eggs that players have in their ender chest onto the ground.
 #Setting this to false will prevent the player from removing that egg from their ender chest.
 drop_enderchested_egg: false
-#Whether the egg is allowed to be stored in bundles and shulker boxes
-#WIP
-#can_package_egg: true
 
 #Whether to apply an entity tag to the egg owner (works like `/tag <playerName> add <tagName>`)
 tag_owner: true
-#The name of the tag to apply (selected like: `/tell @a[tag=<tagName>] <message>`)
-#Do not overlap with tag names used by other plugins.
-#If changing this while the egg is claimed, remove the old tag by running `/tag <playerName> remove <oldTagName>`.
+#The name of the tag to apply. Selected like: `/tell @a[tag=<tagName>] <message>`
+#If changing this while the egg is claimed, remove the old tag by running `/tag <playerName> remove <oldTagName>`
 owner_tag_name: eggOwner
+
+#Whether to create and update scoreboards for time holding the dragon egg
+#Scoreboards are updated when the egg changes ownership and when the world saves
+#When editing the scores, modify the board tracking seconds. Other times are calculated based on that time
+keep_score: true
+#Whether entities with custom names are counted on the scoreboard instead of the owner when holding the egg
+named_entities_keep_score: false
