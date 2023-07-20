@@ -156,10 +156,20 @@ public class EggDestroyListener implements Listener {
             //as a workaround, allow egg blocks to be destroyed, but respawn the egg as an item
 
             if (!eggs.isEmpty()) {
-                for (Block egg : eggs) {
-                    EggController.spawnEggItem(egg.getLocation(), config, data);
+                if (config.getEggInvulnerable()) {
+                
+                    for (Block egg : eggs) {
+                        EggController.spawnEggItem(egg.getLocation(), config, data);
+                    }
+                    logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
+
+                } else {
+                    for (Block b : eggs) {
+                        Egg.removeEgg(b); //delete egg
+                    }
+                    log("Dragon egg was replaced");
+                    EggController.eggDestroyed(config, data, logger);
                 }
-                logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
             }
             
         }
