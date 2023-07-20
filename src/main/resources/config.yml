@@ -1,5 +1,5 @@
 #If enabled, logs extra debugging information to the console. This information will appear in logs regardless of debug setting.
-debug: false
+debug: true
 
 #Name of your end world, usually to "world_the_end" on spigot
 end: world_the_end
@@ -13,11 +13,13 @@ egg_inv: false
 resp_egg: true
 #Whether the egg respawns immediately (true) or after a new dragon is spawned and killed (false) after the egg is destroyed
 resp_imm: false
+
 #Whether to drop any eggs that players have in their ender chest onto the ground.
 #Setting this to false will prevent the player from removing that egg from their ender chest.
 drop_enderchested_egg: false
 
 #Whether to apply an entity tag to the egg owner (works like `/tag <playerName> add <tagName>`)
+#Tag is updated when egg ownership changes and on player login
 tag_owner: true
 #The name of the tag to apply. Selected like: `/tell @a[tag=<tagName>] <message>`
 #If changing this while the egg is claimed, remove the old tag by running `/tag <playerName> remove <oldTagName>`
