@@ -1,7 +1,5 @@
 package io.github.J0hnL0cke.egghunt;
 
-import java.util.logging.Logger;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -10,14 +8,17 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Controller.CommandHandler;
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Controller.EggDestroyListener;
 import io.github.J0hnL0cke.egghunt.Controller.MiscListener;
+import io.github.J0hnL0cke.egghunt.Controller.ScoreboardController;
 import io.github.J0hnL0cke.egghunt.Controller.EventScheduler;
 import io.github.J0hnL0cke.egghunt.Controller.InventoryListener;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
-import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
@@ -28,27 +29,32 @@ public final class egghunt extends JavaPlugin {
     CommandHandler commandHandler;
 
     BukkitTask belowWorldTask;
-    Logger logger;
+    LogHandler logger;
 	
 	@Override
     public void onEnable() {
-        logger = getLogger();
-		log("Enabling EggHunt...");
+        //create logger instance
+        logger = new LogHandler(getLogger());
+
+	    logger.info("Enabling EggHunt..."); //server already provides an enable message
         saveDefaultConfig();
 		
         //create model instances using dependency injection
         config = new Configuration(new ConfigFileDAO(this));
-        data = new Data(DataFileDAO.getDataDAO(this), getLogger());
+        data = new Data(DataFileDAO.getDataDAO(this, logger), logger);
+
+        logger.setDebug(config.getDebugEnabled());
 
         //create controller instances
-        MiscListener miscListener = new MiscListener(getLogger(), config, data);
+        ScoreboardController scoreboardController = ScoreboardController.getScoreboardHandler(data, config, logger);
+        MiscListener miscListener = new MiscListener(logger, config, data);
         InventoryListener inventoryListener = new InventoryListener(logger, config, data);
         EggDestroyListener destroyListener = new EggDestroyListener(logger, config, data);
         EventScheduler scheduler = new EventScheduler(config, data, logger);
         commandHandler = new CommandHandler(data);
 		
 		//register event handlers
-        log("Registering event listeners...");
+        logger.log("Registering event listeners...");
         PluginManager manager = getServer().getPluginManager();
         manager.registerEvents(miscListener, this);
         manager.registerEvents(inventoryListener, this);
@@ -56,35 +62,36 @@ public final class egghunt extends JavaPlugin {
 
 		//schedule tasks
 		//TODO: disable task when not in use
-		log("Scheduling below world task...");
+		logger.log("Scheduling task...");
         belowWorldTask = scheduler.runTaskTimer(this, 20, 20);
         
-		log("Done!");
+		logger.info("EggHunt enabled.");
 	}
 
 	@Override
 	public void onDisable() {
-        log("onDisable has been invoked, disabling eggHunt.");
+        logger.log("Preparing to disable EggHunt..."); //server already provides a disable message
         if (data != null) {
             //if a player has the egg in their inventory,
             //drop it on the ground in case the server is closing
             Entity eggHolder = data.getEggEntity();
             if (eggHolder != null) {
                 if (eggHolder instanceof Player) {
-                    log("egg is held by a player, dropping egg...");
+                    logger.log("Egg is held by a player, dropping egg...");
                     Player p = (Player) eggHolder;
-                    Egg.dropEgg(p, data);
+                    EggController.dropEgg(p, data, config);
                     //in case the server isn't restarting, let the player know what happend
-                    p.sendMessage("The dragon egg was dropped from your inventory");
+                    Announcement.sendMessage(p, "The dragon egg was dropped from your inventory");
                 }
             }
-            log("saving data...");
+            logger.log("Saving data...");
             data.saveData();
         }
+        logger.log("Disabling task...");
 		if (belowWorldTask!=null) {
 			belowWorldTask.cancel();
 		}
-		log("Plugin disabled.");
+		logger.info("EggHunt disabled.");
 	}
 
 	@Override
@@ -92,8 +99,6 @@ public final class egghunt extends JavaPlugin {
         return commandHandler.onCommand(sender, cmd, label, args);
     }
 
-    private void log(String msg) {
-        logger.info(msg);
-    }
+    
     
 }

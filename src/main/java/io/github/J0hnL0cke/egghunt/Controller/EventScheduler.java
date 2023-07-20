@@ -1,7 +1,5 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
-import java.util.logging.Logger;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -16,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 public class EventScheduler extends BukkitRunnable {
 
@@ -24,9 +23,9 @@ public class EventScheduler extends BukkitRunnable {
 
     private Data data;
     private Configuration config;
-    private Logger logger;
+    private LogHandler logger;
 
-    public EventScheduler(Configuration config, Data data, Logger logger) {
+    public EventScheduler(Configuration config, Data data, LogHandler logger) {
         this.data = data;
         this.config = config;
         this.logger = logger;
@@ -39,15 +38,16 @@ public class EventScheduler extends BukkitRunnable {
         //TODO first check if chunk is loaded
         if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
             if (data.getEggEntity() == null) {
-                    logger.warning("Lost track of the dragon egg entity!");
-                    logger.warning("Resetting egg location to prevent repeated warnings");
-                    data.resetEggLocation();
-                    return;
-            } else if (isUnderWorld(data.getEggEntity())) {
+                logger.warning("Lost track of the dragon egg entity!");
+                logger.warning("Resetting egg location to prevent repeated warnings");
+                data.resetEggLocation();
+                return;
+            } else if (isUnderWorld(data.getEggEntity()) && !(data.getEggEntity() instanceof Player)) {
+                logger.log("Egg entity is under the word. Removing egg from entity");
                 Location respawnLoc = data.getEggEntity().getLocation();
-                removeMaterialFromEntity(Material.DRAGON_EGG, data.getEggEntity());
+                Egg.removeEgg(data.getEggEntity());
+
                 if (config.getEggInvulnerable()) {
-                    
                     // get coords for egg to spawn at
                     //get highest block
                     Block highestBlock = respawnLoc.getWorld().getHighestBlockAt(respawnLoc);
@@ -58,53 +58,18 @@ public class EventScheduler extends BukkitRunnable {
                         yPos = respawnLoc.getWorld().getSeaLevel();
                     }
                     respawnLoc.setY(yPos);
-                    Egg.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
+                    EggController.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
+                    data.resetEggOwner(true, config);
                 } else {
-                    eggDestroyed();
-                    respawnEgg(respawnLoc);
+                    //alert and respawn if applicable
+                    EggController.eggDestroyed(config, data, logger);
                 }
-                data.resetEggOwner(true);
-            }
-
-        }
-    }
-    
-    private void eggDestroyed() {
-        Announcement.announce("The dragon egg has been destroyed!", logger);
-        data.resetEggOwner(false);
-    }
-    
-    private void respawnEgg(Location respawnLoc) {
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
                 
-            } else {
-                data.resetEggLocation();
-                Announcement.announce("It will respawn the next time the dragon is defeated", logger);
             }
+
         }
     }
-
-    public boolean hasEgg(Entity entity) {
-        if (entity instanceof Player) {
-            return ((Player) entity).getInventory().contains(Material.DRAGON_EGG);
-        } else if (entity instanceof LivingEntity) {
-            LivingEntity mob = (((LivingEntity) entity));
-            EntityEquipment inv = mob.getEquipment();
-            if (Egg.isEgg(inv.getItemInMainHand())) {
-                return true;
-            }
-            if (Egg.isEgg(inv.getItemInOffHand())) {
-                return true;
-            }
-        } else if (entity instanceof FallingBlock) {
-            return Egg.isEgg(((FallingBlock) entity));
-        } else if (entity instanceof Item) {
-            return Egg.isEgg((Item) entity);
-        }
-        return false;
-    }
-
+    
     public boolean isUnderWorld(Entity entity) {
         return entity.getLocation().getY() < UNDER_WORLD_HEIGHT;
     }

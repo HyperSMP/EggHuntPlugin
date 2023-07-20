@@ -1,9 +1,6 @@
 package io.github.J0hnL0cke.egghunt.Persistence;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.io.File;
 
@@ -15,6 +12,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+
 public class DataFileDAO {
 
     public static final String DATA_FILE = "data.yml";
@@ -22,17 +21,16 @@ public class DataFileDAO {
     private static DataFileDAO thisDao;
     private FileConfiguration fileConfig;
     private File file;
+    private LogHandler logger;
 
-    JavaPlugin plugin;
-
-    private DataFileDAO(JavaPlugin plugin){
-        this.plugin = plugin;
+    private DataFileDAO(JavaPlugin plugin, LogHandler logger) {
+        this.logger = logger;
         loadData(plugin, DATA_FILE);
     }
 
-    public static DataFileDAO getDataDAO(JavaPlugin plugin){
+    public static DataFileDAO getDataDAO(JavaPlugin plugin, LogHandler logger){
         if(thisDao == null){
-            thisDao = new DataFileDAO(plugin);
+            thisDao = new DataFileDAO(plugin, logger);
         }
         return thisDao;
     }
@@ -58,7 +56,7 @@ public class DataFileDAO {
         try {
             fileConfig.save(file);
         } catch (IOException e) {
-            Bukkit.getServer().getLogger().severe(String.format("Could not save data file!"));
+            logger.severe(String.format("Could not save data file!"));
         }
     }
     

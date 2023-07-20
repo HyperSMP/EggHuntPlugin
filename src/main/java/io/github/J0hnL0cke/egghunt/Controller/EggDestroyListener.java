@@ -1,51 +1,48 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.TreeType;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
+import org.bukkit.entity.ComplexEntityPart;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
-import org.bukkit.event.entity.EntityCreatePortalEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 import org.bukkit.inventory.ItemStack;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
+import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 /**
  * Listens for Bukkit events related to destruction of the dragon egg
  * Prevents destruction or respawns the egg, depending on config settings
  */
 public class EggDestroyListener implements Listener {
-    private Logger logger;
+    private LogHandler logger;
     private Configuration config;
     private Data data;
 
 
-    public EggDestroyListener(Logger logger, Configuration config, Data data) {
+    public EggDestroyListener(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
         this.config = config;
         this.data = data;
@@ -59,10 +56,10 @@ public class EggDestroyListener implements Listener {
         Entity entity = event.getEntity();
         if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
             ItemStack item = ((Item)entity).getItemStack();
-            if (Egg.isEgg(item)) {
+            if (Egg.hasEgg(item)) {
             	//make sure item is destroyed to prevent dupes
             	event.getEntity().remove();
-                eggDestroyed();
+                EggController.eggDestroyed(config, data, logger);
             }
         }
     }
@@ -76,12 +73,12 @@ public class EggDestroyListener implements Listener {
             if (event.getEntity().getType().equals(EntityType.ITEM_FRAME)
                 || event.getEntity().getType().equals(EntityType.GLOW_ITEM_FRAME)) {
                 ItemFrame frame = (ItemFrame) event.getEntity();
-                if (Egg.isEgg(frame.getItem())) {
+                if (Egg.hasEgg(frame.getItem())) {
                     if (config.getEggInvulnerable()) {
-                        logToConsole("canceled explosion of egg item frame");
+                        log("canceled explosion of egg item frame");
                         event.setCancelled(true);
                     } else {
-                        eggDestroyed();
+                        EggController.eggDestroyed(config, data, logger);
                         frame.setItem(null); //make sure item is removed
                     }
                 }
@@ -97,10 +94,10 @@ public class EggDestroyListener implements Listener {
     public void onEntityDeath(EntityDeathEvent event) {
         //if the egg item dies, notify that it has been destroyed
         if (event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
-            if (Egg.isEgg((ItemStack) event.getEntity())) {
+            if (Egg.hasEgg((ItemStack) event.getEntity())) {
                 //remove just in case to prevent dupes
                 event.getEntity().remove();
-                eggDestroyed();
+                EggController.eggDestroyed(config, data, logger);
             }
         }
 
@@ -111,7 +108,8 @@ public class EggDestroyListener implements Listener {
                     //if the egg does not exist
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
                         //if the dragon has already been beaten
-    					respawnEgg();
+                        EggController.respawnEgg(config, data, logger);
+                        Announcement.announce("The dragon egg has spawned in the end!", logger);
     				}
     			}
     		}
@@ -119,55 +117,15 @@ public class EggDestroyListener implements Listener {
     }
     
     /**
-     * Stop portals from removing the egg
-     */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onCreatePortal(EntityCreatePortalEvent event) {
-        //not specific to any particular creation reason because multiple events could cause the egg to be removed (obby platform regen, gateway portal spawning, stronghold portal activation)
-        boolean egg_affected = false;
-        Location l = null;
-        List<BlockState> blocks = event.getBlocks();
-        logToConsole(String.format("blocks: %s", blocks.toString()));
-        for (BlockState blockState : blocks) {
-            logToConsole(String.format("Block update at %s: from %s to %s", blockState.getLocation(),
-                    blockState.getBlock().getType(), blockState.getType()));
-            if (Egg.isEgg(blockState.getBlock())) {
-                egg_affected = true;
-                l = blockState.getLocation();
-                //extra check to make sure egg is removed
-                blockState.getBlock().setType(Material.AIR);
-
-            }
-        }
-
-        if (egg_affected) {
-            String entityName = "Unknown entity";
-            if (event.getEntity() != null) {
-                if (event.getEntity().getCustomName() != null) {
-                    entityName = event.getEntity().getCustomName();
-                }
-            }
-            logToConsole(String.format("%s tried to overwrite egg with a portal", entityName));
-            data.resetEggOwner(false);
-            if (l != null) {
-                data.updateEggLocation(Egg.spawnEggItem(l, config, data));
-            } else {
-                logToConsole("Could not spawn egg item! Invalid block location.");
-            }
-        }
-
-    }
-    
-    /**
      * Prevent the egg from despawning
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDespawn(ItemDespawnEvent event) {
-        if (Egg.isEgg(event.getEntity().getItemStack())) {
+        if (Egg.hasEgg(event.getEntity().getItemStack())) {
             event.setCancelled(true);
             //set the age back to 1 so it doesn't try to despawn every tick
             event.getEntity().setTicksLived(1);
-            logToConsole("Canceled egg despawn");
+            log("Canceled egg despawn");
         }
     }
     
@@ -176,43 +134,146 @@ public class EggDestroyListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onGrow(StructureGrowEvent event) {
-        boolean destroy = false;
         if (event.getSpecies().equals(TreeType.RED_MUSHROOM)) {
+            logger.log("Red mushroom grown");
             List<BlockState> blocks = event.getBlocks();
-            for (BlockState blockState : blocks) {
-                Block block = blockState.getBlock();
-                if (Egg.isEgg(block)) {
-                    destroy = true;
-                    if (!config.getEggInvulnerable()) { //if egg will be replaced, make sure it gets removed
-                        block.setType(Material.AIR);
-                    }
-                } else {
-                    if (blockState instanceof Container) { //TODO exclude item frames, which aren't destroyed by this
-                        Container cont = (Container) blockState;
-                        if (cont.getInventory().contains(Material.DRAGON_EGG)) {
-                            destroy = true;
-                            cont.getInventory().remove(Material.DRAGON_EGG); //make sure egg is removed from container
+            handleBlockStateReplace(blocks);
+        }
+    }
+
+    /**
+     * Prevent end platform regeneration from overwriting the egg
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPortalCreate(PortalCreateEvent event) {
+        logger.log("Portal created");
+        if (event.getReason().equals(CreateReason.END_PLATFORM)) {
+            
+            ArrayList<Block> eggs = findEggs(getBlockListFromBlockStateList(event.getBlocks()));
+
+            //for some reason PortalCreateEvent's block list is not a shallow copy, unlike EntityExplode and StructureGrow Events
+            //that means editing the list does not change which blocks are actually affected by the event
+            //as a workaround, allow egg blocks to be destroyed, but respawn the egg as an item
+
+            for (Block egg : eggs) {
+                EggController.spawnEggItem(egg.getLocation(), config, data);
+            }
+            logger.log("Egg overwritten by the end spawn platform, spawning egg item at block location");
+            
+        }
+    }
+
+    /**
+     * Listens for the dragon destroying the egg by flying into it
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onDragonDeleteBlock(final EntityExplodeEvent event) {
+        //check if this event is dealing with the dragon, since the event is very generic
+        Entity e = event.getEntity();
+        if (e instanceof ComplexEntityPart) {
+            //if a part of a multi-part entity like the dragon, get the whole dragon
+            e = ((ComplexEntityPart) e).getParent();
+        }
+
+        //preserve the egg on the fountain if it's respawned there
+        //this is an edge case, since the dragon will perch above the egg unless the egg is placed mid-perch or the dragon is pushed into it
+        if (e.getType().equals(EntityType.ENDER_DRAGON)) {
+            if (!config.getEggInvulnerable() && config.getRespawnEgg()) {
+                
+                ArrayList<Block> eggs = findEggs(event.blockList());
+
+                for (Block egg : eggs) {
+                    if (Egg.isOnlyEgg(egg)) {
+                        if (EggController.getEggRespawnLocation(config).getBlock().equals(egg)) {
+                            //if the egg is set to respawn, and is overlapped by the dragon at the respawn point,
+                            //preserve it rather than letting it be deleted
+                            data.resetEggOwner(false, config);
+                            event.blockList().remove(egg);
+                            //log("prevented dragon destroying respawned egg");
+                            //continue on to check if other blocks are the egg
                         }
                     }
                 }
             }
-            if (destroy) {
-                if (config.getEggInvulnerable()) {
-                    event.setCancelled(true);
-                    Player p = event.getPlayer();
-                    if (p != null) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-                        p.sendMessage("Cannot grow mushroom: obstructed by dragon egg");
-                        p.setCooldown(Material.BONE_MEAL, 100);
-                        logToConsole(String.format("%s tried to mushroom the dragon egg", p.getName()));
-                    }
-                } else {
-                    eggDestroyed();
-                }
+
+            //if dragon is deleting blocks, check if any are the egg
+            handleBlockReplace(event.blockList());
+
+            if(event.blockList().isEmpty()){
+                event.setCancelled(true);
             }
         }
     }
 
+    private ArrayList<Block> findEggs(List<Block> blocks){
+        ArrayList<Block> eggs = new ArrayList<>();
+
+        for (Block block : blocks) {
+            if (Egg.hasEgg(block)) {
+                eggs.add(block);
+            }
+        }
+        return eggs;
+    }
+
+    /**
+     * Looks through the provided blocks to see if the dragon egg is affected
+     * Notifies that the egg is destroyed or prevents its destruction
+     * @param blocks
+     */
+    private void handleBlockReplace(List<Block> blocks) {
+        ArrayList<Block> eggs = findEggs(blocks);
+
+        if (!eggs.isEmpty()) {
+            if (config.getEggInvulnerable()) { //prevent egg destruction
+                for (Block b : eggs) {
+                    blocks.remove(b); //remove egg from list of blocks to delete
+                }
+                //log("Prevented egg from being replaced");
+
+            } else { //if egg will be replaced, make sure it gets removed
+                for (Block b : eggs) {
+                    Egg.removeEgg(b); //delete egg
+                }
+                log("Dragon egg was replaced");
+                EggController.eggDestroyed(config, data, logger);
+            }
+        }
+    }
+
+    private ArrayList<Block> getBlockListFromBlockStateList(List<BlockState> blockStates) {
+        ArrayList<Block> blocks = new ArrayList<>();
+
+        for (BlockState blockState : blockStates) {
+            blocks.add(blockState.getBlock());
+        }
+
+        return blocks;
+    }
+
+    private void handleBlockStateReplace(List<BlockState> blockStates) {
+        ArrayList<Block> blocks = getBlockListFromBlockStateList(blockStates);
+
+        ArrayList<Block> eggs = findEggs(blocks);
+
+        if (!eggs.isEmpty()) {
+            if (config.getEggInvulnerable()) { //prevent egg destruction
+                for (int i = eggs.size()-1; i >= 0; i--) { //iterate over every egg found backwards
+                    int index = blocks.indexOf(eggs.get(i)); //get where the egg is in block list
+                    blockStates.remove(index); //remove that item from the blockstate list
+                }
+                log("Prevented egg from being replaced");
+                
+            } else { //if egg will be replaced, make sure it gets removed
+                for (Block b : eggs) {
+                    Egg.removeEgg(b); //delete egg
+                }
+                log("Dragon egg was replaced");
+                EggController.eggDestroyed(config, data, logger);
+            }
+        }
+    }
+    
     /**
      * Cancel events that damage the egg item if enabled in config
      * Note: cannot cancel damage to item frames, since damage is used to remove an item but is not called when burned/exploded
@@ -223,94 +284,15 @@ public class EggDestroyListener implements Listener {
         if (config.getEggInvulnerable()) {
             Entity entity = event.getEntity();
             if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
-                if (Egg.isEgg((Item) entity)) {
+                if (Egg.hasEgg((Item) entity)) {
                     event.setCancelled(true);
                 }
             }
         }
     }
-    
-    /**
-     * When a portal is updated, check if the egg will be replaced
-     */
-    private void checkPortalBlocks() {
-        //TODO there has to be a better way to do this
-        //Check end platform
-        Location l1 = new Location(config.getEndWorld(), 102, 48, 2);
-        Location l2 = new Location(config.getEndWorld(), 98, 51, -2);
-        Location res = checkBlockMaterialFromLocation(config.getEndWorld(), Material.DRAGON_EGG, l1, l2);
-        if (res != null) {
-            portalOverwriteEgg(res);
-        }
-    }
-    
-    /**
-     * Update data and spawn a new egg when the egg is overwritten with a portal
-     */
-    private void portalOverwriteEgg(Location res) {
-    	res.getBlock().setType(Material.AIR);
-    	logToConsole("Egg was overwritten with a portal");
-        if (config.getEggInvulnerable()) {
-            logToConsole("Spawning new egg");
-    		data.updateEggLocation(Egg.spawnEggItem(res, config, data));
-    	} else {
-    		eggDestroyed();
-    	}
-    }
-    
-    /**
-     * Checks blocks within the cube created by the given locations.
-     * Returns the first location corresponding to the block found with the given material.
-     * Returns null if no matching block is found or locations are in different worlds.
-     */
-    private static Location checkBlockMaterialFromLocation(World w, Material m, Location l1, Location l2) {
-        if (l1.getWorld().equals(l2.getWorld())) {
-            for (int x = l1.getBlockX(); x < l2.getBlockX(); x++) {
-                for (int y = l1.getBlockY(); y < l2.getBlockY(); y++) {
-                    for (int z = l1.getBlockZ(); z < l2.getBlockZ(); z++) {
-                        if (w.getBlockAt(x, y, z).getType().equals(m)) {
-                            return new Location(w, x, y, z);
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
 
-    /**
-     * Alerts when the egg is destroyed and respawns it if needed
-     */
-    public void eggDestroyed() {
-        announce("The dragon egg has been destroyed!");
-        data.resetEggOwner(false);
-
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
-                respawnEgg();
-            } else {
-                data.resetEggLocation();
-                announce("It will respawn the next time the dragon is defeated");
-            }
-        }
-    }
-
-    /**
-     * Respawns the dragon egg in the end
-     */
-    private void respawnEgg() {
-        Block eggBlock = Egg.respawnEgg(config);
-        data.updateEggLocation(eggBlock);
-        Announcement.ShowEggEffects(eggBlock.getLocation());
-        announce("The dragon egg has spawned in the end!");
-    }
-    
-    private void announce(String msg) {
-        Announcement.announce(msg, logger);
-    }
-
-    private void logToConsole(String message) {
-        logger.info(message);
+    private void log(String message) {
+        logger.log(message);
     }
 
 }
