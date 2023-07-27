@@ -2,6 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.J0hnL0cke</groupId>
   <artifactId>EggHunt</artifactId>
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+</properties>
   <version>1.20.1</version>
      <build>
       <plugins>
@@ -12,7 +17,7 @@
           </plugin>
           <plugin>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.4</version>
+          <version>3.5.0</version>
           <configuration>
             <minimizeJar>true</minimizeJar>
             <shadedArtifactAttached>true</shadedArtifactAttached>

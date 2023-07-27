@@ -28,7 +28,7 @@ This plugin's configuration file (`config.yml`) allows for several gameplay cust
 - Scoreboards track the amount of time each player has owned the dragon egg, and can be configured to track named entities as if those entities actually owned the egg.
 
 ## Installation
-- Save the provided .jar file to your server's `/plugins` directory. Alternatively, you can compile the .jar file yourself by cloning this repository to a local directory and running the maven command `mvn package`. The packaged .jar will appear in `/EggHuntPlugin/target/`. Requires Java 17.
+- Save the provided .jar file to your server's `/plugins` directory. Alternatively, you can compile the .jar file yourself by cloning this repository to a local directory and running the maven command `mvn package`. The packaged .jar will appear in `/EggHuntPlugin/target/`.
 - Restart (or `/reload`) the server to generate the `/plugins/EggHunt` directory, which will contain the plugin's config file.
 - Open `config.yml` in any text editor to change the settings, then restart (or reload) the server to apply the changes.
 - If the dragon egg has already been found, update the plugin's record of the egg's location by picking up the egg item or by breaking and re-placing the egg block.
