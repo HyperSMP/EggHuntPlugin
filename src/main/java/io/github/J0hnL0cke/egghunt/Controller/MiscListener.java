@@ -1,6 +1,7 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -172,8 +173,9 @@ public class MiscListener implements Listener {
             }
 
             if (config.resetOwnerOnTeleport()) {
-                if (data.getEggOwner() != null) {
-                    announce(String.format("The dragon egg has teleported. %s is no longer the owner.", data.getEggOwner().getName()));
+                OfflinePlayer owner = data.getEggOwner();
+                if (owner != null) {
+                    announce(String.format("The dragon egg has teleported. %s is no longer the owner.", owner.getName()));
                     data.resetEggOwner(false, config);
                 }
             }

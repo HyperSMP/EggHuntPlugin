@@ -2,17 +2,14 @@ package io.github.J0hnL0cke.egghunt.Controller;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 
 import io.github.J0hnL0cke.egghunt.Model.Data;
-import io.github.J0hnL0cke.egghunt.Model.Egg;
-import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 
 public class CommandHandler {
 
@@ -67,7 +64,7 @@ public class CommandHandler {
                 ItemStack heldItem = player.getInventory().getItemInMainHand();
                 if (heldItem.getType().equals(Material.COMPASS)) {
 
-                    if (data.getEggType() != Data.Egg_Storage_Type.DNE) {
+                    if (data.doesNotExist()) {
                         Location eggLoc = data.getEggLocation();
                         if (player.getWorld().equals(eggLoc.getWorld())) {
 
@@ -94,10 +91,11 @@ public class CommandHandler {
 
     private boolean getOwner(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("egghunt.eggowner")) {
-            if (data.getEggOwner() == null) {
+            OfflinePlayer owner = data.getEggOwner();
+            if (owner == null) {
                 sendMessage(sender, "The dragon egg has not been claimed.");
             } else {
-                sendMessage(sender, String.format("The dragon egg belongs to %s.", data.getEggOwner().getName()));
+                sendMessage(sender, String.format("The dragon egg belongs to %s.", owner.getName()));
             }
         } else {
             sendMessage(sender, NOT_PERMITTED_MSG);

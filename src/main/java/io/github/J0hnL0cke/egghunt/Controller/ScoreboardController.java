@@ -79,10 +79,10 @@ public class ScoreboardController {
      * @param data
      */
     public void updateScores() {
-        if (config.getKeepScore() && data.getEggType()!= Data.Egg_Storage_Type.DNE) {
+        if (config.getKeepScore() && data.doesNotExist()) {
             logger.log("Updating scoreboard");
 
-            if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
+            if (data.isEntity()) {
                 Entity eggEntity = data.getEggEntity();
                 if (config.getNamedEntitiesGetScore()) {
                     if (eggEntity.getCustomName() != null) {

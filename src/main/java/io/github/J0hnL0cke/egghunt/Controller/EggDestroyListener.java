@@ -20,7 +20,6 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
-import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.world.PortalCreateEvent.CreateReason;
@@ -28,7 +27,6 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
-import io.github.J0hnL0cke.egghunt.Model.Data.Egg_Storage_Type;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
@@ -104,7 +102,7 @@ public class EggDestroyListener implements Listener {
         else if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
             //if the dragon is killed, respawn the egg
             if (config.getRespawnEgg()) {
-                if (data.getEggType() == Egg_Storage_Type.DNE) {
+                if (data.doesNotExist()) {
                     //if the egg does not exist
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
                         //if the dragon has already been beaten

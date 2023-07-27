@@ -3,6 +3,8 @@ package io.github.J0hnL0cke.egghunt.Model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -24,82 +26,53 @@ public class Data {
 
     private DataFileDAO dataDao;
     private LogHandler logger;
-    
-    public enum Egg_Storage_Type {
-        ENTITY,
-        BLOCK,
-        DNE, //egg does not exist
-    }
-
-    private Location approxLocation;
-    private UUID owner;
-    private Egg_Storage_Type storedAs;
-    
-    private Block block;
-    private Entity entity;
-    private UUID entityFallback;
+    private Location approxLocation; //TODO move to EggStorageState
+    private EggStorageState state;
 
     private static final String BUG_STR = "THIS MAY BE A BUG! Please report it at https://github.com/HyperSMP/EggHuntPlugin/issues";
-   
 
     public Data(DataFileDAO dataDao, LogHandler logger) {
         this.dataDao = dataDao;
         this.logger = logger;
         loadData();
     }
-
-    public Location getEggLocation() {
-        if (storedAs == Egg_Storage_Type.DNE) {
-            return null;
-        } else if (storedAs == Egg_Storage_Type.BLOCK) {
-            return block.getLocation();
-        } else if (storedAs == Egg_Storage_Type.ENTITY) {
-            return entity.getLocation();
-        }
-        return null;
-    }
-
-    /**
-     * Returns the current storage type for the dragon egg
-     * When getting the corresponding entity or block, that object is guaranteed to be non-null
-     */
-    public Egg_Storage_Type getEggType() {
-        if ((storedAs == Egg_Storage_Type.BLOCK && block == null)
-                || (storedAs == Egg_Storage_Type.ENTITY && entity == null)) {
-            //make sure object is non-null
-            String msg = String.format(
-                    "Unable to find egg! storedAs = %s but corresponding object is null!\nResetting storedAs to prevent further errors",
-                    storedAs.toString());
-            resetEggLocation();
-            logger.warning(msg);
-        }
-
-        return storedAs;
-    }
     
     /**
-     * Returns the entity currently associated with the dragon egg
-     * This should only be used after checking the egg is stored as an entity
-     * The provided entity should (but is not guaranteed to) contain the egg
+     * Gets the current instance of EggStorageState representing how the egg is currently being stored
      */
-    public Entity getEggEntity() {
-        return entity;
+    private EggStorageState getEggState() {
+        return state;
     }
 
-    /**
-     * Returns the block currently associated with the dragon egg
-     * This should only be used after checking the egg is stored as a block
-     * The provided block should (but is not guaranteed to) contain the egg
-     */
+    public boolean isEntity() {
+        return state.isEntity();
+    }
+    
+    public boolean isBlock() {
+        return state.isBlock();
+    }
+
+    public boolean doesNotExist() {
+        return state.doesNotExist();
+    }
+
+    public Location getEggLocation() {
+        return state.getEggLocation();
+    }
+
+    public Entity getEggEntity() { //TODO should be able to remove once event system is created
+        return state.entity();
+    }
+
     public Block getEggBlock() {
-        return block;
+        return state.block();
     }
 
-    public OfflinePlayer getEggOwner() {
-        if (owner == null) {
+    public @Nullable OfflinePlayer getEggOwner() {
+        if (state.owner() == null) {
             return null;
         }
-        return Bukkit.getOfflinePlayer(owner);
+        return Bukkit.getOfflinePlayer(state.owner());
     }
 
     private Location serializeBlock(Block block) {
@@ -138,7 +111,7 @@ public class Data {
         if (!chunkLoaded) {
             logger.warning("Failed to load chunk with egg entity!");
         }
-        return Bukkit.getEntity(entityFallback);
+        return Bukkit.getEntity(uuid);
     }
 
     private UUID deserializeUUID(String uuid) {
@@ -148,91 +121,59 @@ public class Data {
         return UUID.fromString(uuid);
     }
 
-    private void validateData() {
-        logger.log("Data loaded. Validating loaded data...");
-        //make sure data was properly loaded
-
-        switch (storedAs) {
-            case BLOCK:
-                if (block == null) {
-                    logger.warning("Could not locate egg block!");
-                    resetEggLocation();
-                } else if (!Egg.hasEgg(block)) {
-                    logger.warning("Saved egg block does not actually contain the egg!  Was the egg moved while the plugin was disabled?");
-                    logger.warning(BUG_STR);
-                } else {
-                    log("Successfully found dragon egg block.");
-                }
-                break;
-            case ENTITY:
-                if (entity == null) {
-                    logger.warning("Could not locate the egg entity!");
-                    resetEggLocation();
-                } else if (!Egg.hasEgg(entity)) {
-                    logger.warning("Saved egg entity does not actually contain the egg! Was the egg moved while the plugin was disabled?");
-                    logger.warning(BUG_STR);
-                } else {
-                    log("Successfully found dragon egg entity.");
-                }
-                break;
-            case DNE:
-                log("Dragon egg has not been claimed.");
-        }
-        
-        if (owner != null) {
-            OfflinePlayer p = Bukkit.getOfflinePlayer(owner);
-            if (p == null) {
-                logger.warning("Could not find player with the saved UUID! Resetting egg owner to prevent errors.");
-                logger.warning(BUG_STR);
-                resetEggOwner(false, null);
-            }
-        }
-
-        if (entity == null && storedAs.equals(Egg_Storage_Type.ENTITY)) {
-            logger.warning("Could not locate the egg entity!");
-            resetEggLocation();
-        } else if (block == null && storedAs.equals(Egg_Storage_Type.BLOCK)) {
-            logger.warning("Could not locate egg block!");
-            resetEggLocation();
-        } else if (storedAs.equals(Egg_Storage_Type.DNE)) {
-            log("Dragon egg has not been claimed.");
-        } else {
-            log("Successfully found dragon egg.");
-        }
-    }
-
     public void loadData() {
-        owner = dataDao.readUUID("owner", null);
-        block = deserializeBlock(dataDao.readLocation("block", null));
-        entityFallback = deserializeUUID(dataDao.read("entity", String.class, null));
+        UUID owner = dataDao.readUUID("owner", null);
+        Block block = deserializeBlock(dataDao.readLocation("block", null));
+        UUID entityFallback = deserializeUUID(dataDao.read("entity", String.class, null));
         approxLocation = dataDao.readLocation("lastLocation", null);
-        entity = deserializeEntity(entityFallback, approxLocation);
-        String storageString = dataDao.read("storedAs", String.class, null);
+        Entity entity = deserializeEntity(entityFallback, approxLocation);
+        String eggExists = dataDao.read("eggExists", String.class, null); //only used for checking if data file has been deleted
 
-        if (storageString == null) {
+        if (eggExists == null) {
             logger.warning("Could not correctly load egg location data! Was this plugin's data folder deleted?\n" +
                     "If this is the first time this plugin has run, it is safe to ignore this warning.");
-            storedAs = Egg_Storage_Type.DNE;
+            resetEggLocation();
             saveData();
         } else {
-            storedAs = Egg_Storage_Type.valueOf(storageString);
+            try {
+                state = EggStorageState.createState(block, entity, owner);
+            } catch (AssertionError e) {
+                logger.severe("Unable to load EggHunt data! (Both block and entity in data file are non-null)");
+            }
 
-            validateData();
+            //check that the egg's container actually contains the egg
+            if ((state.isBlock() && !Egg.hasEgg(state.block())) || (state.isEntity() && !Egg.hasEgg(state.entity()))) {
+                logger.warning("Saved egg holder does not actually contain the egg! Was the egg moved while the plugin was disabled?");
+                logger.warning(BUG_STR);
+            } else {
+                if (state.doesNotExist()) {
+                    logger.log("Dragon egg does not exist.");
+                } else {
+                    logger.log("Successfully located dragon egg.");
+                }
+            }
+        
+            //check owner exists
+            if (state.owner() != null) {
+                OfflinePlayer p = Bukkit.getOfflinePlayer(state.owner());
+                if (p == null) {
+                    logger.warning("Could not find player with the saved UUID! Resetting egg owner to prevent errors.");
+                    logger.warning(BUG_STR);
+                    resetEggOwner(isBlock(), null);
+                }
+            }
         }
 	}
 
     public void saveData() {
         ScoreboardController.saveData(logger);
 
-        dataDao.writeUUID("owner", owner);
-        dataDao.writeLocation("block", serializeBlock(block));
-        dataDao.writeUUID("entity", serializeEntity(entity));
-        if (storedAs.equals(Egg_Storage_Type.ENTITY)) {
-            approxLocation = entity.getLocation(); //update latest entity location
-            //this is important for getting entity when server restarts
-        }
+        dataDao.writeUUID("owner", state.owner());
+        dataDao.writeLocation("block", serializeBlock(state.block()));
+        dataDao.writeUUID("entity", serializeEntity(state.entity()));
+        approxLocation = state.entity().getLocation(); //update latest egg location for getting egg entity when server restarts
         dataDao.writeLocation("lastLocation", approxLocation);
-        dataDao.writeString("storedAs", storedAs.name());
+        dataDao.writeString("eggExists", String.valueOf(!state.doesNotExist()));
 
         //save timestamp
         dataDao.writeString("writeTime", LocalDateTime.now().toString());
@@ -246,19 +187,17 @@ public class Data {
     }
 
     private void setEggOwner(UUID playerUUID, Configuration config) {
-        if (!playerUUID.equals(owner)) { //only update if the egg has actually changed posession
+        if (!playerUUID.equals(state.owner())) { //only update if the egg has actually changed posession
             ScoreboardController.saveData(logger);
-            UUID oldOwner = owner;
-            owner = playerUUID; //set new owner
-            String ownerName = Bukkit.getOfflinePlayer(owner).getName();
+            UUID oldOwner = state.owner();
+            state = state.setOwner(playerUUID); //set new owner
+            String ownerName = Bukkit.getOfflinePlayer(playerUUID).getName(); //get the name of the new owner
             String msg;
-
-            //if the old owner is online, remove their scoreboard tag
+            
             if (oldOwner != null) {
-                EggController.updateOwnerTag(Bukkit.getPlayer(oldOwner), this, config);
+                EggController.updateOwnerTag(Bukkit.getPlayer(oldOwner), this, config); //if the old owner is online, remove their scoreboard tag
                 String oldOwnerName = Bukkit.getOfflinePlayer(oldOwner).getName();
                 msg = String.format("%s has stolen the dragon egg from %s!", ownerName, oldOwnerName);
-
             } else {
                 msg = String.format("%s has claimed the dragon egg!", ownerName);
             }
@@ -274,7 +213,9 @@ public class Data {
     }
 
     public void resetEggOwner(boolean announce, Configuration config) {
+        //TODO remove unneeded parameters after switching to event creation
         ScoreboardController.saveData(logger);
+        UUID owner = state.owner();
         if (owner != null) {
             Player oldOwner = Bukkit.getPlayer(owner);
             if (announce) { //TODO move announcements somewhere else?
@@ -283,7 +224,7 @@ public class Data {
             }
 
             log("Egg owner reset");
-            owner = null;
+            state = state.setOwner(null);
             if (config != null) {
                 EggController.updateOwnerTag(oldOwner, this, config); //update tag after setting owner to null
             }
@@ -291,28 +232,19 @@ public class Data {
     }
 
     public void resetEggLocation() {
+        state = new EggStorageState();
         log("Egg location reset");
-        block = null;
-        entity = null;
-        storedAs = Egg_Storage_Type.DNE;
     }
 
     public void updateEggLocation(Block block) {
-        approxLocation = block.getLocation();
-        this.block = block;
-        entity = null;
-        storedAs = Egg_Storage_Type.BLOCK;
-
-        log("The egg is "+getEggHolderString());
+        state = new EggStorageState(block, state.owner());
+        approxLocation = state.getEggLocation();
+        log("The egg is " + getEggHolderString());
     }
     
-    
     public void updateEggLocation(Entity holderEntity) {
+        state = new EggStorageState(holderEntity, state.owner());
         approxLocation = holderEntity.getLocation();
-        entity = holderEntity;
-        block = null;
-        storedAs = Egg_Storage_Type.ENTITY;
-
         log("The egg is "+getEggHolderString());
     }
     
@@ -347,17 +279,16 @@ public class Data {
      * Will always start with "is <x>" unless the message is "does not exist"
      */
     public String getEggHolderString() {
-        Egg_Storage_Type type = getEggType();
 
         String storageMsg;
 
-        if (type == Egg_Storage_Type.DNE) { //egg does not exist
+        if (state.doesNotExist()) {
             storageMsg = "does not exist";
 
         } else { //egg exists
 
-            if (type == Egg_Storage_Type.BLOCK) {
-                Block eggBlock = getEggBlock();
+            if (state.isBlock()) {
+                Block eggBlock = state.block();
 
                 if (Egg.isOnlyEgg(eggBlock)) { //egg is an egg block
                     storageMsg = "is a block";
@@ -369,11 +300,11 @@ public class Data {
 
             } else { //egg is in an entity
 
-                Entity eggEntity = getEggEntity();
+                Entity eggEntity = state.entity();
 
                 switch (eggEntity.getType()) {
                     case PLAYER:
-                        storageMsg = String.format("is in the inventory of %s", entity.getName());
+                        storageMsg = String.format("is in the inventory of %s", state.entity().getName());
                         break;
 
                     case FALLING_BLOCK:
@@ -395,12 +326,12 @@ public class Data {
 
                     default:
                         //stored in the inventory of a non-player entity (zombie, hopper minecart, etc)
-                        if (entity.getCustomName() != null) {
+                        if (state.entity().getCustomName() != null) {
                             storageMsg = String.format("is held by a(n) %s named \"%s\"",
-                                    entity.getType().toString(),
-                                    entity.getName());
+                                    state.entity().getType().toString(),
+                                    state.entity().getName());
                         } else {
-                            storageMsg = String.format("is held by a(n) %s", entity.getType().toString());
+                            storageMsg = String.format("is held by a(n) %s", state.entity().getName());
                         }
                 }
             }

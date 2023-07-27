@@ -36,7 +36,7 @@ public class EventScheduler extends BukkitRunnable {
         // check if the entity storing the egg has fallen out of the world
         //TODO handle launching egg into void faster than the timer tick
         //TODO first check if chunk is loaded
-        if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
+        if (data.isEntity()) {
             if (data.getEggEntity() == null) {
                 logger.warning("Lost track of the dragon egg entity!");
                 logger.warning("Resetting egg location to prevent repeated warnings");
