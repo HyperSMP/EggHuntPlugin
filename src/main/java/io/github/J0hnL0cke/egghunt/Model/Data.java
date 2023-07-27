@@ -36,13 +36,6 @@ public class Data {
         this.logger = logger;
         loadData();
     }
-    
-    /**
-     * Gets the current instance of EggStorageState representing how the egg is currently being stored
-     */
-    private EggStorageState getEggState() {
-        return state;
-    }
 
     public boolean isEntity() {
         return state.isEntity();
