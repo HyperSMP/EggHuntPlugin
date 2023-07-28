@@ -167,7 +167,6 @@ public class Data {
 	}
 
     public void saveData() {
-
         dataDao.writeUUID("owner", state.owner());
         dataDao.writeLocation("block", serializeBlock(state.block()));
         dataDao.writeUUID("entity", serializeEntity(state.entity()));
@@ -251,12 +250,14 @@ public class Data {
     }
 
     public void updateEggLocation(Block block) {
+        //TODO when updating, call both events
         state = new EggStorageState(block, state.owner());
         approxLocation = state.getEggLocation();
         log("The egg is " + getEggHolderString());
     }
     
     public void updateEggLocation(Entity holderEntity) {
+        //TODO call events
         state = new EggStorageState(holderEntity, state.owner());
         approxLocation = holderEntity.getLocation();
         log("The egg is " + getEggHolderString());
@@ -271,7 +272,7 @@ public class Data {
         state = new EggStorageState();
         
         callEvent(new EggDestroyedEvent(oldState, state)); //TODO this is a StateSwitchEvent. How does it interact with resetting egg owner?
-        //callEvent(new OwnerChangeEvent(oldState, state)); TODO maybe this?
+        //callEvent(new OwnerChangeEvent(oldState, state, OwnerChangeReason./* ? */)); TODO maybe this?
     }
 
     public void eggRespawned(@Nonnull Block block, @Nonnull SpawnReason reason) {

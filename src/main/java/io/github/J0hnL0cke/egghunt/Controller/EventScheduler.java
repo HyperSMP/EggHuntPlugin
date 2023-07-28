@@ -62,8 +62,8 @@ public class EventScheduler extends BukkitRunnable {
                     EggController.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
                     data.resetEggOwner(config, OwnerChangeReason.DATA_ERROR);
                 } else {
-                    //alert and respawn if applicable
-                    EggController.eggDestroyed(config, data, logger);
+                    //register destruction
+                    data.eggDestroyed();
                 }
                 
             }

@@ -80,8 +80,6 @@ public class MiscListener implements Listener {
 
         if (Egg.hasEgg(item)) {
             data.updateEggLocation(item);
-            EggController.makeEggInvulnerable(event.getEntity(), config);
-            log("made entity invulnerable");
         }
     }
 

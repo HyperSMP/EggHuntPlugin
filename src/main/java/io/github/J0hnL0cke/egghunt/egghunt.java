@@ -39,29 +39,33 @@ public final class egghunt extends JavaPlugin {
 	    logger.info("Enabling EggHunt..."); //server already provides an enable message
         saveDefaultConfig();
 		
-        //create model instances using dependency injection
+        //create model tier instances using dependency injection
         config = new Configuration(new ConfigFileDAO(this));
         data = new Data(DataFileDAO.getDataDAO(this, logger), logger);
 
         logger.setDebug(config.getDebugEnabled());
 
-        //create controller instances
-        ScoreboardController scoreboardController = new ScoreboardController(config, logger);
-        Announcement announcement = new Announcement(config, logger);
+        //create controller tier instances
         MiscListener miscListener = new MiscListener(logger, config, data);
         InventoryListener inventoryListener = new InventoryListener(logger, config, data);
         EggDestroyListener destroyListener = new EggDestroyListener(logger, config, data);
         EventScheduler scheduler = new EventScheduler(config, data, logger);
         commandHandler = new CommandHandler(data);
+
+        //create handler tier instances
+        //TODO rename these classes and move to separate folder
+        ScoreboardController scoreboardController = new ScoreboardController(config, logger);
+        Announcement announcement = new Announcement(config, logger);
 		
-		//register event handlers
+		//register event handlers for controller and handler tiers
         logger.log("Registering event listeners...");
         PluginManager manager = getServer().getPluginManager();
-        manager.registerEvents(announcement, this);
-        manager.registerEvents(scoreboardController, this);
         manager.registerEvents(miscListener, this);
         manager.registerEvents(inventoryListener, this);
         manager.registerEvents(destroyListener, this);
+
+        manager.registerEvents(announcement, this);
+        manager.registerEvents(scoreboardController, this);
 
 		//schedule tasks
 		//TODO: disable task when not in use

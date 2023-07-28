@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,8 +17,10 @@ import org.bukkit.util.Vector;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.EggStorageState;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggDestroyedEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.StateSwitchEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
 import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 
@@ -37,35 +40,30 @@ public class EggController implements Listener {
         this.logger = logger;
     }
 
+
     /**
-     * Makes the given entity invulnerable if enabled in the config
+     * If the egg becomes an item, sets it to invulnerable if enabled in the config
      */
-    public static void makeEggInvulnerable(Entity entity, Configuration config) {
+    @EventHandler
+    public void onStateSwitch(StateSwitchEvent event) {
         if (config.getEggInvulnerable()) {
-            entity.setInvulnerable(true);
-        }
-    }
-
-    /**
-     * Alerts when the egg is destroyed and respawns it if needed
-     */
-    public static void eggDestroyed(Configuration config, Data data, LogHandler logger) {
-
-        //TODO finish making this event handled and then replace with data.eggDestroyed()
-
-        if (config.getRespawnEgg()) {
-            if (config.getRespawnImmediately()) {
-                logger.log("Immediate respawn enabled- respawning egg");
-                respawnEgg(config, data, logger, SpawnReason.IMMEDIATE_RESPAWN);
-            } else {
-                logger.log("Immediate respawn disabled- egg will respawn after next dragon fight");
+            EggStorageState state = event.getState();
+            if (state.isEntity()) {
+                Entity entity = state.entity();
+                if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+                    if (!entity.isInvulnerable()) {
+                        logger.log("Made dropped egg invulnerable");
+                        entity.setInvulnerable(true);
+                    }
+                }
             }
-        } else {
-            logger.log("Egg respawn is disabled");
         }
-        
-        data.eggDestroyed();
     }
+
+
+
+
+    
     
     /**
      * Returns the location above the end fountain where the dragon will respawn
@@ -146,6 +144,7 @@ public class EggController implements Listener {
 
     /**
      * Respawns the dragon egg in the end
+     * TODO figure out how to make this event-related. Maybe dragon death event?
      */
     public static void respawnEgg(Configuration config, Data data, LogHandler logger, @Nonnull SpawnReason reason) {
         logger.log("Respawning egg");

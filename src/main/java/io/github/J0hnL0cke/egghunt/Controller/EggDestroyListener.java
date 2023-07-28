@@ -58,7 +58,7 @@ public class EggDestroyListener implements Listener {
             if (Egg.hasEgg(item)) {
             	//make sure item is destroyed to prevent dupes
             	event.getEntity().remove();
-                EggController.eggDestroyed(config, data, logger);
+                data.eggDestroyed();
             }
         }
     }
@@ -77,7 +77,7 @@ public class EggDestroyListener implements Listener {
                         log("canceled explosion of egg item frame");
                         event.setCancelled(true);
                     } else {
-                        EggController.eggDestroyed(config, data, logger);
+                        data.eggDestroyed();
                         frame.setItem(null); //make sure item is removed
                     }
                 }
@@ -96,7 +96,7 @@ public class EggDestroyListener implements Listener {
             if (Egg.hasEgg((ItemStack) event.getEntity())) {
                 //remove just in case to prevent dupes
                 event.getEntity().remove();
-                EggController.eggDestroyed(config, data, logger);
+                data.eggDestroyed();
             }
         }
 
@@ -166,7 +166,7 @@ public class EggDestroyListener implements Listener {
                         Egg.removeEgg(b); //delete egg
                     }
                     log("Dragon egg was replaced");
-                    EggController.eggDestroyed(config, data, logger);
+                    data.eggDestroyed();
                 }
             }
             
@@ -245,7 +245,7 @@ public class EggDestroyListener implements Listener {
                     Egg.removeEgg(b); //delete egg
                 }
                 log("Dragon egg was replaced");
-                EggController.eggDestroyed(config, data, logger);
+                data.eggDestroyed();
             }
         }
     }
@@ -278,7 +278,7 @@ public class EggDestroyListener implements Listener {
                     Egg.removeEgg(b); //delete egg
                 }
                 log("Dragon egg was replaced");
-                EggController.eggDestroyed(config, data, logger);
+                data.eggDestroyed();
             }
         }
     }

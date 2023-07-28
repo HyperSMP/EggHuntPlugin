@@ -61,7 +61,6 @@ public class InventoryListener implements Listener {
         if (Egg.hasEgg(stack)) {
             data.setEggOwner(event.getPlayer(), config, OwnerChangeReason.EGG_CLAIM);
             data.updateEggLocation(item);
-            EggController.makeEggInvulnerable(event.getItemDrop(), config);
         }
     }
 
