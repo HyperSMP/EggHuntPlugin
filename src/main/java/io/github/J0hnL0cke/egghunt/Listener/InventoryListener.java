@@ -1,4 +1,4 @@
-package io.github.J0hnL0cke.egghunt.Controller;
+package io.github.J0hnL0cke.egghunt.Listener;
 
 
 import org.bukkit.GameMode;

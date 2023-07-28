@@ -36,9 +36,10 @@ public class ScoreboardController implements Listener {
     private static final String EGG_MINUTES_KEY = "eggOwnedMinutes";
     private static final String EGG_SECONDS_KEY = "eggOwnedSeconds";
 
-    public ScoreboardController(Configuration config, LogHandler logger) {
-        this.config = config;
+    public ScoreboardController(LogHandler logger, Configuration config) {
         this.logger = logger;
+        this.config = config;
+        
 
         if (config.getKeepScore()) {
             logger.log("Scorekeeping is enabled, loading scoreboard...");

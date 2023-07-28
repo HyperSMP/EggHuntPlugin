@@ -30,14 +30,14 @@ import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReas
  */
 public class EggController implements Listener {
 
-    private Configuration config;
     private LogHandler logger;
+    private Configuration config;
     private Data data;
 
-    public EggController(Configuration config, Data data, LogHandler logger) {
-        this.data = data;
-        this.config = config;
+    public EggController(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
+        this.config = config;
+        this.data = data;
     }
 
 
@@ -151,6 +151,7 @@ public class EggController implements Listener {
         Block eggBlock = getEggRespawnLocation(config).getBlock();
         eggBlock.setType(Material.DRAGON_EGG);
 
+        //TODO stop using Data instance
         data.eggRespawned(eggBlock, reason);
     }
 

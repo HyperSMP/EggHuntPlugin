@@ -1,4 +1,4 @@
-package io.github.J0hnL0cke.egghunt.Controller;
+package io.github.J0hnL0cke.egghunt.Listener;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
@@ -22,14 +23,14 @@ public class EventScheduler extends BukkitRunnable {
     public final int UNDER_WORLD_HEIGHT = -65; //below overworld bedrock and just above where items stop in the end (-66/67)
     public final int VOID_RESPAWN_OFFSET = 2; // how much higher than the highest block to respawn the egg when it falls into the void
 
-    private Data data;
-    private Configuration config;
     private LogHandler logger;
+    private Configuration config;
+    private Data data;
 
-    public EventScheduler(Configuration config, Data data, LogHandler logger) {
-        this.data = data;
-        this.config = config;
+    public EventScheduler(LogHandler logger, Configuration config, Data data) {
         this.logger = logger;
+        this.config = config;
+        this.data = data;
     }
 
     @Override

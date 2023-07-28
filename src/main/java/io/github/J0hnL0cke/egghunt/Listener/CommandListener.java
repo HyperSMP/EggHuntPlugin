@@ -1,4 +1,4 @@
-package io.github.J0hnL0cke.egghunt.Controller;
+package io.github.J0hnL0cke.egghunt.Listener;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -9,15 +9,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 
+import io.github.J0hnL0cke.egghunt.Controller.AnnouncementController;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 
-public class CommandHandler {
+public class CommandListener {
 
     private static final String NOT_PERMITTED_MSG = "Insufficient permission";
 
     private Data data;
 
-    public CommandHandler(Data data) {
+    public CommandListener(Data data) {
         this.data = data;
     }
 
@@ -27,7 +28,7 @@ public class CommandHandler {
     private void sendMessage(CommandSender sender, String message) {
         //make the message formatted
         if (sender instanceof Player) {
-            Announcement.sendMessage((Player) sender, message);
+            AnnouncementController.sendMessage((Player) sender, message);
         } else {
             sender.sendMessage(message);
         }
@@ -45,7 +46,7 @@ public class CommandHandler {
                 origin = ((Player) sender).getLocation();
             }
 
-            String locStr = Announcement.formatLocation(data.getEggLocation(), origin);
+            String locStr = AnnouncementController.formatLocation(data.getEggLocation(), origin);
             sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
 
         } else {
@@ -74,7 +75,7 @@ public class CommandHandler {
                             heldItem.setItemMeta(compassMeta);
                             sendMessage(sender, "Tracking last known dragon egg position.");
                         } else {
-                            sendMessage(sender, String.format("Not in the same dimension as the egg. The egg is in %s.", Announcement.formatWorld(eggLoc.getWorld(), false)));
+                            sendMessage(sender, String.format("Not in the same dimension as the egg. The egg is in %s.", AnnouncementController.formatWorld(eggLoc.getWorld(), false)));
                         }
                     } else {
                         sendMessage(sender, "The dragon egg does not exist.");

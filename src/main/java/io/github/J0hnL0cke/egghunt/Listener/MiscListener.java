@@ -1,4 +1,4 @@
-package io.github.J0hnL0cke.egghunt.Controller;
+package io.github.J0hnL0cke.egghunt.Listener;
 
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -17,6 +17,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;

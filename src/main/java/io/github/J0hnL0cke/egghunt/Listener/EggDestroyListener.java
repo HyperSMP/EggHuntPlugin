@@ -1,4 +1,4 @@
-package io.github.J0hnL0cke.egghunt.Controller;
+package io.github.J0hnL0cke.egghunt.Listener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +25,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.world.PortalCreateEvent.CreateReason;
 import org.bukkit.inventory.ItemStack;
 
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;

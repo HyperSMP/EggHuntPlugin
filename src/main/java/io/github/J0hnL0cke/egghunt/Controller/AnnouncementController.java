@@ -24,7 +24,7 @@ import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent;
 /**
  * Misc helper methods relating to player notification
  */
-public class Announcement implements Listener {
+public class AnnouncementController implements Listener {
 
     private static final String PREFIX_FORMAT_CODE = ChatColor.COLOR_CHAR+"l"; //bold
     private static final ChatColor PREFIX_COLOR = ChatColor.DARK_PURPLE;
@@ -37,7 +37,7 @@ public class Announcement implements Listener {
     private LogHandler logger;
     private Configuration config;
 
-    public Announcement(Configuration config, LogHandler logger) {
+    public AnnouncementController(LogHandler logger, Configuration config) {
         this.logger = logger;
         this.config = config;
     }
