@@ -45,7 +45,8 @@ public class DataFileDAO {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                //TODO warn user
+                logger.severe("IOException when saving configuration file!");
+                e.printStackTrace();
             }
         }
 
