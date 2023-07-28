@@ -37,7 +37,7 @@ public class Announcement implements Listener {
     private LogHandler logger;
     private Configuration config;
 
-    public Announcement(LogHandler logger, Configuration config) {
+    public Announcement(Configuration config, LogHandler logger) {
         this.logger = logger;
         this.config = config;
     }
