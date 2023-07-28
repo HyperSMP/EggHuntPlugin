@@ -44,7 +44,6 @@ public class MiscListener implements Listener {
      * Save data when the server autosaves or closes.
      * Need to do this because a server crash could roll back the server data but not the plugin.
      * In this case data loss is beneficial, because being in sync with server's reality is more important.
-     * TODO test this
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAutosave(WorldSaveEvent event) {

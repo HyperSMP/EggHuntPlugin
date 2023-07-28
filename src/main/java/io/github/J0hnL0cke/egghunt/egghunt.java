@@ -53,7 +53,6 @@ public final class egghunt extends JavaPlugin {
         commandListener = new CommandListener(data);
 
         //create handler tier instances
-        //TODO standardize constructor arg arrangement
         ScoreboardController scoreboardController = new ScoreboardController(logger, config);
         AnnouncementController announcementController = new AnnouncementController(logger, config);
         EggController eggController = new EggController(logger, config, data);
