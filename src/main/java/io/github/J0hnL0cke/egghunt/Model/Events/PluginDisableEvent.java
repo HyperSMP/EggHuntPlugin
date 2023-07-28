@@ -9,12 +9,12 @@ import io.github.J0hnL0cke.egghunt.Model.EggStorageState;
 /**
  * This event is called whenever this plugin is disabled for a plugin reload or a server shutdown/restart
  */
-public class PluginDisableEvent extends EggHuntEvent {
+public class PluginDisableEvent extends PluginSaveEvent {
     private static final @Nonnull HandlerList handlers = new HandlerList();
     private EggStorageState state;
 
     public PluginDisableEvent(@Nonnull EggStorageState state) {
-        this.state = state;
+        super(state);
     }
 
     public EggStorageState getState() {

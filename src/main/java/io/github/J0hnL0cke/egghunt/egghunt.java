@@ -46,7 +46,7 @@ public final class egghunt extends JavaPlugin {
         logger.setDebug(config.getDebugEnabled());
 
         //create controller instances
-        ScoreboardController scoreboardController = ScoreboardController.getScoreboardHandler(data, config, logger);
+        ScoreboardController scoreboardController = new ScoreboardController(config, logger);
         MiscListener miscListener = new MiscListener(logger, config, data);
         InventoryListener inventoryListener = new InventoryListener(logger, config, data);
         EggDestroyListener destroyListener = new EggDestroyListener(logger, config, data);
@@ -56,6 +56,7 @@ public final class egghunt extends JavaPlugin {
 		//register event handlers
         logger.log("Registering event listeners...");
         PluginManager manager = getServer().getPluginManager();
+        manager.registerEvents(scoreboardController, this);
         manager.registerEvents(miscListener, this);
         manager.registerEvents(inventoryListener, this);
         manager.registerEvents(destroyListener, this);

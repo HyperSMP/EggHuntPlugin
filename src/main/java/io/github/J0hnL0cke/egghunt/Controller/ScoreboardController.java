@@ -5,6 +5,8 @@ import java.time.Instant;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.RenderType;
@@ -13,17 +15,17 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
-import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.EggStorageState;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.PluginSaveEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.StateSwitchEvent;
 
 /**
  * Handles interactions with the scoreboard api
  */
-public class ScoreboardController {
+public class ScoreboardController implements Listener {
 
-    private static ScoreboardController thisHandler;
-
-    private Data data;
     private Configuration config;
     private LogHandler logger;
     private ScoreboardManager manager;
@@ -34,15 +36,7 @@ public class ScoreboardController {
     private static final String EGG_MINUTES_KEY = "eggOwnedMinutes";
     private static final String EGG_SECONDS_KEY = "eggOwnedSeconds";
 
-    public static ScoreboardController getScoreboardHandler(Data data, Configuration configuration, LogHandler logger) {
-        if (thisHandler == null) {
-            thisHandler = new ScoreboardController(data, configuration, logger);
-        }
-        return thisHandler;
-    }
-
-    private ScoreboardController(Data data, Configuration config, LogHandler logger) {
-        this.data = data;
+    public ScoreboardController(Configuration config, LogHandler logger) {
         this.config = config;
         this.logger = logger;
 
@@ -52,12 +46,46 @@ public class ScoreboardController {
         }
     }
 
-    public static void saveData(LogHandler logger) {
-        if (thisHandler == null) {
-            logger.warning("ScoreboardController has not been initalized before attempting to save!");
-        } else {
-            thisHandler.updateScores();
+    /**
+     * Whenever the plugin saves, update the scoreboard.
+     * This also includes PluginDisableEvents, since it subclasses PluginSaveEvent
+     */
+    @EventHandler
+    public void onPluginSave(PluginSaveEvent event) {
+        //this also handles
+        updateScores(event.getState());
+    }
+
+    /**
+     * Whenever the egg moves between states, update the scoreboard if the owner changed.
+     * Also update if the egg changed to/from a named entity (if enabled), to ensure the scores of these entities are correctly.
+     * Not checking StateUpdateEvent because we only care if the egg actually moved containers.
+     * Also includes {@link EggCreatedEvent}, since it subclasses {@link StateSwitchEvent}
+     */
+    @EventHandler
+    public void onEggChange(StateSwitchEvent event) {
+        EggStorageState oldState = event.getOldState();
+        EggStorageState newState = event.getState();
+        //TODO check if this is not an owner change event,
+        //to avoid a double-update when stealing egg by taking it from a named entity
+
+        if (config.getNamedEntitiesGetScore()) { //if should track named entities on the scoreboard
+            if (oldState.isEntity()) { //if old state was in an entity
+                if (isNamed(oldState.entity())) { //if old entity is named
+                    if (oldState.entity() != newState.entity()) { //if no longer in old entity (works without a null check)
+                        updateScores(event.getOldState()); //update scores
+                    }
+                }
+            }
         }
+    }
+
+    /*
+     * Whenever the egg changes owner, update the scoreboard.
+     */
+    @EventHandler
+    public void onOwnerChange(OwnerChangeEvent event) {
+        updateScores(event.getOldState());
     }
 
     private void loadData() {
@@ -78,27 +106,31 @@ public class ScoreboardController {
      * every time the plugin is enabled/disabled
      * @param data
      */
-    public void updateScores() {
-        if (config.getKeepScore() && data.doesNotExist()) {
+    public void updateScores(EggStorageState state) {
+        if (config.getKeepScore() && state.doesNotExist()) {
             logger.log("Updating scoreboard");
 
-            if (data.isEntity()) {
-                Entity eggEntity = data.getEggEntity();
+            if (state.isEntity()) {
+                Entity eggEntity = state.entity();
                 if (config.getNamedEntitiesGetScore()) {
-                    if (eggEntity.getCustomName() != null) {
+                    if (isNamed(eggEntity)) {
                         incrementScoring(eggEntity.getCustomName()); //prioritize the named entity for scoring
                         return;
                     }
                 }
             }
 
-            OfflinePlayer owner = data.getEggOwner();
+            OfflinePlayer owner = EggStorageState.getPlayerFromUUID(state.owner());
             if (owner != null) {
                 incrementScoring(owner.getName());
             }
         }
     }
     
+    private boolean isNamed(Entity entity) {
+        return entity.getCustomName() != null;
+    }
+
     private void incrementScoring(String entityName) {
         //YOU WILL REMEMBER ME! REMEMBER ME FOR
         //ChronoUnit.CENTURIES

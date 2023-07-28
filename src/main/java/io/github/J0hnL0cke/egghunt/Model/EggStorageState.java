@@ -5,7 +5,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 
@@ -23,6 +25,29 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
         ENTITY,
         BLOCK,
         DNE, //egg does not exist
+    }
+    
+    public static OfflinePlayer getPlayerFromUUID(UUID playerUUID) {
+        return Bukkit.getOfflinePlayer(playerUUID);
+    }
+
+    /**
+     * Creates a state. Useful for when data has just been loaded from file, so the storage type hasn't been checked.
+     * <p>
+     * Note that if both the provided entity and block are non-null, this will throw an {@link AssertionError}.
+     */
+    public static @Nonnull EggStorageState createState(@Nullable Block block, @Nullable Entity entity,
+            @Nullable UUID owner) {
+        if (entity == null) {
+            if (block == null) {
+                return new EggStorageState();
+            } else {
+                return new EggStorageState(block, owner);
+            }
+        } else if (block == null) {
+            return new EggStorageState(entity, owner);
+        }
+        throw new AssertionError("Cannot create this StorageState because block and entity are both non-null!");
     }
 
     public EggStorageState() {
@@ -56,26 +81,8 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
     public boolean doesNotExist() {
         return storedAs == Egg_Storage_Type.DNE;
     }
-
-    /**
-     * Creates a state. Useful for when data has just been loaded from file, so the storage type hasn't been checked.
-     * <p>
-     * Note that if both the provided entity and block are non-null, this will throw an {@link AssertionError}.
-     */
-    public static EggStorageState createState(@Nullable Block block, @Nullable Entity entity, @Nullable UUID owner) {
-        if (entity == null) {
-            if (block == null) {
-                return new EggStorageState();
-            } else {
-                return new EggStorageState(block, owner);
-            }
-        } else if (block == null) {
-            return new EggStorageState(entity, owner);
-        }
-        throw new AssertionError("Cannot create this StorageState because block and entity are both non-null!");
-    }
     
-    public EggStorageState setOwner(UUID newOwner) {
+    public @Nonnull EggStorageState setOwner(UUID newOwner) {
         return createState(block, entity, newOwner);
     }
 

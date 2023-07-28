@@ -7,13 +7,18 @@ import org.bukkit.event.HandlerList;
 import io.github.J0hnL0cke.egghunt.Model.EggStorageState;
 
 /**
- * Called when the dragon egg is destroyed
+ * Called whenever the plugin's data is saved. This happens on autosave and on server reload/restart/shutdown
  */
-public class EggDestroyedEvent extends StateSwitchEvent {
+public class PluginSaveEvent extends EggHuntEvent {
     private static final @Nonnull HandlerList handlers = new HandlerList();
+    private EggStorageState state;
 
-    public EggDestroyedEvent(@Nonnull EggStorageState oldState, @Nonnull EggStorageState newState) {
-        super(oldState, newState);
+    public PluginSaveEvent(@Nonnull EggStorageState state) {
+        this.state = state;
+    }
+
+    public EggStorageState getState() {
+        return state;
     }
 
     @Nonnull

@@ -3,6 +3,7 @@ package io.github.J0hnL0cke.egghunt.Model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
@@ -11,12 +12,15 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 import io.github.J0hnL0cke.egghunt.Controller.Announcement;
 import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Controller.ScoreboardController;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.PluginSaveEvent;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
 /**
@@ -27,7 +31,7 @@ public class Data {
     private DataFileDAO dataDao;
     private LogHandler logger;
     private Location approxLocation; //TODO move to EggStorageState
-    private EggStorageState state;
+    private @Nonnull EggStorageState state = new EggStorageState();
 
     private static final String BUG_STR = "THIS MAY BE A BUG! Please report it at https://github.com/HyperSMP/EggHuntPlugin/issues";
 
@@ -62,10 +66,11 @@ public class Data {
     }
 
     public @Nullable OfflinePlayer getEggOwner() {
-        if (state.owner() == null) {
-            return null;
-        }
         return Bukkit.getOfflinePlayer(state.owner());
+    }
+
+    public static OfflinePlayer getPlayerFromUUID(UUID playerUUID){
+        return Bukkit.getOfflinePlayer(playerUUID);
     }
 
     private Location serializeBlock(Block block) {
@@ -132,6 +137,7 @@ public class Data {
                 state = EggStorageState.createState(block, entity, owner);
             } catch (AssertionError e) {
                 logger.severe("Unable to load EggHunt data! (Both block and entity in data file are non-null)");
+                resetEggLocation();
             }
 
             //check that the egg's container actually contains the egg
@@ -159,7 +165,6 @@ public class Data {
 	}
 
     public void saveData() {
-        ScoreboardController.saveData(logger);
 
         dataDao.writeUUID("owner", state.owner());
         dataDao.writeLocation("block", serializeBlock(state.block()));
@@ -173,6 +178,13 @@ public class Data {
 
         //write to file
         dataDao.save();
+
+        callEvent(new PluginSaveEvent(state)); //call the plugin save event
+
+    }
+    
+    public void callEvent(Event event) {
+        Bukkit.getPluginManager().callEvent(event); //todo store plugin manager in class var or use a helper class
     }
     
     public void setEggOwner(Player player, Configuration config) {
@@ -180,10 +192,17 @@ public class Data {
     }
 
     private void setEggOwner(UUID playerUUID, Configuration config) {
+        //TODO figure out how to combine egg state change and owner change into a single owner change event
+        //so that before/after states will be more accurate
+
         if (!playerUUID.equals(state.owner())) { //only update if the egg has actually changed posession
-            ScoreboardController.saveData(logger);
+            EggStorageState oldState = state;
+            //TODO remove ScoreboardController.saveData(logger);
             UUID oldOwner = state.owner();
             state = state.setOwner(playerUUID); //set new owner
+            
+            callEvent(new OwnerChangeEvent(oldState, state));
+
             String ownerName = Bukkit.getOfflinePlayer(playerUUID).getName(); //get the name of the new owner
             String msg;
             
@@ -206,8 +225,9 @@ public class Data {
     }
 
     public void resetEggOwner(boolean announce, Configuration config) {
+        //TODO include this method in new setup to combine stateswitch and owner switch events into 1 owner switch event
         //TODO remove unneeded parameters after switching to event creation
-        ScoreboardController.saveData(logger);
+        EggStorageState oldState = state;
         UUID owner = state.owner();
         if (owner != null) {
             Player oldOwner = Bukkit.getPlayer(owner);
@@ -221,6 +241,8 @@ public class Data {
             if (config != null) {
                 EggController.updateOwnerTag(oldOwner, this, config); //update tag after setting owner to null
             }
+
+            callEvent(new OwnerChangeEvent(oldState, state));
         }
     }
 
