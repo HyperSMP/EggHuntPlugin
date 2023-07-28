@@ -29,6 +29,7 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
 
 /**
  * Listens for Bukkit events related to destruction of the dragon egg
@@ -106,8 +107,7 @@ public class EggDestroyListener implements Listener {
                     //if the egg does not exist
                     if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
                         //if the dragon has already been beaten
-                        EggController.respawnEgg(config, data, logger);
-                        Announcement.announce("The dragon egg has spawned in the end!", logger);
+                        EggController.respawnEgg(config, data, logger, SpawnReason.DELAYED_RESPAWN);
     				}
     			}
     		}
@@ -197,7 +197,6 @@ public class EggDestroyListener implements Listener {
                         if (EggController.getEggRespawnLocation(config).getBlock().equals(egg)) {
                             //if the egg is set to respawn, and is overlapped by the dragon at the respawn point,
                             //preserve it rather than letting it be deleted
-                            data.resetEggOwner(false, config);
                             event.blockList().remove(egg);
                             //log("prevented dragon destroying respawned egg");
                             //continue on to check if other blocks are the egg

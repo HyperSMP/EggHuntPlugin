@@ -21,6 +21,7 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 
 /**
  * Listens to miscellaneous Bukkit events
@@ -91,7 +92,7 @@ public class MiscListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (Egg.hasEgg(event.getBlock())) {
             data.updateEggLocation(event.getBlock());
-            data.setEggOwner(event.getPlayer(), config);
+            data.setEggOwner(event.getPlayer(), config, OwnerChangeReason.EGG_CLAIM);
         }
     }
     
@@ -130,7 +131,7 @@ public class MiscListener implements Listener {
                             && playerInv.getItemInMainHand().getType().equals(Material.AIR)) {
                         //interaction with empty main hand will remove the egg from the allay and put it in the player's inventory
                         data.updateEggLocation(event.getPlayer());
-                        data.setEggOwner(event.getPlayer(), config);
+                        data.setEggOwner(event.getPlayer(), config, OwnerChangeReason.EGG_CLAIM);
 
                     }
                     break; //allay has an item, giving it the egg is not possible
@@ -148,7 +149,7 @@ public class MiscListener implements Listener {
                 if (!heldItem.getType().equals(Material.AIR)) { //if item in either hand
                     if (Egg.hasEgg(heldItem)) {
                         data.updateEggLocation(event.getRightClicked());
-                        data.setEggOwner(event.getPlayer(), config);
+                        data.setEggOwner(event.getPlayer(), config, OwnerChangeReason.EGG_CLAIM);
                     }
                 }
 
@@ -175,8 +176,7 @@ public class MiscListener implements Listener {
             if (config.resetOwnerOnTeleport()) {
                 OfflinePlayer owner = data.getEggOwner();
                 if (owner != null) {
-                    announce(String.format("The dragon egg has teleported. %s is no longer the owner.", owner.getName()));
-                    data.resetEggOwner(false, config);
+                    data.resetEggOwner(config, OwnerChangeReason.EGG_TELEPORT);
                 }
             }
         }
@@ -214,13 +214,12 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (!event.getKeepInventory() && Egg.hasEgg(event.getEntity().getInventory())) {
-            data.resetEggOwner(false, config);
-    
+            
             //change the death message
             String deathmsg = event.getDeathMessage();
     
             if (deathmsg == null || deathmsg.isBlank()) {
-                announce(String.format("%s died and lost the dragon egg!", event.getEntity().getDisplayName()));
+                event.setDeathMessage(String.format("%s died and lost the dragon egg!", event.getEntity().getDisplayName()));
     
             } else {
                 if (deathmsg.endsWith(".")) {
@@ -228,12 +227,9 @@ public class MiscListener implements Listener {
                 }
                 event.setDeathMessage(String.format("%s and lost the dragon egg!", deathmsg));
             }
+
+            data.resetEggOwner(config, OwnerChangeReason.OWNER_DEATH);
         }
-    }
-    
-    //Helper methods
-    private void announce(String msg) {
-        Announcement.announce(msg, logger);
     }
 
     private void log(String message) {

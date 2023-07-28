@@ -1,5 +1,7 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -7,18 +9,33 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.EggDestroyedEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 
 /**
  * Provides functionality relating to the dragon egg, but does not register any event handlers.
  * This is a pure fabrication class to simplify functionality used by multiple controllers.
  */
-public class EggController {
+public class EggController implements Listener {
+
+    private Configuration config;
+    private LogHandler logger;
+    private Data data;
+
+    public EggController(Configuration config, Data data, LogHandler logger) {
+        this.data = data;
+        this.config = config;
+        this.logger = logger;
+    }
 
     /**
      * Makes the given entity invulnerable if enabled in the config
@@ -33,31 +50,21 @@ public class EggController {
      * Alerts when the egg is destroyed and respawns it if needed
      */
     public static void eggDestroyed(Configuration config, Data data, LogHandler logger) {
-        logger.log("Egg was destroyed");
-        OfflinePlayer oldOwner = data.getEggOwner();
-        data.resetEggOwner(false, config);
-        data.resetEggLocation();
-        String msg;
+
+        //TODO finish making this event handled and then replace with data.eggDestroyed()
 
         if (config.getRespawnEgg()) {
             if (config.getRespawnImmediately()) {
                 logger.log("Immediate respawn enabled- respawning egg");
-                respawnEgg(config, data, logger);
-                msg = "The dragon egg was destroyed and has respawned in The End!";
-                if (oldOwner != null) { //prevent spamming of egg destruction
-                }
+                respawnEgg(config, data, logger, SpawnReason.IMMEDIATE_RESPAWN);
             } else {
                 logger.log("Immediate respawn disabled- egg will respawn after next dragon fight");
-                msg = "The dragon egg has been destroyed! It will respawn the next time the Ender Dragon is defeated.";
             }
         } else {
             logger.log("Egg respawn is disabled");
-            msg = "The dragon egg has been destroyed!";
-
         }
         
-    Announcement.announce(msg, logger);
-        
+        data.eggDestroyed();
     }
     
     /**
@@ -76,7 +83,7 @@ public class EggController {
         if (player.getInventory().contains(Material.DRAGON_EGG)) {
 
             // Set owner and remove
-            data.setEggOwner(player, config); //TODO is this necessary? player will likely already be owner
+            data.setEggOwner(player, config, OwnerChangeReason.EGG_CLAIM); //TODO is this necessary? player will likely already be owner
             player.getInventory().remove(Material.DRAGON_EGG);
 
             // Drop it on the floor and set its location
@@ -123,15 +130,29 @@ public class EggController {
         data.updateEggLocation(drop);
     }
 
+    @EventHandler
+    public void onEggDestroyed(EggDestroyedEvent event){
+        if (config.getRespawnEgg()) {
+            if (config.getRespawnImmediately()) {
+                logger.log("Immediate respawn enabled- respawning egg");
+                respawnEgg(config, data, logger, SpawnReason.IMMEDIATE_RESPAWN);
+            } else {
+                logger.log("Immediate respawn disabled- egg will respawn after next dragon fight");
+            }
+        } else {
+            logger.log("Egg respawn is disabled");
+        }
+    }
+
     /**
      * Respawns the dragon egg in the end
      */
-    public static void respawnEgg(Configuration config, Data data, LogHandler logger) {
+    public static void respawnEgg(Configuration config, Data data, LogHandler logger, @Nonnull SpawnReason reason) {
         logger.log("Respawning egg");
         Block eggBlock = getEggRespawnLocation(config).getBlock();
         eggBlock.setType(Material.DRAGON_EGG);
-        data.updateEggLocation(eggBlock);
-        Announcement.ShowEggEffects(eggBlock.getLocation().add(0.5, 0, 0.5)); //target the center bottom of the block
+
+        data.eggRespawned(eggBlock, reason);
     }
 
     

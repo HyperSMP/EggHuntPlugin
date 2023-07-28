@@ -15,6 +15,7 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 
 public class EventScheduler extends BukkitRunnable {
 
@@ -59,7 +60,7 @@ public class EventScheduler extends BukkitRunnable {
                     }
                     respawnLoc.setY(yPos);
                     EggController.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
-                    data.resetEggOwner(true, config);
+                    data.resetEggOwner(config, OwnerChangeReason.DATA_ERROR);
                 } else {
                     //alert and respawn if applicable
                     EggController.eggDestroyed(config, data, logger);

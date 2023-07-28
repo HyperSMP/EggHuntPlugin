@@ -54,19 +54,19 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
         this(Egg_Storage_Type.DNE, null, null, null);
     }
 
-    public EggStorageState(Block block) {
+    public EggStorageState(@Nonnull Block block) {
         this(Egg_Storage_Type.BLOCK, block, null, null);
     }
     
-    public EggStorageState(Entity entity) {
+    public EggStorageState(@Nonnull Entity entity) {
         this(Egg_Storage_Type.ENTITY, null, entity, null);
     }
 
-    public EggStorageState(Block block, UUID owner) {
+    public EggStorageState(@Nonnull Block block, UUID owner) {
         this(Egg_Storage_Type.ENTITY, block, null, owner);
     }
     
-    public EggStorageState(Entity entity, UUID owner) {
+    public EggStorageState(@Nonnull Entity entity, UUID owner) {
         this(Egg_Storage_Type.ENTITY, null, entity, owner);
     }
 

@@ -30,6 +30,7 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 
 /**
  * Listens for Bukkit events related to inventories
@@ -58,7 +59,7 @@ public class InventoryListener implements Listener {
 
         // Check if the dropped item is the egg
         if (Egg.hasEgg(stack)) {
-            data.setEggOwner(event.getPlayer(), config);
+            data.setEggOwner(event.getPlayer(), config, OwnerChangeReason.EGG_CLAIM);
             data.updateEggLocation(item);
             EggController.makeEggInvulnerable(event.getItemDrop(), config);
         }
@@ -73,7 +74,7 @@ public class InventoryListener implements Listener {
         if (Egg.hasEgg(event.getItem())) {
             data.updateEggLocation(event.getEntity());
             if (event.getEntity() instanceof Player) {
-                data.setEggOwner((Player) event.getEntity(), config);
+                data.setEggOwner((Player) event.getEntity(), config, OwnerChangeReason.EGG_CLAIM);
             }
         }
     }
@@ -131,7 +132,7 @@ public class InventoryListener implements Listener {
         if (Egg.hasEgg(player.getInventory())) {
             //if the player has the egg in their inventory, it will stay there
             data.updateEggLocation(player);
-            data.setEggOwner(player, config);
+            data.setEggOwner(player, config, OwnerChangeReason.EGG_CLAIM);
 
         } else if (Egg.hasEgg(otherInv)) {
 
