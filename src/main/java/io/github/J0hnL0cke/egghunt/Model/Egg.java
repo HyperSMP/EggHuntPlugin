@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * Provides methods related to checking for or removing the dragon egg
@@ -26,6 +27,18 @@ import org.bukkit.inventory.meta.BundleMeta;
 public class Egg {
 
     private static Material egg = Material.DRAGON_EGG;
+
+    /**
+     * Checks if the given Block is a container that is holding the dragon egg. Also returns false if the provided block is null.
+     * @param block Block to check
+     * @return True if the block is a dragon egg or holding the egg, otherwise false
+     */
+    public static boolean containsEgg(Block block) {
+        if (block == null) {
+            return false;
+        }
+        return hasEgg(getContainerContents(block));
+    }
 
     /**
      * Checks if the given ItemStack is a container that is holding the dragon egg. Also returns false if the provided stack is null.
@@ -36,16 +49,48 @@ public class Egg {
         if (stack == null) {
             return false;
         }
-        if (isShulker(stack.getType())) { //check if shulker
-            BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
-            ShulkerBox box = (ShulkerBox) meta.getBlockState();
-            return hasEgg(box.getInventory());
-            
-        } else if (stack.getType().equals(Material.BUNDLE)) { //check if bundle
-            BundleMeta bundle = (BundleMeta) stack.getItemMeta();
-            return hasEgg(bundle);
+        return hasEgg(getContainerContents(stack.getItemMeta(), stack.getType()));
+    }
+    
+    /**
+     * Gets a list of ItemStacks held by the given container.
+     * If this block is not a container, returns null.
+     * @param block The block to check
+     * @return An array of the contained items, or null if not a container
+     */
+    public static ItemStack[] getContainerContents(Block block) {
+        if (block == null) {
+            return null;
         }
-        return false;
+        BlockState state = block.getState();
+        if (state instanceof Container) {
+            Container cont = (Container) state;
+            return cont.getInventory().getContents();
+        }
+        return null;
+    }
+
+    /**
+     * Gets a list of ItemStacks held by the container represented by the given ItemMeta and Material.
+     * If the provided meta is not a container, returns null.
+     * @param meta The BlockMeta or ItemMeta of the item to check
+     * @param type The material type of the associated item or block
+     * @return An array of the contained items, or null if not a container
+     */
+    public static ItemStack[] getContainerContents(ItemMeta meta, Material type) {
+        if (meta == null) {
+            return null;
+        }
+        if (isShulker(type)) { //check if shulker
+            BlockStateMeta blockMeta = (BlockStateMeta) meta;
+            ShulkerBox box = (ShulkerBox) blockMeta.getBlockState();
+            return box.getInventory().getContents();
+
+        } else if (type.equals(Material.BUNDLE)) { //check if bundle
+            BundleMeta bundle = (BundleMeta) meta;
+            return bundle.getItems().toArray(new ItemStack[0]);
+        }
+        return null;
     }
 
     /**
@@ -59,53 +104,47 @@ public class Egg {
     }
 
     /**
-     * Checks if the given Block is a container that is holding the dragon egg. Also returns false if the provided block is null.
-     * @param block Block to check
-     * @return True if the block is a dragon egg or holding the egg, otherwise false
+     * Remove the dragon egg from the given entity.
+     * Recursively searches the given entity for the dragon egg and removes it,
+     * preserving any containers holding the egg.
      */
-    public static boolean containsEgg(Block block) {
-        if (block == null) {
-            return false;
-        }
-        BlockState state = block.getState();
-        if (state instanceof Container) {
-            Container cont = (Container) state;
-            return hasEgg(cont.getInventory());
-        }
-        return false;
-    }
-
     public static boolean removeEgg(Entity entity) {
-        //TODO update for containers
+        boolean res = false;
+
         if (entity instanceof Player) {
             if (hasEgg(((Player) entity).getInventory())) {
                 Player player = (Player) entity;
-                player.getInventory().remove(egg);
+                for (ItemStack stack : player.getInventory()) {
+                    res = res || removeEgg(stack);
+                }
             }
         } else if (entity instanceof LivingEntity) {
             LivingEntity mob = (((LivingEntity) entity));
             EntityEquipment inv = mob.getEquipment();
-            if (hasEgg(inv.getItemInMainHand())) {
-                inv.setItemInMainHand(null);
-                return true;
-            } else if (hasEgg(inv.getItemInOffHand())) {
-                inv.setItemInOffHand(null);
-                return true;
+            res = res || removeEgg(inv.getItemInMainHand());
+            res = res || removeEgg(inv.getItemInOffHand());
+
+            //a mob can be a LivingEntity and an InventoryHolder, so check them separately
+        }
+        if (entity instanceof InventoryHolder) {
+            InventoryHolder holder = (InventoryHolder) entity;
+            if (hasEgg(holder.getInventory())) {
+                res = res || removeEgg(holder.getInventory().getContents());
             }
+
         } else if (entity instanceof FallingBlock) {
             FallingBlock block = (FallingBlock) entity;
             if (hasEgg(block)) {
-                block.remove();
-                return true;
+                block.remove(); //unlikely a container with an egg would be a falling block, just remove the whole block
+                res = true;
             }
         } else if (entity instanceof Item) {
             Item item = (Item) entity;
             if (hasEgg(item)) {
-                item.remove();
-                return true;
+                res = res || removeEgg(item.getItemStack());
             }
         }
-        return false;
+        return res;
     }
     
     public static boolean removeEgg(Inventory inventory) {
@@ -116,12 +155,55 @@ public class Egg {
         return true;
     }
     
+    /**
+     * Remove the dragon egg from the given block.
+     * Recursively searches the given block for the dragon egg and removes it,
+     * preserving any containers holding the egg.
+     */
     public static boolean removeEgg(Block block) {
         if (hasEgg(block)) {
             block.setType(Material.AIR);
             return true;
+        } else if (containsEgg(block)) {
+            return removeEgg(getContainerContents(block));
         }
         return false;
+    }
+
+    /**
+     * Remove the dragon egg from the given ItemStack.
+     * Recursively searches the given ItemStack for the dragon egg and removes it,
+     * preserving any containers holding the egg.
+     */
+    public static boolean removeEgg(ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        if (hasEgg(stack)) {
+            if (isOnlyEgg(stack)) {
+                stack.setAmount(0);
+                return true;
+            } else if (containsEgg(stack)) {
+                return removeEgg(getContainerContents(stack.getItemMeta(), stack.getType()));
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Remove the dragon egg from the given ItemStack array.
+     * Recursively searches each ItemStack in the given array for the dragon egg and removes it,
+     * preserving any containers holding the egg.
+     */
+    public static boolean removeEgg(ItemStack[] stack) {
+        if (stack == null) {
+            return false;
+        }
+        boolean res = false;
+        for (ItemStack i : stack) {
+            res = res || removeEgg(i);
+        }
+        return res;
     }
     
     /**
