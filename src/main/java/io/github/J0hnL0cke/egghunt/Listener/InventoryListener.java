@@ -2,7 +2,6 @@ package io.github.J0hnL0cke.egghunt.Listener;
 
 
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
@@ -26,6 +25,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Merchant;
 
+import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
@@ -109,17 +109,15 @@ public class InventoryListener implements Listener {
         //force an egg in the ender chest to be dropped if enabled in config and if the player is not in creative
         if (otherInv.getType().equals(InventoryType.ENDER_CHEST)) {
             if (config.getDropEnderchestedEgg() && player.getGameMode() != GameMode.CREATIVE) {
-                if (otherInv.contains(Material.DRAGON_EGG)) { 
-                    ItemStack egg = otherInv.getItem(otherInv.first(Material.DRAGON_EGG)); //TODO make this work with bundles/shulkers
-                    Location playerLoc = player.getLocation();
-                    otherInv.remove(egg);
-                    Item i = playerLoc.getWorld().dropItem(playerLoc, egg); //TODO use drop item function
+                if (otherInv.contains(Material.DRAGON_EGG)) {
+                    Egg.removeEgg(otherInv);
+                    EggController.dropEgg(player, data, config);
                     log(String.format(
-                            "Dropped the dragon egg on the ground since %s had it in their ender chest.",
-                            player.getName()));
-                    log(
-                            "Set ignore_echest_egg to \"true\" in the config file to disable this feature.");
-                    data.updateEggLocation(i);
+                            "Dropped the dragon egg on the ground since %s had it in their ender chest.\n"
+                            + "Set ignore_echest_egg to \"true\" in the config file to disable this feature.",
+                            player.getName()
+                        )
+                    );
                 }
             }
             //whether the egg is dropped or not, ignore all other checking

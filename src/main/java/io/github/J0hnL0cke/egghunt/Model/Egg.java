@@ -79,7 +79,7 @@ public class Egg {
         //TODO update for containers
         if (entity instanceof Player) {
             if (hasEgg(((Player) entity).getInventory())) {
-                Player player = (Player)entity;
+                Player player = (Player) entity;
                 player.getInventory().remove(egg);
             }
         } else if (entity instanceof LivingEntity) {
@@ -106,6 +106,14 @@ public class Egg {
             }
         }
         return false;
+    }
+    
+    public static boolean removeEgg(Inventory inventory) {
+        //TODO update for inventories
+        if (hasEgg(inventory)) {
+            inventory.remove(egg);
+        }
+        return true;
     }
     
     public static boolean removeEgg(Block block) {

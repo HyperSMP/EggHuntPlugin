@@ -39,7 +39,7 @@ public class EventScheduler extends BukkitRunnable {
         //TODO handle launching egg into void faster than the timer tick
         //TODO first check if chunk is loaded (maybe enable/disable event based on chunk load?)
         if (data.isEntity()) {
-            if (data.getEggEntity() == null) {
+            if (data.getEggEntity() == null) { //TODO should be able to get rid of these checks
                 logger.warning("Lost track of the dragon egg entity!");
                 logger.warning("Resetting egg location to prevent repeated warnings");
                 data.resetEggLocation();
@@ -61,7 +61,7 @@ public class EventScheduler extends BukkitRunnable {
                     }
                     respawnLoc.setY(yPos);
                     EggController.spawnEggItem(respawnLoc, config, data); //do not need to update data with this location since item spawn event will be called
-                    data.resetEggOwner(config, OwnerChangeReason.DATA_ERROR);
+                    data.resetEggOwner(OwnerChangeReason.EGG_INVULNERABLE_RESPAWN);
                 } else {
                     //register destruction
                     data.eggDestroyed();

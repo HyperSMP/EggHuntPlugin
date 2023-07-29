@@ -51,7 +51,7 @@ public class AnnouncementController implements Listener {
         UUID newOwner = event.getState().owner();
 
         //get player instances and names
-        String oldOwnerName = "N/A"; //TODO move all this handling to the event
+        String oldOwnerName = "N/A";
         String newOwnerName = "N/A";
         Player player = null; //new owner as a Player instance
         if (newOwner != null) {
@@ -79,8 +79,13 @@ public class AnnouncementController implements Listener {
             case EGG_TELEPORT:
                 msg = String.format("The dragon egg has teleported. %s is no longer the owner.", oldOwnerName);
                 break;
+            case EGG_DESTROYED:
+                //egg changed states in a way that will be handled by state switch
+            case EGG_INVULNERABLE_RESPAWN:
+                //egg respawn messages will be handled by state switch / egg respawn
             case OWNER_DEATH:
-                msg = null; //String.format("%s died and lost the dragon egg!", oldOwnerName); //Not needed- death message used instead
+                //this will be handled by the death message
+                msg = null;
                 break;
             default:
                 msg = String.format("%s no longer owns the dragon egg", oldOwnerName);

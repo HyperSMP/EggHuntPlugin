@@ -16,11 +16,12 @@ import org.bukkit.event.Event;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
-import io.github.J0hnL0cke.egghunt.Controller.EggController;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggDestroyedEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.PluginSaveEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.StateSwitchEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.StateUpdateEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
 import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
@@ -32,7 +33,7 @@ public class Data {
 
     private DataFileDAO dataDao;
     private LogHandler logger;
-    private Location approxLocation; //TODO move to EggStorageState
+    private Location approxLocation;
     private @Nonnull EggStorageState state = new EggStorageState();
 
     private static final String BUG_STR = "THIS MAY BE A BUG! Please report it at https://github.com/HyperSMP/EggHuntPlugin/issues";
@@ -55,11 +56,15 @@ public class Data {
         return state.doesNotExist();
     }
 
+    public boolean eggExists() {
+        return !state.doesNotExist();
+    }
+
     public Location getEggLocation() {
         return state.getEggLocation();
     }
 
-    public Entity getEggEntity() { //TODO should be able to remove once event system is created
+    public Entity getEggEntity() { //TODO should be able to remove once event system is fully implemented
         return state.entity();
     }
 
@@ -137,6 +142,7 @@ public class Data {
         } else {
             try {
                 state = EggStorageState.createState(block, entity, owner);
+                //TODO call changeState()?
             } catch (AssertionError e) {
                 logger.severe("Unable to load EggHunt data! (Both block and entity in data file are non-null)");
                 resetEggLocation();
@@ -160,7 +166,7 @@ public class Data {
                 if (p == null) {
                     logger.warning("Could not find player with the saved UUID! Resetting egg owner to prevent errors.");
                     logger.warning(BUG_STR);
-                    resetEggOwner(null, OwnerChangeReason.DATA_ERROR);
+                    resetEggOwner(OwnerChangeReason.DATA_ERROR);
                 }
             }
         }
@@ -189,96 +195,73 @@ public class Data {
     }
     
     public void setEggOwner(Player player, Configuration config, @Nonnull OwnerChangeReason reason) {
-        setEggOwner(player.getUniqueId(), config, reason);
+        setEggOwner(player.getUniqueId(), reason);
     }
 
-    private void setEggOwner(UUID playerUUID, Configuration config, @Nonnull OwnerChangeReason reason) {
-        //TODO figure out how to combine egg state change and owner change into a single owner change event
-        //so that before/after states will be more accurate
-
+    private void setEggOwner(UUID playerUUID, @Nonnull OwnerChangeReason reason) {
         if (!playerUUID.equals(state.owner())) { //only update if the egg has actually changed posession
             EggStorageState oldState = state;
-            UUID oldOwner = state.owner();
             state = state.setOwner(playerUUID); //set new owner
-            
             callEvent(new OwnerChangeEvent(oldState, state, reason));
-
-            /*TODO remove
-             String ownerName = Bukkit.getOfflinePlayer(playerUUID).getName(); //get the name of the new owner
-            String msg;
-            */
-            if (oldOwner != null) {
-                EggController.updateOwnerTag(Bukkit.getPlayer(oldOwner), this, config); //if the old owner is online, remove their scoreboard tag
-                /*TODO remove
-                String oldOwnerName = Bukkit.getOfflinePlayer(oldOwner).getName();
-                msg = String.format("%s has stolen the dragon egg from %s!", ownerName, oldOwnerName);
-            } else {
-                msg = String.format("%s has claimed the dragon egg!", ownerName); */
-            }
-            
-            /*Announcement.announce(msg, logger); */
-
-            Player p = Bukkit.getPlayer(playerUUID);
-            if (p != null) { //make sure player is online
-                //TODO remove Announcement.ShowEggEffects(p);
-                EggController.updateOwnerTag(p, this, config); //update the scoreboard tag of the new owner
-            }
         }
     }
 
-    public void resetEggOwner(Configuration config, @Nonnull OwnerChangeReason reason) {
-        //TODO include this method in new setup to combine stateswitch and owner switch events into 1 owner switch event
-        //TODO remove unneeded parameters after switching to event creation
+    public void resetEggOwner(@Nonnull OwnerChangeReason reason) {
         EggStorageState oldState = state;
         UUID owner = state.owner();
         if (owner != null) {
-            Player oldOwner = Bukkit.getPlayer(owner);
-
             log("Egg owner reset");
             state = state.setOwner(null);
-            if (config != null) {
-                EggController.updateOwnerTag(oldOwner, this, config); //update tag after setting owner to null
-            }
-
             callEvent(new OwnerChangeEvent(oldState, state, reason));
         }
     }
 
     public void resetEggLocation() {
-        state = new EggStorageState();
         log("Egg location reset");
+        changeState(new EggStorageState());
     }
 
     public void updateEggLocation(Block block) {
-        //TODO when updating, call both events
-        state = new EggStorageState(block, state.owner());
-        approxLocation = state.getEggLocation();
-        log("The egg is " + getEggHolderString());
+        changeState(new EggStorageState(block, state.owner()));
     }
     
     public void updateEggLocation(Entity holderEntity) {
-        //TODO call events
-        state = new EggStorageState(holderEntity, state.owner());
-        approxLocation = holderEntity.getLocation();
-        log("The egg is " + getEggHolderString());
+        changeState(new EggStorageState(holderEntity, state.owner()));
+    }
+
+    private void changeState(@Nonnull EggStorageState newState) {
+        EggStorageState oldState = state;
+        state = newState;
+        log("The egg " + getEggHolderString());
+        if (state == oldState) {
+            callEvent(new StateUpdateEvent(oldState, newState)); //state has not meaningfully changed
+        } else {
+            callEvent(new StateSwitchEvent(oldState, newState)); //state has changed
+        }
+        approxLocation = state.getEggLocation();
     }
 
     public void eggDestroyed() {
         logger.log("Egg was destroyed");
-        //data.resetEggOwner(false, config); TODO needed?
-        //data.resetEggLocation();
-
         EggStorageState oldState = state;
         state = new EggStorageState();
         
         callEvent(new EggDestroyedEvent(oldState, state)); //TODO this is a StateSwitchEvent. How does it interact with resetting egg owner?
-        //callEvent(new OwnerChangeEvent(oldState, state, OwnerChangeReason./* ? */)); TODO maybe this?
+        callEvent(new OwnerChangeEvent(oldState, state, OwnerChangeReason.EGG_DESTROYED));
     }
 
     public void eggRespawned(@Nonnull Block block, @Nonnull SpawnReason reason) {
-        logger.log("Egg has respawned");
+        logger.log("Egg has respawned as a block");
         EggStorageState oldState = state;
         state = new EggStorageState(block);
+
+        callEvent(new EggCreatedEvent(oldState, state, reason));
+    }
+
+    public void eggRespawned(@Nonnull Entity entity, @Nonnull SpawnReason reason) {
+        logger.log("Egg has respawned as an item");
+        EggStorageState oldState = state;
+        state = new EggStorageState(entity);
 
         callEvent(new EggCreatedEvent(oldState, state, reason));
     }

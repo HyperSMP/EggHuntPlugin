@@ -16,9 +16,13 @@ public class EggCreatedEvent extends StateSwitchEvent {
      * The reason that this egg was spawned
      */
     public enum SpawnReason {
+        /** This is the first time the egg has spawned TODO check this is actually called*/
         FIRST_SPAWN,
+        /** The egg is respawned in the end after being destroyed */
         IMMEDIATE_RESPAWN,
+        /** The egg is respawned in the end when the ender dragon dies, after the egg was previously destroyed */
         DELAYED_RESPAWN,
+        /** The egg was respawned in-place as an item after the original invulnerable egg was destroyed */
         DROP_AS_ITEM,
     }
 

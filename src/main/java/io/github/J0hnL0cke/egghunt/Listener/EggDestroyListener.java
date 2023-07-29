@@ -3,9 +3,11 @@ package io.github.J0hnL0cke.egghunt.Listener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.TreeType;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.boss.DragonBattle;
 import org.bukkit.entity.ComplexEntityPart;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -30,7 +32,7 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
-import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
+import io.github.J0hnL0cke.egghunt.Model.Events.DragonDeathEvent;
 
 /**
  * Listens for Bukkit events related to destruction of the dragon egg
@@ -102,16 +104,9 @@ public class EggDestroyListener implements Listener {
         }
 
         else if (event.getEntityType().equals(EntityType.ENDER_DRAGON)) {
-            //if the dragon is killed, respawn the egg
-            if (config.getRespawnEgg()) {
-                if (data.doesNotExist()) {
-                    //if the egg does not exist
-                    if (config.getEndWorld().getEnderDragonBattle().hasBeenPreviouslyKilled()) {
-                        //if the dragon has already been beaten
-                        EggController.respawnEgg(config, data, logger, SpawnReason.DELAYED_RESPAWN);
-    				}
-    			}
-    		}
+            //if the dragon is killed, send an event
+            DragonBattle battle = config.getEndWorld().getEnderDragonBattle();
+            Bukkit.getPluginManager().callEvent(new DragonDeathEvent(battle));
     	}
     }
     

@@ -18,10 +18,11 @@ public class Configuration {
     private boolean dropEnderchestedEgg; /** whether an existing egg already in an ender chest should be forced out or stuck there */
     private boolean canPackageEgg; /** whether the egg can be stored in a shulker box or bundle */
     private boolean tagOwner; /** whether to apply a tag to the owner of the egg */
+    private String ownerTagName; /** the name of the tag to apply to the owner, if enabled */
     private boolean keepScore; /** whether to create and increment a scoreboard for time holding the egg */
     private boolean namedEntitiesGetScore; /** whether entities with custom names are counted on the scoreboard when holding the egg */
     private World endWorld; /** the name of the world that counts as the end on this server */
-    private String ownerTagName; /** the name of the tag to apply to the owner, if enabled */
+    
     
     public static final String DEFAULT_END = "world_end"; /** default end world name for most spigot servers */
     
@@ -44,10 +45,9 @@ public class Configuration {
         dropEnderchestedEgg = fileDao.readBool("drop_enderchested_egg");
         canPackageEgg = fileDao.readBool("can_package_egg");
         tagOwner = fileDao.readBool("tag_owner");
+        ownerTagName = fileDao.read("owner_tag_name", null);
         keepScore = fileDao.readBool("keep_score");
         namedEntitiesGetScore = fileDao.readBool("named_entities_keep_score");
-
-        ownerTagName = fileDao.read("owner_tag_name", null);
         endWorld = Bukkit.getServer().getWorld(fileDao.read("end", DEFAULT_END));
 
     }
@@ -87,6 +87,10 @@ public class Configuration {
         return tagOwner;
     }
 
+    public String getOwnerTagName(){
+        return ownerTagName;
+    }
+
     public boolean getKeepScore() {
         return keepScore;
     }
@@ -94,11 +98,6 @@ public class Configuration {
     public boolean getNamedEntitiesGetScore() {
         return namedEntitiesGetScore;
     }
-
-    public String getOwnerTagName(){
-        return ownerTagName;
-    }
-
     public World getEndWorld() {
         return endWorld;
     }

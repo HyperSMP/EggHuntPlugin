@@ -1,5 +1,6 @@
 package io.github.J0hnL0cke.egghunt.Listener;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.*;
@@ -56,7 +57,8 @@ public class MiscListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        EggController.updateOwnerTag(player, data, config);
+        Bukkit.getPluginManager().callEvent(new io.github.J0hnL0cke.egghunt.Model.Events.PlayerJoinEvent(player));
+        //TODO prevent naming collision
     }
 
     /**
@@ -174,7 +176,7 @@ public class MiscListener implements Listener {
             if (config.resetOwnerOnTeleport()) {
                 OfflinePlayer owner = data.getEggOwner();
                 if (owner != null) {
-                    data.resetEggOwner(config, OwnerChangeReason.EGG_TELEPORT);
+                    data.resetEggOwner(OwnerChangeReason.EGG_TELEPORT);
                 }
             }
         }
@@ -226,7 +228,9 @@ public class MiscListener implements Listener {
                 event.setDeathMessage(String.format("%s and lost the dragon egg!", deathmsg));
             }
 
-            data.resetEggOwner(config, OwnerChangeReason.OWNER_DEATH);
+            data.resetEggOwner(OwnerChangeReason.OWNER_DEATH);
+            //TODO is this ok to do if player doesn't fall in void?
+            //might be unfair to players who just got the egg. Maybe only check for player kill or void death?
         }
     }
 

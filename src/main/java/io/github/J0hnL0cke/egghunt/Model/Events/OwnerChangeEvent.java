@@ -19,10 +19,14 @@ public class OwnerChangeEvent extends StateSwitchEvent {
     public enum OwnerChangeReason {
         /** A player claimed the egg. Includes stealing the egg from another player. */
         EGG_CLAIM,
-        /** The owner died in a way that resets the egg owner. */ 
+        /** The egg was destroyed */
+        EGG_DESTROYED,
+        /** The owner died in a way that resets the egg owner. TODO there is alr an event for this, combine both events and remove this*/ 
         OWNER_DEATH,
         /** The egg teleported, causing the owner to be reset. */
         EGG_TELEPORT,
+        /** The invulnerable egg was respawned to prevent its destruction, causing the owner to be reset */
+        EGG_INVULNERABLE_RESPAWN,
         /** The egg's owner has been reset due to an error loading data */
         DATA_ERROR,
     }

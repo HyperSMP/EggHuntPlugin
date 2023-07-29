@@ -18,8 +18,6 @@ import org.bukkit.entity.Entity;
  * and is not necessairly an up-to-date representation of the egg's location
  * 
  * Since this is a record, its fields are immutable
- * 
- * TODO add .equals()
  */
 public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Block block, @Nullable Entity entity, @Nullable UUID owner) {
 
@@ -98,6 +96,15 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
                 return entity.getLocation();
         }
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof EggStorageState){
+            EggStorageState otherState = (EggStorageState) o;
+            return otherState.block == block && otherState.entity == entity && otherState.storedAs == storedAs; 
+        }
+        return false;
     }
 
 }

@@ -2,9 +2,9 @@ package io.github.J0hnL0cke.egghunt.Controller;
 
 import javax.annotation.Nonnull;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -19,7 +19,9 @@ import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.EggStorageState;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Events.DragonDeathEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggDestroyedEvent;
+import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.StateSwitchEvent;
 import io.github.J0hnL0cke.egghunt.Model.Events.EggCreatedEvent.SpawnReason;
 import io.github.J0hnL0cke.egghunt.Model.Events.OwnerChangeEvent.OwnerChangeReason;
@@ -59,11 +61,6 @@ public class EggController implements Listener {
             }
         }
     }
-
-
-
-
-    
     
     /**
      * Returns the location above the end fountain where the dragon will respawn
@@ -84,26 +81,29 @@ public class EggController implements Listener {
             data.setEggOwner(player, config, OwnerChangeReason.EGG_CLAIM); //TODO is this necessary? player will likely already be owner
             player.getInventory().remove(Material.DRAGON_EGG);
 
-            // Drop it on the floor and set its location
-            //TODO use drop egg method in EggRespawn
-            Item eggDrop = player.getWorld().dropItem(player.getLocation(),
-                    new ItemStack(Material.DRAGON_EGG));
-            eggDrop.setVelocity(new Vector(0, 0, 0));
-            data.updateEggLocation(eggDrop);
+            // Drop it on the ground
+            spawnEggItem(player.getLocation(), config, data);
         }
+    }
+
+    @EventHandler
+    public void onOwnerChange(OwnerChangeEvent event) {
+        Player oldOwner = Bukkit.getPlayer(event.getOldState().owner());
+        Player newOwner = Bukkit.getPlayer(event.getState().owner());
+        updateOwnerTag(oldOwner, false); //if the previous owner is online, remove their scoreboard tag
+        updateOwnerTag(newOwner, true); //if the owner is online, add their scoreboard tag
     }
 
     /**
      * Updates the egg ownership scoreboard tag for the given player if tagging is enabled
      * Adds the tag if the player is the owner, otherwise removes it
      */
-    public static void updateOwnerTag(Player player, Data data, Configuration config) {
+    public void updateOwnerTag(Player player, boolean isOwner) {
         if (player != null) {
             if (config.getTagOwner()) {
-                OfflinePlayer owner = data.getEggOwner();
                 //if the given player owns the egg
-                if (owner != null && owner.getUniqueId().equals(player.getUniqueId())) {
-                    player.addScoreboardTag(config.getOwnerTagName());
+                if (isOwner) {
+                    player.addScoreboardTag(config.getOwnerTagName()); 
                 } else {
                     player.removeScoreboardTag(config.getOwnerTagName());
                 }
@@ -120,16 +120,16 @@ public class EggController implements Listener {
         egg.setAmount(1);
         Item drop = loc.getWorld().dropItem(loc, egg);
         drop.setGravity(false);
-        drop.setGlowing(true);
-        drop.setVelocity(new Vector().setX(0).setY(0).setZ(0));
-        if (config.getEggInvulnerable()) {
+        drop.setGlowing(true); //TODO make glowing optional
+        drop.setVelocity(new Vector()); //set velocity to 0
+        if (config.getEggInvulnerable()) { //TODO is this already handled by state change?
             drop.setInvulnerable(true);
         }
-        data.updateEggLocation(drop);
+        data.eggRespawned(drop, SpawnReason.DROP_AS_ITEM);
     }
 
     @EventHandler
-    public void onEggDestroyed(EggDestroyedEvent event){
+    public void onEggDestroyed(EggDestroyedEvent event) {
         if (config.getRespawnEgg()) {
             if (config.getRespawnImmediately()) {
                 logger.log("Immediate respawn enabled- respawning egg");
@@ -139,6 +139,23 @@ public class EggController implements Listener {
             }
         } else {
             logger.log("Egg respawn is disabled");
+        }
+    }
+
+    @EventHandler
+    public void onDragonDeath(DragonDeathEvent event) {
+        boolean wasKilled = event.getBattle().hasBeenPreviouslyKilled();
+
+        if (!wasKilled) { //if the dragon has not beaten
+            //the egg will spawn on its own
+            if (data.eggExists()) {
+                //warn if the egg already exists (so it probably shouldn't respawn)
+                logger.warning("Possible duplication of dragon egg! An egg already exists somewhere, but this is the first dragon kill so it will spawn an egg!");
+            }
+        } else {
+            if (data.doesNotExist() && config.getRespawnEgg()) { //if dragon is re-beaten and egg needs to be respawned
+                EggController.respawnEgg(config, data, logger, SpawnReason.DELAYED_RESPAWN);
+            }
         }
     }
 
