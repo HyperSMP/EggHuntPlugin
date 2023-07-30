@@ -42,12 +42,16 @@ public class CommandListener {
             String storageMsg = data.getEggHolderString(); //"is in <x>"
 
             Location origin = null; //get location of player that sent the command for distance calculation
-            if(sender instanceof Player){
+            if (sender instanceof Player) {
                 origin = ((Player) sender).getLocation();
             }
 
-            String locStr = AnnouncementController.formatLocation(data.getEggLocation(), origin);
-            sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
+            if (data.eggExists()) {
+                String locStr = AnnouncementController.formatLocation(data.getEggLocation(), origin);
+                sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
+            } else {
+                sendMessage(sender, String.format("%s %s.", msgStart, storageMsg));
+            }
 
         } else {
             sendMessage(sender, NOT_PERMITTED_MSG);
@@ -65,7 +69,7 @@ public class CommandListener {
                 ItemStack heldItem = player.getInventory().getItemInMainHand();
                 if (heldItem.getType().equals(Material.COMPASS)) {
 
-                    if (data.doesNotExist()) {
+                    if (data.eggExists()) {
                         Location eggLoc = data.getEggLocation();
                         if (player.getWorld().equals(eggLoc.getWorld())) {
 

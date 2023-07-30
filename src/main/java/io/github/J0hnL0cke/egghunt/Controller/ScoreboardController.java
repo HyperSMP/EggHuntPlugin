@@ -1,6 +1,7 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import java.time.Instant;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -121,9 +122,12 @@ public class ScoreboardController implements Listener {
                 }
             }
 
-            OfflinePlayer owner = EggStorageState.getPlayerFromUUID(state.owner());
+            UUID owner = state.owner();
             if (owner != null) {
-                incrementScoring(owner.getName());
+                OfflinePlayer namedOwner = EggStorageState.getPlayerFromUUID(owner);
+                if (namedOwner != null) {
+                    incrementScoring(namedOwner.getName());
+                }
             }
         }
     }

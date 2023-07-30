@@ -1,5 +1,7 @@
 package io.github.J0hnL0cke.egghunt.Controller;
 
+import java.util.UUID;
+
 import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
@@ -88,8 +90,18 @@ public class EggController implements Listener {
 
     @EventHandler
     public void onOwnerChange(OwnerChangeEvent event) {
-        Player oldOwner = Bukkit.getPlayer(event.getOldState().owner());
-        Player newOwner = Bukkit.getPlayer(event.getState().owner());
+        UUID oldOwnerUUID = event.getOldState().owner();
+        UUID newOwnerUUID = event.getState().owner();
+
+        Player oldOwner = null;
+        Player newOwner = null;
+
+        if (oldOwnerUUID != null) {
+            oldOwner = Bukkit.getPlayer(event.getOldState().owner());
+        }
+        if (newOwnerUUID != null) {
+            newOwner = Bukkit.getPlayer(event.getState().owner());
+        }
         updateOwnerTag(oldOwner, false); //if the previous owner is online, remove their scoreboard tag
         updateOwnerTag(newOwner, true); //if the owner is online, add their scoreboard tag
     }

@@ -27,7 +27,7 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
         DNE, //egg does not exist
     }
     
-    public static OfflinePlayer getPlayerFromUUID(UUID playerUUID) {
+    public static OfflinePlayer getPlayerFromUUID(@Nonnull UUID playerUUID) {
         return Bukkit.getOfflinePlayer(playerUUID);
     }
 
@@ -63,7 +63,7 @@ public record EggStorageState(@Nonnull Egg_Storage_Type storedAs, @Nullable Bloc
     }
 
     public EggStorageState(@Nonnull Block block, UUID owner) {
-        this(Egg_Storage_Type.ENTITY, block, null, owner);
+        this(Egg_Storage_Type.BLOCK, block, null, owner);
     }
     
     public EggStorageState(@Nonnull Entity entity, UUID owner) {

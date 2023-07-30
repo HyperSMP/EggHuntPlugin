@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -165,7 +167,7 @@ public class AnnouncementController implements Listener {
     }
 
     //TODO make these private
-    public static String formatLocation(Location destination, Location origin) {
+    public static String formatLocation(@Nonnull Location destination, Location origin) {
         //stringify the egg's location
         int x = destination.getBlockX();
         int y = destination.getBlockY();

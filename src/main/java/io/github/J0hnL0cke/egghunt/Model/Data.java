@@ -60,7 +60,7 @@ public class Data {
         return !state.doesNotExist();
     }
 
-    public Location getEggLocation() {
+    public @Nullable Location getEggLocation() {
         return state.getEggLocation();
     }
 
@@ -73,11 +73,10 @@ public class Data {
     }
 
     public @Nullable OfflinePlayer getEggOwner() {
-        return Bukkit.getOfflinePlayer(state.owner());
-    }
-
-    public static OfflinePlayer getPlayerFromUUID(UUID playerUUID){
-        return Bukkit.getOfflinePlayer(playerUUID);
+        if(state.owner()==null){
+            return null;
+        }
+        return EggStorageState.getPlayerFromUUID(state.owner());
     }
 
     private Location serializeBlock(Block block) {
@@ -176,7 +175,7 @@ public class Data {
         dataDao.writeUUID("owner", state.owner());
         dataDao.writeLocation("block", serializeBlock(state.block()));
         dataDao.writeUUID("entity", serializeEntity(state.entity()));
-        approxLocation = state.entity().getLocation(); //update latest egg location for getting egg entity when server restarts
+        approxLocation = state.getEggLocation(); //update latest egg location for getting egg entity when server restarts
         dataDao.writeLocation("lastLocation", approxLocation);
         dataDao.writeString("eggExists", String.valueOf(!state.doesNotExist()));
 
