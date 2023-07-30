@@ -19,6 +19,7 @@ import io.github.J0hnL0cke.egghunt.Controller.InventoryListener;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Version;
 import io.github.J0hnL0cke.egghunt.Persistence.ConfigFileDAO;
 import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 
@@ -26,6 +27,7 @@ import io.github.J0hnL0cke.egghunt.Persistence.DataFileDAO;
 public final class egghunt extends JavaPlugin {
     Configuration config;
     Data data;
+    Version version;
     CommandHandler commandHandler;
 
     BukkitTask belowWorldTask;
@@ -42,11 +44,12 @@ public final class egghunt extends JavaPlugin {
         //create model instances using dependency injection
         config = new Configuration(new ConfigFileDAO(this));
         data = new Data(DataFileDAO.getDataDAO(this, logger), logger);
+        version = new Version();
 
         logger.setDebug(config.getDebugEnabled());
 
         //create controller instances
-        ScoreboardController scoreboardController = ScoreboardController.getScoreboardHandler(data, config, logger);
+        ScoreboardController scoreboardController = ScoreboardController.getScoreboardHandler(data, config, logger, version);
         MiscListener miscListener = new MiscListener(logger, config, data);
         InventoryListener inventoryListener = new InventoryListener(logger, config, data);
         EggDestroyListener destroyListener = new EggDestroyListener(logger, config, data);
