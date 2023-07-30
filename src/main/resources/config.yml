@@ -1,5 +1,5 @@
 #If enabled, logs extra debugging information to the console. This information will appear in logs regardless of debug setting.
-debug: true
+debug: false
 
 #Name of your end world, usually to "world_the_end" on spigot
 end: world_the_end
