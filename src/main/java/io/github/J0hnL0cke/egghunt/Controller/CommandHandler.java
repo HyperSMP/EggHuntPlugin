@@ -43,13 +43,17 @@ public class CommandHandler {
 
             String storageMsg = data.getEggHolderString(); //"is in <x>"
 
-            Location origin = null; //get location of player that sent the command for distance calculation
-            if(sender instanceof Player){
-                origin = ((Player) sender).getLocation();
-            }
+            if (data.getEggType() != Egg_Storage_Type.DNE) {
+                Location origin = null; //get location of player that sent the command for distance calculation
+                if (sender instanceof Player) {
+                    origin = ((Player) sender).getLocation();
+                }
 
-            String locStr = Announcement.formatLocation(data.getEggLocation(), origin);
-            sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
+                String locStr = Announcement.formatLocation(data.getEggLocation(), origin);
+                sendMessage(sender, String.format("%s %s at %s.", msgStart, storageMsg, locStr));
+            } else {
+                sendMessage(sender, String.format("%s %s.", msgStart, storageMsg));
+            }
 
         } else {
             sendMessage(sender, NOT_PERMITTED_MSG);
