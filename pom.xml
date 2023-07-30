@@ -1,56 +1,78 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>io.github.J0hnL0cke</groupId>
-  <artifactId>EggHunt</artifactId>
-  <version>1.20.1</version>
-     <build>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                  <source>1.8</source>
-                  <target>1.8</target>
-              </configuration>
-          </plugin>
-          <plugin>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.4</version>
-          <configuration>
-            <minimizeJar>true</minimizeJar>
-            <shadedArtifactAttached>true</shadedArtifactAttached>
-            <transformers>
-              <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-            </transformers>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>shade</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-   </build>
-      <repositories>
-       <repository>
-         <id>spigot-repo</id>
-         <url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
-       </repository>
-   </repositories>
-      <dependencies>
-       <dependency>
-           <groupId>org.spigotmc</groupId>
-           <artifactId>spigot-api</artifactId>
-           <version>LATEST</version><!--change this value depending on the version-->
-           <type>jar</type>
-           <scope>provided</scope>
-       </dependency>
-       <dependency>
-         <groupId>com.google.code.gson</groupId>
-         <artifactId>gson</artifactId>
-         <version>2.10.1</version>
-       </dependency>
-   </dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>EggHunt</name>
+    <version>1.1.1</version>
+    <url>https://github.com/HyperSMP/EggHuntPlugin</url>
+    <description>Minecraft plugin adding the ability to track and steal the Dragon Egg from other players.</description>
+
+    <groupId>io.github.J0hnL0cke</groupId>
+    <artifactId>EggHunt</artifactId>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <configuration>
+                    <minimizeJar>true</minimizeJar>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <transformers>
+                        <transformer
+                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                    </transformers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                    <include>config.yml</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>LATEST</version><!--change
+            this value depending on the version-->
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+    </dependencies>
 </project>

@@ -1,10 +1,12 @@
-name: EggHunt
-main:  io.github.J0hnL0cke.egghunt.egghunt
-website: https://github.com/HyperSMP/EggHuntPlugin
-version: 1.20.1
-api-version: '1.20'
+#See pom.xml for this information
+name: ${project.name}
+website: ${project.url}
+version: ${project.version}
+description: ${project.description}
 
+api-version: '1.17'
 author: J0hnL0cke
+main:  io.github.J0hnL0cke.egghunt.egghunt
 commands:
     locateegg:
       description: Gives the current coordinates of the dragon egg

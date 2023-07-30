@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.Criterias;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.RenderType;
 import org.bukkit.scoreboard.Score;
@@ -15,6 +16,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
+import io.github.J0hnL0cke.egghunt.Model.Version;
 
 /**
  * Handles interactions with the scoreboard api
@@ -26,6 +28,7 @@ public class ScoreboardController {
     private Data data;
     private Configuration config;
     private LogHandler logger;
+    private Version version;
     private ScoreboardManager manager;
     private Scoreboard board;
     private Objective eggMinutes;
@@ -34,17 +37,18 @@ public class ScoreboardController {
     private static final String EGG_MINUTES_KEY = "eggOwnedMinutes";
     private static final String EGG_SECONDS_KEY = "eggOwnedSeconds";
 
-    public static ScoreboardController getScoreboardHandler(Data data, Configuration configuration, LogHandler logger) {
+    public static ScoreboardController getScoreboardHandler(Data data, Configuration configuration, LogHandler logger, Version version) {
         if (thisHandler == null) {
-            thisHandler = new ScoreboardController(data, configuration, logger);
+            thisHandler = new ScoreboardController(data, configuration, logger, version);
         }
         return thisHandler;
     }
 
-    private ScoreboardController(Data data, Configuration config, LogHandler logger) {
+    private ScoreboardController(Data data, Configuration config, LogHandler logger, Version version) {
         this.data = data;
         this.config = config;
         this.logger = logger;
+        this.version = version;
 
         if (config.getKeepScore()) {
             logger.log("Scorekeeping is enabled, loading scoreboard...");
@@ -81,6 +85,10 @@ public class ScoreboardController {
     public void updateScores() {
         if (config.getKeepScore() && data.getEggType()!= Data.Egg_Storage_Type.DNE) {
             logger.log("Updating scoreboard");
+            if(eggMinutes == null || eggSeconds == null){
+                logger.warning("Objective does not exist, cannot update scoreboard!");
+                return;
+            }
 
             if (data.getEggType() == Data.Egg_Storage_Type.ENTITY) {
                 Entity eggEntity = data.getEggEntity();
@@ -112,23 +120,30 @@ public class ScoreboardController {
 
         int mins = Math.floorDiv(getScore(entityName, eggSeconds), 60); //convert seconds into minutes
         setScore(entityName, eggMinutes, mins); //update eggMinutes
-        
+
         lastUpdate = newUpdate; //update lastUpdate time
     }
 
     public Objective getOrMakeObjective(String key, String displayName) {
-        Objective obj = board.getObjective(key);
-        if (obj == null) {
-            logger.info(String.format("No scoreboard objective \"%s\" found, creating new objective", key));
-            obj = board.registerNewObjective(key, Criteria.DUMMY, displayName, RenderType.INTEGER);
-        }
-        
-        if (!obj.isModifiable()) {
-            String msg = "Could not modify objective \"%s\"! Make sure objective criteria is set to dummy!";
-            logger.warning(String.format(msg, obj.getName()));
+        Objective objective = board.getObjective(key);
+        if (objective == null) {
+            logger.warning(String.format("No scoreboard objective \"%s\" found, creating new objective", key));
+            //older versions of the Bukkit API use Criterias instead of Criteria, so handle older versions
+            if (version.hasCriteria()) {
+                
+                objective = board.registerNewObjective(key, Criteria.DUMMY, displayName, RenderType.INTEGER);
+            } else {
+                @SuppressWarnings("deprecation")
+                Objective o = board.registerNewObjective(key, "dummy", displayName, RenderType.INTEGER);
+                objective = o;
+            }
         }
 
-        return obj;
+        if (!objective.isModifiable()) {
+            String msg = "Could not modify objective \"%s\"! Make sure objective criteria is set to dummy!";
+            logger.warning(String.format(msg, objective.getName()));
+        }
+        return objective;
     }
 
     private void addScore(String name, Objective obj, int score) {
