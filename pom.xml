@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>EggHunt</name>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <url>https://github.com/HyperSMP/EggHuntPlugin</url>
     <description>Minecraft plugin adding the ability to track and steal the Dragon Egg from other players.</description>
 
