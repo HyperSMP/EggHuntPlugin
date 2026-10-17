@@ -187,18 +187,6 @@ public class Data {
                 resetEggOwner(false, null);
             }
         }
-
-        if (entity == null && storedAs.equals(Egg_Storage_Type.ENTITY)) {
-            logger.warning("Could not locate the egg entity!");
-            resetEggLocation();
-        } else if (block == null && storedAs.equals(Egg_Storage_Type.BLOCK)) {
-            logger.warning("Could not locate egg block!");
-            resetEggLocation();
-        } else if (storedAs.equals(Egg_Storage_Type.DNE)) {
-            log("Dragon egg has not been claimed.");
-        } else {
-            log("Successfully found dragon egg.");
-        }
     }
 
     public void loadData() {

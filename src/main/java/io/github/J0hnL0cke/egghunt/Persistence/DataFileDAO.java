@@ -87,13 +87,8 @@ public class DataFileDAO {
         if (loc == null) {
             return notFound;
         }
-        World world = Bukkit.getWorld(loc.getString("world"));
-        double locX = loc.getDouble("x");
-        double locY = loc.getDouble("y");
-        double locZ = loc.getDouble("z");
-        //skipping roll and yaw since they don't matter for most cases
-
-        return new Location(world, locX, locY, locZ, 0, 0);
+        Location location = Location.deserialize(loc.getValues(false));
+        return location;
     }
 
     public UUID readUUID(String key, UUID notFound) {
