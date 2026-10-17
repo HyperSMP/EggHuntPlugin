@@ -235,7 +235,7 @@ public class Data {
 
     private void setEggOwner(UUID playerUUID, Configuration config) {
         if (!playerUUID.equals(owner)) { //only update if the egg has actually changed posession
-            ScoreboardController.saveData(logger);
+            ScoreboardController.saveData(logger); // update scoreboard for the old owner before the new one gets set
             UUID oldOwner = owner;
             owner = playerUUID; //set new owner
             String ownerName = Bukkit.getOfflinePlayer(owner).getName();

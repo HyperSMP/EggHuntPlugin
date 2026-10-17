@@ -79,7 +79,8 @@ public class ScoreboardController {
      * Updates the score for the current egg owner
      * 
      * For accurate scoring, this should be updated at least every time egg ownership changes, and
-     * every time the plugin is enabled/disabled
+     * every time the plugin is enabled/disabled.
+     * It must be called before ownership change takes place so the previous owner gets credit for their time holding it
      * @param data
      */
     public void updateScores() {
@@ -103,8 +104,10 @@ public class ScoreboardController {
             OfflinePlayer owner = data.getEggOwner();
             if (owner != null) {
                 incrementScoring(owner.getName());
+                return;
             }
         }
+        lastUpdate = Instant.now(); //update lastUpdate time if the egg is unowned
     }
     
     private void incrementScoring(String entityName) {
