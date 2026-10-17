@@ -1,7 +1,7 @@
 #If enabled, logs extra debugging information to the console. This information will appear in logs regardless of debug setting.
 debug: false
 
-#Name of your end world, usually to "world_the_end" on spigot
+#Name of your end world, usually "world_the_end" on spigot
 end: world_the_end
 
 #Whether the egg teleporting causes the owner to no longer count as the owner of the egg
@@ -29,5 +29,5 @@ owner_tag_name: eggOwner
 #Scoreboards are updated when the egg changes ownership and when the world saves
 #When editing the scores, modify the board tracking seconds. Other times are calculated based on that time
 keep_score: true
-#Whether entities with custom names are counted on the scoreboard instead of the owner when holding the egg
+#Whether non-player entities with custom names are counted on the scoreboard instead of the owner when holding the egg
 named_entities_keep_score: false

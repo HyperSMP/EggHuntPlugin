@@ -81,7 +81,7 @@ public class EventScheduler extends BukkitRunnable {
                 player.getInventory().remove(m);
                 break;
             
-            case DROPPED_ITEM:
+            case ITEM:
                 ((Item) entity).remove();
                 break;
             

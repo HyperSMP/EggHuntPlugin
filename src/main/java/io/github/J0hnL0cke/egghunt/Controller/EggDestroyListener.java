@@ -54,7 +54,7 @@ public class EggDestroyListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
         Entity entity = event.getEntity();
-        if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+        if (entity.getType().equals(EntityType.ITEM)) {
             ItemStack item = ((Item)entity).getItemStack();
             if (Egg.hasEgg(item)) {
             	//make sure item is destroyed to prevent dupes
@@ -93,7 +93,7 @@ public class EggDestroyListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
         //if the egg item dies, notify that it has been destroyed
-        if (event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
+        if (event.getEntityType().equals(EntityType.ITEM)) {
             if (Egg.hasEgg((ItemStack) event.getEntity())) {
                 //remove just in case to prevent dupes
                 event.getEntity().remove();
@@ -295,7 +295,7 @@ public class EggDestroyListener implements Listener {
     public void onConsiderEntityDamageEvent(EntityDamageEvent event) {
         if (config.getEggInvulnerable()) {
             Entity entity = event.getEntity();
-            if (entity.getType().equals(EntityType.DROPPED_ITEM)) {
+            if (entity.getType().equals(EntityType.ITEM)) {
                 if (Egg.hasEgg((Item) entity)) {
                     event.setCancelled(true);
                 }

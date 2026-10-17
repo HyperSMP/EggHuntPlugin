@@ -95,7 +95,7 @@ public class Announcement {
      */
     public static void ShowEggEffects(Location loc) {
         for (Player p : loc.getWorld().getPlayers()) {
-            p.spawnParticle(Particle.SPELL_WITCH, loc, 50, 0.3, 0.1, 0.3);
+            p.spawnParticle(Particle.WITCH, loc, 50, 0.3, 0.1, 0.3);
             p.spawnParticle(Particle.PORTAL, loc, 50, 0.3, 0.1, 0.3);
         }
     }

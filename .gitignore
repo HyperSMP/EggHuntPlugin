@@ -6,3 +6,4 @@
 .externalToolBuilders/Make Jar.launch
 /.vscode/
 .vscode/settings.json
+dependency-reduced-pom.xml

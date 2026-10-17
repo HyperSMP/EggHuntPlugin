@@ -380,7 +380,7 @@ public class Data {
                         storageMsg = String.format("is a falling block");
                         break;
 
-                    case DROPPED_ITEM:
+                    case ITEM:
                         storageMsg = String.format("is a dropped item");
                         break;
 
