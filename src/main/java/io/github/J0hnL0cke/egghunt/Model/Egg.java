@@ -1,5 +1,8 @@
 package io.github.J0hnL0cke.egghunt.Model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -41,15 +44,15 @@ public class Egg {
     }
 
     /**
-     * Checks if the given ItemStack is a container that is holding the dragon egg. Also returns false if the provided stack is null.
+     * Checks if the given ItemStack is the dragon egg or a container that is holding the egg. Also returns false if the provided stack is null.
      * @param stack ItemStack to check
-     * @return True if the stack is a dragon egg or holding the egg, otherwise false
+     * @return True if the stack is a dragon egg or a container holding the egg, otherwise false
      */
     public static boolean containsEgg(ItemStack stack) {
         if (stack == null) {
             return false;
         }
-        return hasEgg(getContainerContents(stack.getItemMeta(), stack.getType()));
+        return isEgg(stack.getType()) || hasEgg(getContainerContents(stack.getItemMeta(), stack.getType()));
     }
     
     /**
@@ -71,7 +74,8 @@ public class Egg {
     }
 
     /**
-     * Gets a list of ItemStacks held by the container represented by the given ItemMeta and Material.
+     * Gets an array of ItemStacks held by the container represented by the given ItemMeta and Material.
+     * Note that this list is not tied to game state.
      * If the provided meta is not a container, returns null.
      * @param meta The BlockMeta or ItemMeta of the item to check
      * @param type The material type of the associated item or block
@@ -86,11 +90,39 @@ public class Egg {
             ShulkerBox box = (ShulkerBox) blockMeta.getBlockState();
             return box.getInventory().getContents();
 
-        } else if (type.equals(Material.BUNDLE)) { //check if bundle
+        } else if (isBundle(type)) { //check if bundle
             BundleMeta bundle = (BundleMeta) meta;
             return bundle.getItems().toArray(new ItemStack[0]);
         }
         return null;
+    }
+
+    /**
+     * Sets the ItemStacks held by the container represented by the given ItemMeta and Material.
+     * If the provided meta is not a container, returns False.
+     * @param meta The BlockMeta or ItemMeta of the item to set
+     * @param type The material type of the associated item or block
+     * @param items The items to put into the ItemMeta
+     * @return True if set, False otherwise
+     */
+    public static boolean setContainerContents(ItemMeta meta, Material type, ItemStack[] items) {
+        if (meta == null) {
+            return false;
+        }
+        if (isShulker(type)) { //check if shulker
+            BlockStateMeta blockMeta = (BlockStateMeta) meta;
+            ShulkerBox box = (ShulkerBox) blockMeta.getBlockState();
+            box.getInventory().setContents(items);
+            blockMeta.setBlockState(box);
+
+            
+        } else if (isBundle(type)) { //check if bundle
+            BundleMeta bundle = (BundleMeta) meta;
+            bundle.setItems(Arrays.asList(items));
+        } else {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -101,6 +133,16 @@ public class Egg {
             return false;
         }
         return Tag.SHULKER_BOXES.getValues().contains(material);
+    }
+
+    /**
+     * Check if the given material is any color of bundle
+     */
+    public static boolean isBundle(Material material) {
+        if (material == null) {
+            return false;
+        }
+        return Tag.ITEMS_BUNDLES.getValues().contains(material);
     }
 
     /**
@@ -115,7 +157,7 @@ public class Egg {
             if (hasEgg(((Player) entity).getInventory())) {
                 Player player = (Player) entity;
                 for (ItemStack stack : player.getInventory()) {
-                    res = res || removeEgg(stack);
+                    res = removeEgg(stack) || res;
                 }
             }
         } else if (entity instanceof LivingEntity) {
@@ -167,17 +209,34 @@ public class Egg {
      * Recursively searches the given ItemStack for the dragon egg and removes it,
      * preserving any containers holding the egg.
      */
-    public static boolean removeEgg(ItemStack stack) {
-        if (stack == null) {
+    public static boolean removeEgg(ItemStack parentStack) {
+        if (parentStack == null) {
             return false;
         }
-        if (hasEgg(stack)) {
-            if (isOnlyEgg(stack)) {
-                stack.setAmount(0);
-                return true;
-            } else if (containsEgg(stack)) {
-                return removeEgg(getContainerContents(stack.getItemMeta(), stack.getType()));
+        if (hasEgg(parentStack)) {
+
+            if (isOnlyEgg(parentStack)) {
+                parentStack.setAmount(0);
+
+            } else if (containsEgg(parentStack)) {
+                ItemMeta meta = parentStack.getItemMeta();
+                ItemStack[] contents = getContainerContents(meta, parentStack.getType());
+                
+                ArrayList<ItemStack> newContents = new ArrayList<>(Arrays.asList(contents));
+                for (ItemStack i: contents){
+                    if (isOnlyEgg(i)){
+                        newContents.remove(i);
+                    } else if (hasEgg(i)){
+                        removeEgg(i); //recursive if removing an egg from nested bundles or (nested) bundle(s) inside a shulker
+                    }
+                }
+
+                ItemStack[] itemArray = new ItemStack[newContents.size()];
+                newContents.toArray(itemArray);
+                setContainerContents(meta, parentStack.getType(), itemArray);
+                parentStack.setItemMeta(meta);
             }
+            return true;
         }
         return false;
     }
@@ -193,7 +252,7 @@ public class Egg {
         }
         boolean res = false;
         for (ItemStack i : stack) {
-            res = res || removeEgg(i);
+            res = removeEgg(i) || res;
         }
         return res;
     }

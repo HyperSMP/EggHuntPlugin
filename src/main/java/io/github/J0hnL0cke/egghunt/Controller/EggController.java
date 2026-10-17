@@ -12,6 +12,7 @@ import org.bukkit.util.Vector;
 
 import io.github.J0hnL0cke.egghunt.Model.Configuration;
 import io.github.J0hnL0cke.egghunt.Model.Data;
+import io.github.J0hnL0cke.egghunt.Model.Egg;
 import io.github.J0hnL0cke.egghunt.Model.LogHandler;
 
 /**
@@ -23,9 +24,10 @@ public class EggController {
     /**
      * Makes the given entity invulnerable if enabled in the config
      */
-    public static void makeEggInvulnerable(Entity entity, Configuration config) {
+    public static void makeEggInvulnerable(Entity entity, Configuration config, LogHandler logger) {
         if (config.getEggInvulnerable()) {
             entity.setInvulnerable(true);
+            logger.info("made entity invulnerable");
         }
     }
 
@@ -73,12 +75,11 @@ public class EggController {
      */
     public static void dropEgg(Player player, Data data, Configuration config) {
         // Check if the player has a dragon egg
-        if (player.getInventory().contains(Material.DRAGON_EGG)) {
-
+        if (Egg.hasEgg(player)){
             // Set owner and remove
             data.setEggOwner(player, config); //TODO is this necessary? player will likely already be owner
-            player.getInventory().remove(Material.DRAGON_EGG);
-
+            Egg.removeEgg(player);
+            
             // Drop it on the floor and set its location
             //TODO use drop egg method in EggRespawn
             Item eggDrop = player.getWorld().dropItem(player.getLocation(),
